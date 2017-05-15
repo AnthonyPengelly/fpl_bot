@@ -14,6 +14,8 @@ const port: number = process.env.PORT || 3000;
 // Mount the WelcomeController at the /welcome route
 app.use('/', WelcomeController);
 
+app.use('/static', express.static(__dirname + '/static'));
+
 // Serve the application at the given port
 app.listen(port, () => {
     // Success callback
