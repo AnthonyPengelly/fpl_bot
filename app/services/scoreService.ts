@@ -1,44 +1,20 @@
-import FplFetcher from '../fetchers/fplFetcher';
-import PlayerScore from '../models/PlayerScore';
+import * as ScoreWeightings from "../config/scoreWeightings";
 
 export default class ScoreService {
-    static async scoreAllPlayers() {
-        var playerScores = Array<PlayerScore>();
-        var overview =  await FplFetcher.getOverview();
-        var teams = this.indexTeams(overview.teams);
+    static calculateScore(player: Player, team: Team, opponents: Array<Team>) {
+        var score = 0;
+        score += (player.form * ScoreWeightings.Form.Weighting / ScoreWeightings.Form.Max);
+        score += (player.points_per_game * ScoreWeightings.PointsPerGame.Weighting 
+            / ScoreWeightings.PointsPerGame.Max);
+        score += (player.ict_index * ScoreWeightings.ICTIndex.Weighting / ScoreWeightings.ICTIndex.Max);
+        score += (team.strength * ScoreWeightings.TeamStrength.Weighting / ScoreWeightings.TeamStrength.Max);
+        return score;
+    }
 
-        overview.elements.forEach(player => {
-            var team = teams[player.team];
-            var opponents = this.getOpponents(team, teams);
-            playerScores.push(new PlayerScore(
-                player.id,
-                player.web_name,
-                player.now_cost / 10,
-                this.calculatePoints(player, team, opponents)
-            ));
+    private static calculateScoreForOpponents(opponents: Array<Team>, team: Team) {
+        var score = 0;
+        opponents.forEach((opponent) => {
+            
         });
-        return playerScores;
-    }
-
-    private static calculatePoints(player: Player, team: Team, opponents: Array<Team>) {
-        console.log(player.web_name + " - " + team.name);
-        console.log(opponents);
-        return 10;
-    }
-
-    private static getOpponents(team: Team, teams: Array<Team>) {
-        var opponents = Array<Team>();
-        team.next_event_fixture.forEach((fixture) => {
-            opponents.push(teams[fixture.opponent]);
-        })
-        return opponents;
-    }
-
-    private static indexTeams(teams: Array<Team>) {
-        var indexedTeams = Array<Team>();
-        teams.forEach(team => {
-            indexedTeams[team.id] = team;
-        })
-        return indexedTeams;
     }
 }

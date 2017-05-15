@@ -32,7 +32,7 @@ interface Player {
     loaned_out: number;
     total_points: number;
     event_points: number;
-    points_per_game: string;
+    points_per_game: number;
     ep_this: string;
     ep_next: string;
     special: boolean;
@@ -52,7 +52,7 @@ interface Player {
     influence: string;
     creativity: string;
     threat: string;
-    ict_index: string;
+    ict_index: number;
     ea_index: number;
     element_type: number;
     team: number;
