@@ -50,7 +50,6 @@ export default class RecommendationService {
     return cache[players.length][W];
   };
 
-  // TODO players per squad
   private breaksRules = (
     players: PlayerScore[],
     settings: RecommendationSetting
