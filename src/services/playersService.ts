@@ -3,11 +3,13 @@ import ScoreService from "./scoreService";
 import PlayerScore from "../models/PlayerScore";
 
 export default class PlayersService {
-  static async getAllPlayers() {
+  constructor(private fplFetcher: FplFetcher) {}
+
+  async getAllPlayerScores() {
     const playerScores: PlayerScore[] = [];
-    const overview = await FplFetcher.getOverview();
+    const overview = await this.fplFetcher.getOverview();
     const nextEvent = overview.events.filter((event) => event.is_next)[0];
-    const fixtures = await FplFetcher.getFixtures(nextEvent.id);
+    const fixtures = await this.fplFetcher.getFixtures(nextEvent.id);
     const teams = this.indexTeams(overview.teams);
 
     overview.elements.forEach((player) => {
@@ -27,7 +29,7 @@ export default class PlayersService {
     return playerScores;
   }
 
-  private static getOpponents(team: Team, teams: Team[], fixtures: Fixture[]) {
+  private getOpponents(team: Team, teams: Team[], fixtures: Fixture[]) {
     const homeFixtures = fixtures.filter(
       (fixture) => fixture.team_h === team.id
     );
@@ -45,7 +47,7 @@ export default class PlayersService {
     return homeOpponents.concat(awayOpponents);
   }
 
-  private static indexTeams(teams: Array<Team>) {
+  private indexTeams(teams: Array<Team>) {
     var indexedTeams = Array<Team>();
     teams.forEach((team) => {
       indexedTeams[team.id] = team;
