@@ -12,64 +12,59 @@ import FplFetcher from "./fetchers/fplFetcher";
 
 console.log("Comparing players...");
 const fplFetcher = new FplFetcher();
-fplFetcher
-  .init()
-  .then(() => {
-    fplFetcher.getMyTeamAuthenticated("2364216");
-    const playerService = new PlayersService(fplFetcher);
-    return playerService.getAllPlayerScores();
-  })
-  .then((players) => {
-    players.sort(compareScores);
-    console.log("| ID\t| Value\t\t| Score\t| ROI\t| Position\t| Name");
-    players.slice(0, 30).forEach(displayPlayerScore);
+fplFetcher.getMyTeam().then((myTeam) => console.log(JSON.stringify(myTeam)));
+const playerService = new PlayersService(fplFetcher);
+playerService.getAllPlayerScores().then((players) => {
+  players.sort(compareScores);
+  console.log("| ID\t| Value\t\t| Score\t| ROI\t| Position\t| Name");
+  players.slice(0, 30).forEach(displayPlayerScore);
 
-    console.log();
-    console.log("Recommended Squads");
-    const goalkeepers = players
-      .filter((player) => player.position.singular_name_short === "GKP")
-      .slice(0, 2);
-    const defenders = players
-      .filter((player) => player.position.singular_name_short === "DEF")
-      .slice(0, 5);
-    const midfielders = players
-      .filter((player) => player.position.singular_name_short === "MID")
-      .slice(0, 5);
-    const forwards = players
-      .filter((player) => player.position.singular_name_short === "FWD")
-      .slice(0, 3);
-    const all = goalkeepers.concat(defenders, midfielders, forwards);
-    displaySquad(all, "Draft Squad");
+  console.log();
+  console.log("Recommended Squads");
+  const goalkeepers = players
+    .filter((player) => player.position.singular_name_short === "GKP")
+    .slice(0, 2);
+  const defenders = players
+    .filter((player) => player.position.singular_name_short === "DEF")
+    .slice(0, 5);
+  const midfielders = players
+    .filter((player) => player.position.singular_name_short === "MID")
+    .slice(0, 5);
+  const forwards = players
+    .filter((player) => player.position.singular_name_short === "FWD")
+    .slice(0, 3);
+  const all = goalkeepers.concat(defenders, midfielders, forwards);
+  displaySquad(all, "Draft Squad");
 
-    const recommendationService = new RecommendationService(players);
+  const recommendationService = new RecommendationService(players);
 
-    const all15Positions = recommendationService.recommendATeam(fullSquad, 100);
-    displaySquad(all15Positions, "Full Squad");
+  const all15Positions = recommendationService.recommendATeam(fullSquad, 100);
+  displaySquad(all15Positions, "Full Squad");
 
-    const skeleton442 = recommendationService.recommendATeam(
-      skeleton442Squad,
-      100
-    );
-    displaySquad(skeleton442, "Skeleton 442 Squad");
+  const skeleton442 = recommendationService.recommendATeam(
+    skeleton442Squad,
+    100
+  );
+  displaySquad(skeleton442, "Skeleton 442 Squad");
 
-    const skeleton433 = recommendationService.recommendATeam(
-      skeleton433Squad,
-      100
-    );
-    displaySquad(skeleton433, "Skeleton 433 Squad");
+  const skeleton433 = recommendationService.recommendATeam(
+    skeleton433Squad,
+    100
+  );
+  displaySquad(skeleton433, "Skeleton 433 Squad");
 
-    const skeleton343 = recommendationService.recommendATeam(
-      skeleton343Squad,
-      100
-    );
-    displaySquad(skeleton343, "Skeleton 343 Squad");
+  const skeleton343 = recommendationService.recommendATeam(
+    skeleton343Squad,
+    100
+  );
+  displaySquad(skeleton343, "Skeleton 343 Squad");
 
-    const skeleton532 = recommendationService.recommendATeam(
-      skeleton532Squad,
-      100
-    );
-    displaySquad(skeleton532, "Skeleton 532 Squad");
-  });
+  const skeleton532 = recommendationService.recommendATeam(
+    skeleton532Squad,
+    100
+  );
+  displaySquad(skeleton532, "Skeleton 532 Squad");
+});
 
 const compareScores = (a: PlayerScore, b: PlayerScore) => b.score - a.score;
 

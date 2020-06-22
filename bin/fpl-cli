@@ -1,2 +1,14 @@
-#!/usr/bin/env node
-require("../lib/index.js");
+#!/usr/bin/env bash
+if [ $# -ne 3 ]
+  then
+    echo "Please add the username, password and team id as arguments"
+    exit 1
+fi
+
+# The Cookies returned are incompatible with node libraries, so we login here and set the response
+# as an env variable, allowing the JS to parse them
+export FPL_AUTH_HEADERS=$(curl https://users.premierleague.com/accounts/login/ \
+  -H 'content-type: application/x-www-form-urlencoded' \
+  --data-raw "login=$1&password=$2&app=plfpl-web&redirect_uri=https%3A%2F%2Ffantasy.premierleague.com%2F" \
+  -i)
+TEAM_ID=$3 node ./lib/index.js;

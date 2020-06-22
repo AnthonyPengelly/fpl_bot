@@ -3,43 +3,25 @@ import axios from "axios";
 
 export default class FplFetcher {
   private baseUrl: string = "https://fantasy.premierleague.com/api";
-  private cookies: string[] = [];
+  private cookies: string;
 
-  async init() {
-    const url = "https://users.premierleague.com/accounts/login/";
-    const payload = {
-      password: "Newcastle1",
-      login: "anthonype@blueyonder.co.uk",
-      redirect_uri: "https://fantasy.premierleague.com/",
-      app: "plfpl-web",
-    };
-    const response = await axios.request({
-      method: "POST",
-      url: url,
-      data: JSON.stringify(payload),
-      withCredentials: true,
-      maxRedirects: 0,
-      validateStatus: function (status) {
-        return status >= 200 && status < 303;
-      },
-      headers: {
-        "content-type": "application/x-www-form-urlencoded",
-        crossDomain: true,
-      },
-    });
-    this.cookies = response.headers["set-cookie"];
+  constructor() {
+    // Parse the response from the auth request, which was performed in
+    // the bash script.
+    if (!process.env.FPL_AUTH_HEADERS) {
+      throw "Env variable FPL_AUTH_HEADERS must be set!";
+    }
+    const splitOnSetCookie = process.env.FPL_AUTH_HEADERS!.split(
+      "set-cookie: "
+    );
+    const cookiesArray = splitOnSetCookie.slice(1).map((x) => x.split("; ")[0]);
+    this.cookies = cookiesArray.join("; ") + ";";
   }
 
   async getOverview() {
     let url = this.baseUrl + "/bootstrap-static/";
     var overview = await WebRequest.json<Overview>(url);
     return overview;
-  }
-
-  async getMyTeam(gameweek: number) {
-    let url = this.baseUrl + "/entry/2888136/event/" + gameweek + "/picks/";
-    var myTeam = await WebRequest.json<FantasyTeam>(url);
-    return myTeam;
   }
 
   async getPlayer(id: number) {
@@ -54,15 +36,16 @@ export default class FplFetcher {
     return fixtures;
   }
 
-  async getMyTeamAuthenticated(id: string) {
-    let url = this.baseUrl + "/my-team/" + id;
-    console.log(this.cookies);
-    var myTeam = await axios.get(url, {
+  async getMyTeam() {
+    if (!process.env.TEAM_ID) {
+      throw "Env variable TEAM_ID must be set!";
+    }
+    let url = this.baseUrl + "/my-team/" + process.env.TEAM_ID;
+    var myTeam = await WebRequest.json<MyTeam>(url, {
       headers: {
-        Cookie:
-          this.cookies.map((cookie) => cookie.split(";")).join("; ") + ";",
+        Cookie: this.cookies,
       },
     });
-    console.log(myTeam);
+    return myTeam;
   }
 }
