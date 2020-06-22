@@ -5,6 +5,7 @@ export interface RecommendationSetting {
   midfielders: number;
   forwards: number;
   budgetOffset: number;
+  maxPlayersPerTeam: number;
 }
 
 export const fullSquad: RecommendationSetting = {
@@ -14,6 +15,7 @@ export const fullSquad: RecommendationSetting = {
   midfielders: 5,
   forwards: 3,
   budgetOffset: 0,
+  maxPlayersPerTeam: 4,
 };
 
 export const skeleton442Squad: RecommendationSetting = {
@@ -23,6 +25,7 @@ export const skeleton442Squad: RecommendationSetting = {
   midfielders: 4,
   forwards: 2,
   budgetOffset: 4 * 4.7,
+  maxPlayersPerTeam: 4,
 };
 
 export const skeleton433Squad: RecommendationSetting = {
@@ -32,6 +35,7 @@ export const skeleton433Squad: RecommendationSetting = {
   midfielders: 3,
   forwards: 3,
   budgetOffset: 4 * 4.7,
+  maxPlayersPerTeam: 4,
 };
 
 export const skeleton343Squad: RecommendationSetting = {
@@ -41,6 +45,7 @@ export const skeleton343Squad: RecommendationSetting = {
   midfielders: 4,
   forwards: 3,
   budgetOffset: 4 * 4.7,
+  maxPlayersPerTeam: 4,
 };
 
 export const skeleton532Squad: RecommendationSetting = {
@@ -50,4 +55,5 @@ export const skeleton532Squad: RecommendationSetting = {
   midfielders: 3,
   forwards: 2,
   budgetOffset: 4 * 4.7,
+  maxPlayersPerTeam: 4,
 };
