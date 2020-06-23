@@ -50,7 +50,6 @@ export default class FplFetcher {
   }
 
   async setLineup(lineup: MyTeamRequest) {
-    console.log(lineup);
     if (!process.env.TEAM_ID) {
       throw "Env variable TEAM_ID must be set!";
     }
