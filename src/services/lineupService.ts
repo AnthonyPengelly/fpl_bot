@@ -2,9 +2,13 @@ import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import PlayerScore from "../models/PlayerScore";
 import { PositionMap } from "../models/PositionMap";
 import { Lineup } from "../models/Lineup";
+import FplFetcher from "../fetchers/fplFetcher";
 
 export default class LineupService {
-  constructor(private picksWithScore: TeamPickWithScore[]) {}
+  constructor(
+    private fplFetcher: FplFetcher,
+    private picksWithScore: TeamPickWithScore[]
+  ) {}
 
   recommendLineup(): Lineup {
     const sortedPlayers = this.picksWithScore.sort(
@@ -56,5 +60,23 @@ export default class LineupService {
       captain: sortedPlayers[0].playerScore,
       viceCaptain: sortedPlayers[1].playerScore,
     };
+  }
+
+  async setLineup(lineup: Lineup) {
+    const picks = lineup.starting11.map((player, index) => ({
+      element: player.player.id,
+      position: index,
+      is_captain: lineup.captain.player.id === player.player.id,
+      is_vice_captain: lineup.viceCaptain.player.id === player.player.id,
+    }));
+    picks.push(
+      ...lineup.orderedSubs.map((player, index) => ({
+        element: player.player.id,
+        position: index + 11,
+        is_captain: false,
+        is_vice_captain: false,
+      }))
+    );
+    await this.fplFetcher.setLineup({ chips: null, picks: picks });
   }
 }

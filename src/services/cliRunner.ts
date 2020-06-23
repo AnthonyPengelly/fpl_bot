@@ -1,3 +1,4 @@
+import moment from "moment";
 import FplFetcher from "../fetchers/fplFetcher";
 import PlayersService from "./playersService";
 import RecommendationService from "./recommendationService";
@@ -31,12 +32,22 @@ export default class CliRunner {
   private picksWithScore: TeamPickWithScore[] = [];
   private nextEvent?: Gameweek;
 
+  public static RUN_CMD = "run";
   public static TOP_PLAYERS_CMD = "top-players";
   public static RECOMMEND_SQUAD_CMD = "recommend-squad";
   public static RECOMMEND_TRANSFERS_CMD = "recommend-transfers";
   public static RECOMMEND_LINEUP_CMD = "recommend-lineup";
-  public static SET_LINEUP = "set-lineup";
-  public static PERFORM_TRANSFERS = "perform-transfers";
+  public static SET_LINEUP_CMD = "set-lineup";
+  public static PERFORM_TRANSFERS_CMD = "perform-transfers";
+  public static commands = [
+    CliRunner.RUN_CMD,
+    CliRunner.TOP_PLAYERS_CMD,
+    CliRunner.RECOMMEND_SQUAD_CMD,
+    CliRunner.RECOMMEND_TRANSFERS_CMD,
+    CliRunner.RECOMMEND_LINEUP_CMD,
+    CliRunner.SET_LINEUP_CMD,
+    CliRunner.PERFORM_TRANSFERS_CMD,
+  ];
 
   async init() {
     this.fplFetcher = new FplFetcher();
@@ -45,12 +56,15 @@ export default class CliRunner {
     const fixtures = await this.fplFetcher.getFixtures(this.nextEvent.id);
     this.playerService = new PlayersService(overview, fixtures);
     this.players = await this.playerService.getAllPlayerScores();
-    this.myTeam = await this.fplFetcher.getMyTeam();
-    this.picksWithScore = this.mapTeamToTeamPickWithScore(this.myTeam);
+    await this.updateMyTeamInfo();
     this.teamValidator = new TeamValidator();
     this.optimisationService = new OptimisationService(this.teamValidator);
-    this.lineupService = new LineupService(this.picksWithScore);
+    this.lineupService = new LineupService(
+      this.fplFetcher,
+      this.picksWithScore
+    );
     this.transferService = new TransferService(
+      this.fplFetcher,
       this.optimisationService,
       this.players,
       this.myTeam!,
@@ -66,6 +80,9 @@ export default class CliRunner {
 
   async run(command: string) {
     switch (command) {
+      case CliRunner.RUN_CMD:
+        this.runBot();
+        break;
       case CliRunner.TOP_PLAYERS_CMD:
         this.topPlayers();
         break;
@@ -78,19 +95,39 @@ export default class CliRunner {
       case CliRunner.RECOMMEND_LINEUP_CMD:
         this.recommendLineup();
         break;
-      case CliRunner.SET_LINEUP:
+      case CliRunner.SET_LINEUP_CMD:
         this.setLineup();
         break;
-      case CliRunner.PERFORM_TRANSFERS:
+      case CliRunner.PERFORM_TRANSFERS_CMD:
         this.performTransfers();
         break;
       default:
         console.error(
-          `Please enter a command to begin. The currently supported commands are:
-          ${CliRunner.TOP_PLAYERS_CMD}, ${CliRunner.RECOMMEND_SQUAD_CMD}, ${CliRunner.RECOMMEND_TRANSFERS_CMD}, ${CliRunner.RECOMMEND_LINEUP_CMD}, ${CliRunner.PERFORM_TRANSFERS}`
+          "Please enter a command to begin. The currently supported commands are: " +
+            `${CliRunner.commands.join(", ")}`
         );
         exit(1);
     }
+  }
+
+  private async runBot() {
+    console.log("Running Bot...");
+    const timeNow = moment();
+    const deadlineTime = moment(this.nextEvent!.deadline_time);
+    const hoursTilDeadline = deadlineTime.diff(timeNow, "hours");
+    if (hoursTilDeadline < 24) {
+      console.log(
+        `Deadline in ${hoursTilDeadline} hours, performing transfers`
+      );
+      await this.performTransfers();
+      this.updateMyTeamInfo();
+    } else {
+      console.log(
+        `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week`
+      );
+    }
+    console.log("Updating lineup...");
+    await this.setLineup();
   }
 
   private topPlayers() {
@@ -189,42 +226,15 @@ export default class CliRunner {
 
   private async performTransfers() {
     const recommendation = await this.recommendTransfers();
-    if (
-      this.myTeam!.transfers.limit &&
-      recommendation.playersIn.length >
-        this.myTeam!.transfers.limit - this.myTeam!.transfers.made
-    ) {
-      console.log(
-        `Transfers requested: ${
-          recommendation.playersIn.length
-        } exceeds limit: ${
-          this.myTeam!.transfers.limit - this.myTeam!.transfers.made
-        }, postponing until next week`
-      );
-      return;
+    const didPerformTransfer = await this.transferService!.performTransfers(
+      recommendation,
+      this.nextEvent!
+    );
+    if (didPerformTransfer) {
+      console.log("Successfully performed transfers");
+    } else {
+      console.log("Did not perform transfer");
     }
-    if (recommendation.scoreImprovement < 0) {
-      console.log("Transfer has a negative value, not performing!");
-      return;
-    }
-    const transferRequest: TransferRequest = {
-      chips: null,
-      entry: parseInt(process.env.TEAM_ID!),
-      event: this.nextEvent!.id,
-      transfers: recommendation.playersIn.map((playerIn, index) => {
-        const playerOut = recommendation.playersOut[index];
-        return {
-          element_in: playerIn.player.id,
-          element_out: playerOut.player.id,
-          purchase_price: playerIn.value * 10,
-          selling_price: this.myTeam!.picks.find(
-            (pick) => pick.element === playerOut.player.id
-          )!.selling_price,
-        };
-      }),
-    };
-    await this.fplFetcher!.performTransfers(transferRequest);
-    console.log("Successfully performed transfers");
   }
 
   private recommendLineup() {
@@ -240,22 +250,13 @@ export default class CliRunner {
 
   private async setLineup() {
     const lineup = this.recommendLineup();
-    const picks = lineup.starting11.map((player, index) => ({
-      element: player.player.id,
-      position: index,
-      is_captain: lineup.captain.player.id === player.player.id,
-      is_vice_captain: lineup.viceCaptain.player.id === player.player.id,
-    }));
-    picks.push(
-      ...lineup.orderedSubs.map((player, index) => ({
-        element: player.player.id,
-        position: index + 11,
-        is_captain: false,
-        is_vice_captain: false,
-      }))
-    );
-    await this.fplFetcher!.setLineup({ chips: null, picks: picks });
+    await this.lineupService!.setLineup(lineup);
     console.log("Successfully updated lineup");
+  }
+
+  private async updateMyTeamInfo() {
+    this.myTeam = await this.fplFetcher!.getMyTeam();
+    this.picksWithScore = this.mapTeamToTeamPickWithScore(this.myTeam);
   }
 
   private mapTeamToTeamPickWithScore(myTeam: MyTeam): TeamPickWithScore[] {

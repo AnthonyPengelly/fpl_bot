@@ -3,9 +3,11 @@ import { TransferWithScores } from "../models/TransferWithScores";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import OptimisationService from "./optimisationService";
 import { fullSquad } from "../config/optimisationSettings";
+import FplFetcher from "../fetchers/fplFetcher";
 
 export default class TransferService {
   constructor(
+    private fplFetcher: FplFetcher,
     private optimisationService: OptimisationService,
     private playerScores: PlayerScore[],
     private myTeam: MyTeam,
@@ -113,5 +115,42 @@ export default class TransferService {
       });
     });
     return options.sort((a, b) => b.scoreImprovement - a.scoreImprovement)[0];
+  }
+
+  async performTransfers(transfer: TransferWithScores, nextEvent: Gameweek) {
+    if (
+      this.myTeam!.transfers.limit &&
+      transfer.playersIn.length >
+        this.myTeam!.transfers.limit - this.myTeam!.transfers.made
+    ) {
+      console.log(
+        `Transfers requested: ${transfer.playersIn.length} exceeds limit: ${
+          this.myTeam!.transfers.limit - this.myTeam!.transfers.made
+        }, postponing until next week`
+      );
+      return false;
+    }
+    if (transfer.scoreImprovement < 0) {
+      console.log("Transfer has a negative value, not performing!");
+      return false;
+    }
+    const transferRequest: TransferRequest = {
+      chips: null,
+      entry: parseInt(process.env.TEAM_ID!),
+      event: nextEvent.id,
+      transfers: transfer.playersIn.map((playerIn, index) => {
+        const playerOut = transfer.playersOut[index];
+        return {
+          element_in: playerIn.player.id,
+          element_out: playerOut.player.id,
+          purchase_price: playerIn.value * 10,
+          selling_price: this.myTeam!.picks.find(
+            (pick) => pick.element === playerOut.player.id
+          )!.selling_price,
+        };
+      }),
+    };
+    await this.fplFetcher!.performTransfers(transferRequest);
+    return true;
   }
 }
