@@ -14,6 +14,7 @@ import {
   skeleton442Squad,
   skeleton343Squad,
 } from "../config/optimisationSettings";
+import TransferService from "./transferService";
 
 export default class CliRunner {
   private fplFetcher?: FplFetcher;
@@ -21,6 +22,7 @@ export default class CliRunner {
   private recommendationService?: RecommendationService;
   private optimisationService?: OptimisationService;
   private teamValidator?: TeamValidator;
+  private transferService?: TransferService;
   private players: PlayerScore[] = [];
 
   public static TOP_PLAYERS_CMD = "top-players";
@@ -36,8 +38,13 @@ export default class CliRunner {
     this.players = await this.playerService.getAllPlayerScores();
     this.teamValidator = new TeamValidator();
     this.optimisationService = new OptimisationService(this.teamValidator);
+    this.transferService = new TransferService(
+      this.optimisationService,
+      this.players
+    );
     this.recommendationService = new RecommendationService(
       this.optimisationService,
+      this.transferService,
       this.players
     );
   }
@@ -147,13 +154,11 @@ export default class CliRunner {
     const recommendation = this.recommendationService!.recommendTransfers(
       myTeam
     );
-    console.log("Player Out:");
-    DisplayService.displayHeader();
-    DisplayService.displayPlayer(recommendation.playerOut);
+    console.log("Players Out:");
+    DisplayService.displayPlayers(recommendation.playersOut);
     console.log();
-    console.log("Player In");
-    DisplayService.displayHeader();
-    DisplayService.displayPlayer(recommendation.playerIn);
+    console.log("Players In");
+    DisplayService.displayPlayers(recommendation.playersIn);
     console.log();
     console.log(
       `Score improvement: ${recommendation.scoreImprovement.toFixed(2)}`

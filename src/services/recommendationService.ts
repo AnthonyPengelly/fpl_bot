@@ -1,16 +1,13 @@
 import { OptimisationSettings } from "../config/optimisationSettings";
 import PlayerScore from "../models/PlayerScore";
 import OptimisationService from "./optimisationService";
-import { TransferWithScores } from "../models/TransferWithScores";
-
-interface TeamPickWithScore {
-  pick: FantasyPick;
-  playerScore: PlayerScore;
-}
+import { TeamPickWithScore } from "../models/TeamPickWithScore";
+import TransferService from "./transferService";
 
 export default class RecommendationService {
   constructor(
     private optimisationService: OptimisationService,
+    private transferService: TransferService,
     private playerScores: PlayerScore[]
   ) {}
 
@@ -24,45 +21,24 @@ export default class RecommendationService {
 
   recommendTransfers(myTeam: MyTeam) {
     const teamPickWithScore = this.mapTeamToTeamPickWithScore(myTeam);
-    return this.recommendOneTransfer(teamPickWithScore, myTeam);
-  }
-
-  private recommendOneTransfer(
-    teamWithScores: TeamPickWithScore[],
-    myTeam: MyTeam
-  ): TransferWithScores {
-    const options = teamWithScores.map((pickWithScore) => {
-      console.log(
-        `Attempting to replace ${pickWithScore.playerScore.player.web_name}`
-      );
-      const remainingBudget =
-        (myTeam.transfers.bank + pickWithScore.pick.selling_price) / 10;
-      const possiblePlayers = this.playerScores
-        .filter(
-          (player) =>
-            player.position.id === pickWithScore.playerScore.position.id
-        )
-        .filter((player) => player.value <= remainingBudget)
-        .filter(
-          (player) =>
-            teamWithScores.filter(
-              (pick) => pick.playerScore.player.id === player.player.id
-            ).length === 0
-        );
-      const suggestion = possiblePlayers.sort((a, b) => b.score - a.score)[0];
-      const improvement = suggestion.score - pickWithScore.playerScore.score;
-      console.log(
-        `Suggested ${suggestion.player.web_name} to replace ${
-          pickWithScore.playerScore.player.web_name
-        } for an improvement of ${improvement.toFixed(2)}`
-      );
-      return {
-        playerIn: suggestion,
-        playerOut: pickWithScore.playerScore,
-        scoreImprovement: improvement,
-      };
-    });
-    return options.sort((a, b) => b.scoreImprovement - a.scoreImprovement)[0];
+    const singleTransfer = this.transferService.recommendOneTransfer(
+      teamPickWithScore,
+      myTeam
+    );
+    const twoTransfers = this.transferService.recommendTwoTransfers(
+      teamPickWithScore,
+      myTeam
+    );
+    const twoTransfersAreDouble =
+      twoTransfers.scoreImprovement > singleTransfer.scoreImprovement * 2;
+    const twoTransfersAre150Percent =
+      twoTransfers.scoreImprovement > singleTransfer.scoreImprovement * 1.5;
+    console.log(myTeam.transfers.limit);
+    if (myTeam.transfers.limit === 1) {
+      return twoTransfersAreDouble ? twoTransfers : singleTransfer;
+    }
+    // Limit is two - go for 2 a bit more readily
+    return twoTransfersAre150Percent ? twoTransfers : singleTransfer;
   }
 
   private mapTeamToTeamPickWithScore(myTeam: MyTeam): TeamPickWithScore[] {
