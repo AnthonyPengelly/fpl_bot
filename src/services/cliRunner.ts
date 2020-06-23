@@ -142,7 +142,21 @@ export default class CliRunner {
     DisplayService.displaySquad(skeleton532, "Skeleton 532 Squad");
   }
 
-  private recommendTransfers() {
-    console.log("TODO");
+  private async recommendTransfers() {
+    const myTeam = await this.fplFetcher!.getMyTeam();
+    const recommendation = this.recommendationService!.recommendTransfers(
+      myTeam
+    );
+    console.log("Player Out:");
+    DisplayService.displayHeader();
+    DisplayService.displayPlayer(recommendation.playerOut);
+    console.log();
+    console.log("Player In");
+    DisplayService.displayHeader();
+    DisplayService.displayPlayer(recommendation.playerIn);
+    console.log();
+    console.log(
+      `Score improvement: ${recommendation.scoreImprovement.toFixed(2)}`
+    );
   }
 }

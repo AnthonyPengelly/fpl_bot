@@ -3,40 +3,50 @@ import PlayerScore from "../models/PlayerScore";
 import { OptimisationSettings } from "../config/optimisationSettings";
 
 export default class TeamValidator {
-  isValid = (players: PlayerScore[], settings: OptimisationSettings) => {
-    if (players.length > settings.maxPlayers) {
+  isValid = (
+    players: PlayerScore[],
+    settings: OptimisationSettings,
+    otherPlayersInTeam: PlayerScore[]
+  ) => {
+    const fullTeam = players.concat(otherPlayersInTeam);
+
+    if (this.anyDuplicates(fullTeam)) {
+      return false;
+    }
+
+    if (fullTeam.length > settings.maxPlayers) {
       return false;
     }
 
     if (
-      players.filter((player) => player.position.id === PositionMap.GOALKEEPER)
+      fullTeam.filter((player) => player.position.id === PositionMap.GOALKEEPER)
         .length > settings.goalkeepers
     ) {
       return false;
     }
 
     if (
-      players.filter((player) => player.position.id === PositionMap.DEFENDER)
+      fullTeam.filter((player) => player.position.id === PositionMap.DEFENDER)
         .length > settings.defenders
     ) {
       return false;
     }
 
     if (
-      players.filter((player) => player.position.id === PositionMap.MIDFIELDER)
+      fullTeam.filter((player) => player.position.id === PositionMap.MIDFIELDER)
         .length > settings.midfielders
     ) {
       return false;
     }
 
     if (
-      players.filter((player) => player.position.id === PositionMap.FORWARD)
+      fullTeam.filter((player) => player.position.id === PositionMap.FORWARD)
         .length > settings.forwards
     ) {
       return false;
     }
 
-    if (this.tooManyPlayersFromOneTeam(players, settings)) {
+    if (this.tooManyPlayersFromOneTeam(fullTeam, settings)) {
       return false;
     }
 
@@ -60,6 +70,20 @@ export default class TeamValidator {
       Object.values(playersPerTeam).filter(
         (players) => players.length > settings.maxPlayersPerTeam
       ).length !== 0
+    );
+  };
+
+  private anyDuplicates = (players: PlayerScore[]) => {
+    const playersById: { [index: number]: PlayerScore[] } = {};
+    players.forEach((playerScore) => {
+      playersById[playerScore.player.id] = playersById[playerScore.player.id]
+        ? playersById[playerScore.player.id].concat(playerScore)
+        : [playerScore];
+    });
+
+    return (
+      Object.values(playersById).filter((players) => players.length > 1)
+        .length !== 0
     );
   };
 }

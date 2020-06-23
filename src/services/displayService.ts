@@ -23,7 +23,7 @@ export default class DisplayService {
   }
 
   static displayPlayers(players: PlayerScore[]) {
-    console.log("| ID\t| Value\t\t| Score\t| ROI\t| Position\t| Name");
+    this.displayHeader();
     players.forEach((player) => this.displayPlayer(player));
     console.log();
   }
@@ -38,5 +38,9 @@ export default class DisplayService {
         playerScore.player.web_name
       }`
     );
+  }
+
+  static displayHeader() {
+    console.log("| ID\t| Value\t\t| Score\t| ROI\t| Position\t| Name");
   }
 }

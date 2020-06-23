@@ -8,7 +8,8 @@ export default class OptimisationService {
   getOptimalTeamForSettings = (
     players: PlayerScore[],
     settings: OptimisationSettings,
-    budget: number
+    budget: number,
+    otherPlayersInTeam: PlayerScore[] = []
   ) => {
     const W = (budget - settings.budgetOffset) * 100;
     let cache: PlayerScore[][][] = [];
@@ -35,7 +36,8 @@ export default class OptimisationService {
               excluded.reduce(
                 (total, player) => total + Math.round(player.score * 100),
                 0
-              ) && this.teamValidator.isValid(included, settings)
+              ) &&
+            this.teamValidator.isValid(included, settings, otherPlayersInTeam)
               ? included
               : excluded;
         } else {
