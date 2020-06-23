@@ -30,6 +30,9 @@ export default class ScoreService {
           ScoreWeightings.TeamStrengthForPosition.Weighting) /
         ScoreWeightings.TeamStrengthForPosition.Max;
     });
+    score =
+      (score * player.chance_of_playing_next_round) /
+      ScoreWeightings.ChanceOfPlaying.Max;
     return score;
   }
 
