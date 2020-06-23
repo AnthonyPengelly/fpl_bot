@@ -15,7 +15,7 @@ export const fullSquad: OptimisationSettings = {
   midfielders: 5,
   forwards: 3,
   budgetOffset: 0,
-  maxPlayersPerTeam: 4,
+  maxPlayersPerTeam: 3,
 };
 
 export const skeleton442Squad: OptimisationSettings = {
@@ -25,7 +25,7 @@ export const skeleton442Squad: OptimisationSettings = {
   midfielders: 4,
   forwards: 2,
   budgetOffset: 4 * 4.7,
-  maxPlayersPerTeam: 4,
+  maxPlayersPerTeam: 3,
 };
 
 export const skeleton433Squad: OptimisationSettings = {
@@ -35,7 +35,7 @@ export const skeleton433Squad: OptimisationSettings = {
   midfielders: 3,
   forwards: 3,
   budgetOffset: 4 * 4.7,
-  maxPlayersPerTeam: 4,
+  maxPlayersPerTeam: 3,
 };
 
 export const skeleton343Squad: OptimisationSettings = {
@@ -45,7 +45,7 @@ export const skeleton343Squad: OptimisationSettings = {
   midfielders: 4,
   forwards: 3,
   budgetOffset: 4 * 4.7,
-  maxPlayersPerTeam: 4,
+  maxPlayersPerTeam: 3,
 };
 
 export const skeleton532Squad: OptimisationSettings = {
@@ -55,5 +55,5 @@ export const skeleton532Squad: OptimisationSettings = {
   midfielders: 3,
   forwards: 2,
   budgetOffset: 4 * 4.7,
-  maxPlayersPerTeam: 4,
+  maxPlayersPerTeam: 3,
 };
