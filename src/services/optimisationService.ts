@@ -10,7 +10,6 @@ export default class OptimisationService {
     settings: OptimisationSettings,
     budget: number
   ) => {
-    console.log(players.length);
     const W = (budget - settings.budgetOffset) * 100;
     let cache: PlayerScore[][][] = [];
     for (let g = 0; g < players.length + 1; g++) {

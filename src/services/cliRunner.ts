@@ -7,7 +7,13 @@ import { exit } from "process";
 import PlayerScore from "../models/PlayerScore";
 import DisplayService from "./displayService";
 import { PositionMap } from "../models/PositionMap";
-import { skeleton532Squad, fullSquad } from "../config/optimisationSettings";
+import {
+  skeleton532Squad,
+  fullSquad,
+  skeleton433Squad,
+  skeleton442Squad,
+  skeleton343Squad,
+} from "../config/optimisationSettings";
 
 export default class CliRunner {
   private fplFetcher?: FplFetcher;
@@ -37,7 +43,6 @@ export default class CliRunner {
   }
 
   async run(command: string) {
-    console.log(command);
     switch (command) {
       case CliRunner.TOP_PLAYERS_CMD:
         this.topPlayers();
@@ -114,19 +119,19 @@ export default class CliRunner {
     DisplayService.displaySquad(all15Positions, "Full Squad");
 
     const skeleton442 = this.recommendationService!.recommendATeam(
-      skeleton532Squad,
+      skeleton442Squad,
       100
     );
     DisplayService.displaySquad(skeleton442, "Skeleton 442 Squad");
 
     const skeleton433 = this.recommendationService!.recommendATeam(
-      skeleton532Squad,
+      skeleton433Squad,
       100
     );
     DisplayService.displaySquad(skeleton433, "Skeleton 433 Squad");
 
     const skeleton343 = this.recommendationService!.recommendATeam(
-      skeleton532Squad,
+      skeleton343Squad,
       100
     );
     DisplayService.displaySquad(skeleton343, "Skeleton 343 Squad");
