@@ -5,13 +5,10 @@ import { Lineup } from "../models/Lineup";
 import FplFetcher from "../fetchers/fplFetcher";
 
 export default class LineupService {
-  constructor(
-    private fplFetcher: FplFetcher,
-    private picksWithScore: TeamPickWithScore[]
-  ) {}
+  constructor(private fplFetcher: FplFetcher) {}
 
-  recommendLineup(): Lineup {
-    const sortedPlayers = this.picksWithScore.sort(
+  recommendLineup(picksWithScore: TeamPickWithScore[]): Lineup {
+    const sortedPlayers = picksWithScore.sort(
       (a, b) => b.playerScore.score - a.playerScore.score
     );
     const starting11: PlayerScore[] = [];

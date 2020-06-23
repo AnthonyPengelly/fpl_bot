@@ -2,22 +2,18 @@ import ScoreService from "./scoreService";
 import PlayerScore from "../models/PlayerScore";
 
 export default class PlayersService {
-  constructor(private overview: Overview, private fixtures: Fixture[]) {}
-
-  async getAllPlayerScores() {
+  async getAllPlayerScores(overview: Overview, fixtures: Fixture[]) {
     const playerScores: PlayerScore[] = [];
-    const teams = this.indexTeams(this.overview.teams);
+    const teams = this.indexTeams(overview.teams);
 
-    this.overview.elements.forEach((player) => {
+    overview.elements.forEach((player) => {
       const team = teams[player.team];
-      const opponents = this.getOpponents(team, teams, this.fixtures);
+      const opponents = this.getOpponents(team, teams, fixtures);
       const score = ScoreService.calculateScore(player, team, opponents);
       playerScores.push(
         new PlayerScore(
           player,
-          this.overview.element_types.filter(
-            (e) => e.id === player.element_type
-          )[0],
+          overview.element_types.filter((e) => e.id === player.element_type)[0],
           player.now_cost / 10,
           score,
           (score / player.now_cost) * 100

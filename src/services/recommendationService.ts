@@ -1,33 +1,47 @@
 import { OptimisationSettings } from "../config/optimisationSettings";
 import PlayerScore from "../models/PlayerScore";
 import OptimisationService from "./optimisationService";
-import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import TransferService from "./transferService";
+import { TeamPickWithScore } from "../models/TeamPickWithScore";
 
 export default class RecommendationService {
   constructor(
     private optimisationService: OptimisationService,
-    private transferService: TransferService,
-    private playerScores: PlayerScore[],
-    private myTeam: MyTeam
+    private transferService: TransferService
   ) {}
 
-  recommendATeam(settings: OptimisationSettings, budget: number) {
+  recommendATeam(
+    playerScores: PlayerScore[],
+    settings: OptimisationSettings,
+    budget: number
+  ) {
     return this.optimisationService.getOptimalTeamForSettings(
-      this.playerScores,
+      playerScores,
       settings,
       budget
     );
   }
 
-  recommendTransfers() {
-    const singleTransfer = this.transferService.recommendOneTransfer();
-    const twoTransfers = this.transferService.recommendTwoTransfers();
+  recommendTransfers(
+    playerScores: PlayerScore[],
+    myTeam: MyTeam,
+    picksWithScore: TeamPickWithScore[]
+  ) {
+    const singleTransfer = this.transferService.recommendOneTransfer(
+      playerScores,
+      myTeam,
+      picksWithScore
+    );
+    const twoTransfers = this.transferService.recommendTwoTransfers(
+      playerScores,
+      myTeam,
+      picksWithScore
+    );
     const twoTransfersAreDouble =
       twoTransfers.scoreImprovement > singleTransfer.scoreImprovement * 2;
     const twoTransfersAre150Percent =
       twoTransfers.scoreImprovement > singleTransfer.scoreImprovement * 1.5;
-    if (this.myTeam.transfers.limit === 1) {
+    if (myTeam.transfers.limit === 1) {
       return twoTransfersAreDouble ? twoTransfers : singleTransfer;
     }
     // Limit is two or unlimited - go for 2 a bit more readily

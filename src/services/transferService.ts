@@ -8,20 +8,21 @@ import FplFetcher from "../fetchers/fplFetcher";
 export default class TransferService {
   constructor(
     private fplFetcher: FplFetcher,
-    private optimisationService: OptimisationService,
-    private playerScores: PlayerScore[],
-    private myTeam: MyTeam,
-    private picksWithScore: TeamPickWithScore[]
+    private optimisationService: OptimisationService
   ) {}
 
-  recommendOneTransfer(): TransferWithScores {
-    const options = this.picksWithScore.map((pickWithScore) => {
+  recommendOneTransfer(
+    playerScores: PlayerScore[],
+    myTeam: MyTeam,
+    picksWithScore: TeamPickWithScore[]
+  ): TransferWithScores {
+    const options = picksWithScore.map((pickWithScore) => {
       console.log(
         `Attempting to replace ${pickWithScore.playerScore.player.web_name}`
       );
       const remainingBudget =
-        (this.myTeam.transfers.bank + pickWithScore.pick.selling_price) / 10;
-      const possiblePlayers = this.playerScores
+        (myTeam.transfers.bank + pickWithScore.pick.selling_price) / 10;
+      const possiblePlayers = playerScores
         .filter(
           (player) =>
             player.position.id === pickWithScore.playerScore.position.id
@@ -29,7 +30,7 @@ export default class TransferService {
         .filter((player) => player.value <= remainingBudget)
         .filter(
           (player) =>
-            this.picksWithScore.filter(
+            picksWithScore.filter(
               (pick) => pick.playerScore.player.id === player.player.id
             ).length === 0
         );
@@ -49,10 +50,14 @@ export default class TransferService {
     return options.sort((a, b) => b.scoreImprovement - a.scoreImprovement)[0];
   }
 
-  recommendTwoTransfers(): TransferWithScores {
+  recommendTwoTransfers(
+    playerScores: PlayerScore[],
+    myTeam: MyTeam,
+    picksWithScore: TeamPickWithScore[]
+  ): TransferWithScores {
     const options: TransferWithScores[] = [];
-    this.picksWithScore.forEach((pick1) => {
-      this.picksWithScore.forEach((pick2) => {
+    picksWithScore.forEach((pick1) => {
+      picksWithScore.forEach((pick2) => {
         if (pick1.playerScore.player.id === pick2.playerScore.player.id) {
           return;
         }
@@ -60,18 +65,18 @@ export default class TransferService {
           `Attempting to replace ${pick1.playerScore.player.web_name} and ${pick2.playerScore.player.web_name}`
         );
         const remainingBudget =
-          (this.myTeam.transfers.bank +
+          (myTeam.transfers.bank +
             pick1.pick.selling_price +
             pick2.pick.selling_price) /
           10;
-        const remainingTeam = this.picksWithScore
+        const remainingTeam = picksWithScore
           .map((pick) => pick.playerScore)
           .filter(
             (player) =>
               player.player.id !== pick1.playerScore.player.id &&
               player.player.id !== pick2.playerScore.player.id
           );
-        const possiblePlayers = this.playerScores
+        const possiblePlayers = playerScores
           .filter(
             (player) =>
               player.position.id === pick1.playerScore.position.id ||
@@ -80,7 +85,7 @@ export default class TransferService {
           .filter((player) => player.value <= remainingBudget - 4)
           .filter(
             (player) =>
-              this.picksWithScore.filter(
+              picksWithScore.filter(
                 (pick) => pick.playerScore.player.id === player.player.id
               ).length === 0
           );
@@ -117,15 +122,15 @@ export default class TransferService {
     return options.sort((a, b) => b.scoreImprovement - a.scoreImprovement)[0];
   }
 
-  async performTransfers(transfer: TransferWithScores, nextEvent: Gameweek) {
+  async performTransfers(transfer: TransferWithScores, nextEvent: Gameweek, myTeam: MyTeam) {
     if (
-      this.myTeam!.transfers.limit &&
+      myTeam.transfers.limit &&
       transfer.playersIn.length >
-        this.myTeam!.transfers.limit - this.myTeam!.transfers.made
+        myTeam.transfers.limit - myTeam.transfers.made
     ) {
       console.log(
         `Transfers requested: ${transfer.playersIn.length} exceeds limit: ${
-          this.myTeam!.transfers.limit - this.myTeam!.transfers.made
+          myTeam.transfers.limit - myTeam.transfers.made
         }, postponing until next week`
       );
       return false;
@@ -144,7 +149,7 @@ export default class TransferService {
           element_in: playerIn.player.id,
           element_out: playerOut.player.id,
           purchase_price: playerIn.value * 10,
-          selling_price: this.myTeam!.picks.find(
+          selling_price: myTeam.picks.find(
             (pick) => pick.element === playerOut.player.id
           )!.selling_price,
         };

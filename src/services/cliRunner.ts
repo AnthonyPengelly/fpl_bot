@@ -20,17 +20,13 @@ import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import LineupService from "./lineupService";
 
 export default class CliRunner {
-  private fplFetcher?: FplFetcher;
-  private playerService?: PlayersService;
-  private recommendationService?: RecommendationService;
-  private optimisationService?: OptimisationService;
-  private teamValidator?: TeamValidator;
-  private transferService?: TransferService;
-  private lineupService?: LineupService;
-  private players: PlayerScore[] = [];
-  private myTeam?: MyTeam;
-  private picksWithScore: TeamPickWithScore[] = [];
-  private nextEvent?: Gameweek;
+  private fplFetcher: FplFetcher;
+  private playerService: PlayersService;
+  private recommendationService: RecommendationService;
+  private optimisationService: OptimisationService;
+  private teamValidator: TeamValidator;
+  private transferService: TransferService;
+  private lineupService: LineupService;
 
   public static RUN_CMD = "run";
   public static TOP_PLAYERS_CMD = "top-players";
@@ -49,57 +45,56 @@ export default class CliRunner {
     CliRunner.PERFORM_TRANSFERS_CMD,
   ];
 
-  async init() {
+  constructor() {
     this.fplFetcher = new FplFetcher();
-    const overview = await this.fplFetcher.getOverview();
-    this.nextEvent = overview.events.filter((event) => event.is_next)[0];
-    const fixtures = await this.fplFetcher.getFixtures(this.nextEvent.id);
-    this.playerService = new PlayersService(overview, fixtures);
-    this.players = await this.playerService.getAllPlayerScores();
-    await this.updateMyTeamInfo();
+    this.playerService = new PlayersService();
     this.teamValidator = new TeamValidator();
     this.optimisationService = new OptimisationService(this.teamValidator);
-    this.lineupService = new LineupService(
-      this.fplFetcher,
-      this.picksWithScore
-    );
+    this.lineupService = new LineupService(this.fplFetcher);
     this.transferService = new TransferService(
       this.fplFetcher,
-      this.optimisationService,
-      this.players,
-      this.myTeam!,
-      this.picksWithScore
+      this.optimisationService
     );
     this.recommendationService = new RecommendationService(
       this.optimisationService,
-      this.transferService,
-      this.players,
-      this.myTeam!
+      this.transferService
     );
   }
 
+  async init() {}
+
   async run(command: string) {
+    const overview = await this.fplFetcher.getOverview();
+    const nextEvent = overview.events.filter((event) => event.is_next)[0];
+    const fixtures = await this.fplFetcher.getFixtures(nextEvent.id);
+    const players = await this.playerService.getAllPlayerScores(
+      overview,
+      fixtures
+    );
+    const myTeam = await this.fplFetcher.getMyTeam();
+    const picksWithScore = this.mapTeamToTeamPickWithScore(myTeam, players);
+
     switch (command) {
       case CliRunner.RUN_CMD:
-        this.runBot();
+        this.runBot(players, myTeam, picksWithScore, nextEvent);
         break;
       case CliRunner.TOP_PLAYERS_CMD:
-        this.topPlayers();
+        this.topPlayers(players);
         break;
       case CliRunner.RECOMMEND_SQUAD_CMD:
-        this.recommendSquad();
+        this.recommendSquad(players);
         break;
       case CliRunner.RECOMMEND_TRANSFERS_CMD:
-        this.recommendTransfers();
+        this.recommendTransfers(players, myTeam, picksWithScore);
         break;
       case CliRunner.RECOMMEND_LINEUP_CMD:
-        this.recommendLineup();
+        this.recommendLineup(picksWithScore);
         break;
       case CliRunner.SET_LINEUP_CMD:
-        this.setLineup();
+        this.setLineup(picksWithScore);
         break;
       case CliRunner.PERFORM_TRANSFERS_CMD:
-        this.performTransfers();
+        this.performTransfers(players, myTeam, picksWithScore, nextEvent);
         break;
       default:
         console.error(
@@ -110,108 +105,130 @@ export default class CliRunner {
     }
   }
 
-  private async runBot() {
+  private async runBot(
+    players: PlayerScore[],
+    myTeam: MyTeam,
+    picksWithScore: TeamPickWithScore[],
+    nextEvent: Gameweek
+  ) {
     console.log("Running Bot...");
     const timeNow = moment();
-    const deadlineTime = moment(this.nextEvent!.deadline_time);
+    const deadlineTime = moment(nextEvent.deadline_time);
     const hoursTilDeadline = deadlineTime.diff(timeNow, "hours");
     if (hoursTilDeadline < 24) {
       console.log(
         `Deadline in ${hoursTilDeadline} hours, performing transfers`
       );
-      await this.performTransfers();
-      this.updateMyTeamInfo();
+      await this.performTransfers(players, myTeam, picksWithScore, nextEvent);
     } else {
       console.log(
         `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week`
       );
     }
     console.log("Updating lineup...");
-    await this.setLineup();
+    const myNewTeam = await this.fplFetcher.getMyTeam();
+    const newPicksWithScore = this.mapTeamToTeamPickWithScore(
+      myNewTeam,
+      players
+    );
+    await this.setLineup(newPicksWithScore);
   }
 
-  private topPlayers() {
+  private topPlayers(players: PlayerScore[]) {
     console.log("All Players:");
-    DisplayService.displayPlayers(this.players.slice(0, 40));
+    DisplayService.displayPlayers(players.slice(0, 40));
 
     console.log("Goalkeepers");
     DisplayService.displayPlayers(
-      this.players
+      players
         .filter((player) => player.position.id === PositionMap.GOALKEEPER)
         .slice(0, 10)
     );
 
     console.log("Defenders");
     DisplayService.displayPlayers(
-      this.players
+      players
         .filter((player) => player.position.id === PositionMap.DEFENDER)
         .slice(0, 20)
     );
 
     console.log("Midfielders");
     DisplayService.displayPlayers(
-      this.players
+      players
         .filter((player) => player.position.id === PositionMap.MIDFIELDER)
         .slice(0, 20)
     );
 
     console.log("Forwards");
     DisplayService.displayPlayers(
-      this.players
+      players
         .filter((player) => player.position.id === PositionMap.FORWARD)
         .slice(0, 20)
     );
 
-    const goalkeepers = this.players
+    const goalkeepers = players
       .filter((player) => player.position.singular_name_short === "GKP")
       .slice(0, 2);
-    const defenders = this.players
+    const defenders = players
       .filter((player) => player.position.singular_name_short === "DEF")
       .slice(0, 5);
-    const midfielders = this.players
+    const midfielders = players
       .filter((player) => player.position.singular_name_short === "MID")
       .slice(0, 5);
-    const forwards = this.players
+    const forwards = players
       .filter((player) => player.position.singular_name_short === "FWD")
       .slice(0, 3);
     const bestSquad = goalkeepers.concat(defenders, midfielders, forwards);
     DisplayService.displaySquad(bestSquad, "Best Squad");
   }
 
-  private recommendSquad() {
-    const all15Positions = this.recommendationService!.recommendATeam(
+  private recommendSquad(players: PlayerScore[]) {
+    const all15Positions = this.recommendationService.recommendATeam(
+      players,
       fullSquad,
       100
     );
     DisplayService.displaySquad(all15Positions, "Full Squad");
 
-    const skeleton442 = this.recommendationService!.recommendATeam(
+    const skeleton442 = this.recommendationService.recommendATeam(
+      players,
       skeleton442Squad,
       100
     );
     DisplayService.displaySquad(skeleton442, "Skeleton 442 Squad");
 
-    const skeleton433 = this.recommendationService!.recommendATeam(
+    const skeleton433 = this.recommendationService.recommendATeam(
+      players,
       skeleton433Squad,
       100
     );
     DisplayService.displaySquad(skeleton433, "Skeleton 433 Squad");
 
-    const skeleton343 = this.recommendationService!.recommendATeam(
+    const skeleton343 = this.recommendationService.recommendATeam(
+      players,
       skeleton343Squad,
       100
     );
     DisplayService.displaySquad(skeleton343, "Skeleton 343 Squad");
 
-    const skeleton532 = this.recommendationService!.recommendATeam(
+    const skeleton532 = this.recommendationService.recommendATeam(
+      players,
       skeleton532Squad,
       100
     );
     DisplayService.displaySquad(skeleton532, "Skeleton 532 Squad");
   }
 
-  private async recommendTransfers() {
-    const recommendation = this.recommendationService!.recommendTransfers();
+  private async recommendTransfers(
+    playerScores: PlayerScore[],
+    myTeam: MyTeam,
+    picksWithScore: TeamPickWithScore[]
+  ) {
+    const recommendation = this.recommendationService.recommendTransfers(
+      playerScores,
+      myTeam,
+      picksWithScore
+    );
     console.log("Players Out:");
     DisplayService.displayPlayers(recommendation.playersOut);
     console.log();
@@ -224,11 +241,21 @@ export default class CliRunner {
     return recommendation;
   }
 
-  private async performTransfers() {
-    const recommendation = await this.recommendTransfers();
-    const didPerformTransfer = await this.transferService!.performTransfers(
+  private async performTransfers(
+    playerScores: PlayerScore[],
+    myTeam: MyTeam,
+    picksWithScore: TeamPickWithScore[],
+    nextEvent: Gameweek
+  ) {
+    const recommendation = await this.recommendTransfers(
+      playerScores,
+      myTeam,
+      picksWithScore
+    );
+    const didPerformTransfer = await this.transferService.performTransfers(
       recommendation,
-      this.nextEvent!
+      nextEvent,
+      myTeam
     );
     if (didPerformTransfer) {
       console.log("Successfully performed transfers");
@@ -237,8 +264,8 @@ export default class CliRunner {
     }
   }
 
-  private recommendLineup() {
-    const lineup = this.lineupService!.recommendLineup();
+  private recommendLineup(picksWithScore: TeamPickWithScore[]) {
+    const lineup = this.lineupService.recommendLineup(picksWithScore);
     DisplayService.displaySquad(lineup.starting11, "Starting XI");
     console.log();
     console.log("Subs (Ordered)");
@@ -248,23 +275,19 @@ export default class CliRunner {
     return lineup;
   }
 
-  private async setLineup() {
-    const lineup = this.recommendLineup();
-    await this.lineupService!.setLineup(lineup);
+  private async setLineup(picksWithScore: TeamPickWithScore[]) {
+    const lineup = this.recommendLineup(picksWithScore);
+    await this.lineupService.setLineup(lineup);
     console.log("Successfully updated lineup");
   }
 
-  private async updateMyTeamInfo() {
-    this.myTeam = await this.fplFetcher!.getMyTeam();
-    this.picksWithScore = this.mapTeamToTeamPickWithScore(this.myTeam);
-  }
-
-  private mapTeamToTeamPickWithScore(myTeam: MyTeam): TeamPickWithScore[] {
+  private mapTeamToTeamPickWithScore(
+    myTeam: MyTeam,
+    players: PlayerScore[]
+  ): TeamPickWithScore[] {
     return myTeam.picks.map((pick) => ({
       pick: pick,
-      playerScore: this.players.find(
-        (player) => player.player.id === pick.element
-      )!,
+      playerScore: players.find((player) => player.player.id === pick.element)!,
     }));
   }
 }
