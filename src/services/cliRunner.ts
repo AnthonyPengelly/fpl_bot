@@ -15,6 +15,8 @@ import {
   skeleton343Squad,
 } from "../config/optimisationSettings";
 import TransferService from "./transferService";
+import { TeamPickWithScore } from "../models/TeamPickWithScore";
+import LineupService from "./lineupService";
 
 export default class CliRunner {
   private fplFetcher?: FplFetcher;
@@ -23,11 +25,16 @@ export default class CliRunner {
   private optimisationService?: OptimisationService;
   private teamValidator?: TeamValidator;
   private transferService?: TransferService;
+  private lineupService?: LineupService;
   private players: PlayerScore[] = [];
+  private myTeam?: MyTeam;
+  private picksWithScore: TeamPickWithScore[] = [];
 
   public static TOP_PLAYERS_CMD = "top-players";
   public static RECOMMEND_SQUAD_CMD = "recommend-squad";
   public static RECOMMEND_TRANSFERS_CMD = "recommend-transfers";
+  public static RECOMMEND_LINEUP_CMD = "recommend-lineup";
+  public static SET_LINEUP = "set-lineup";
 
   async init() {
     this.fplFetcher = new FplFetcher();
@@ -36,16 +43,22 @@ export default class CliRunner {
     const fixtures = await this.fplFetcher.getFixtures(nextEvent.id);
     this.playerService = new PlayersService(overview, fixtures);
     this.players = await this.playerService.getAllPlayerScores();
+    this.myTeam = await this.fplFetcher.getMyTeam();
+    this.picksWithScore = this.mapTeamToTeamPickWithScore(this.myTeam);
     this.teamValidator = new TeamValidator();
     this.optimisationService = new OptimisationService(this.teamValidator);
+    this.lineupService = new LineupService(this.picksWithScore);
     this.transferService = new TransferService(
       this.optimisationService,
-      this.players
+      this.players,
+      this.myTeam!,
+      this.picksWithScore
     );
     this.recommendationService = new RecommendationService(
       this.optimisationService,
       this.transferService,
-      this.players
+      this.players,
+      this.myTeam!
     );
   }
 
@@ -60,10 +73,16 @@ export default class CliRunner {
       case CliRunner.RECOMMEND_TRANSFERS_CMD:
         this.recommendTransfers();
         break;
+      case CliRunner.RECOMMEND_LINEUP_CMD:
+        this.recommendLineup();
+        break;
+      case CliRunner.SET_LINEUP:
+        this.setLineup();
+        break;
       default:
         console.error(
           `Please enter a command to begin. The currently supported commands are:
-          ${CliRunner.TOP_PLAYERS_CMD}, ${CliRunner.RECOMMEND_SQUAD_CMD}, ${CliRunner.RECOMMEND_TRANSFERS_CMD}`
+          ${CliRunner.TOP_PLAYERS_CMD}, ${CliRunner.RECOMMEND_SQUAD_CMD}, ${CliRunner.RECOMMEND_TRANSFERS_CMD}, ${CliRunner.RECOMMEND_LINEUP_CMD}`
         );
         exit(1);
     }
@@ -150,10 +169,7 @@ export default class CliRunner {
   }
 
   private async recommendTransfers() {
-    const myTeam = await this.fplFetcher!.getMyTeam();
-    const recommendation = this.recommendationService!.recommendTransfers(
-      myTeam
-    );
+    const recommendation = this.recommendationService!.recommendTransfers();
     console.log("Players Out:");
     DisplayService.displayPlayers(recommendation.playersOut);
     console.log();
@@ -163,5 +179,45 @@ export default class CliRunner {
     console.log(
       `Score improvement: ${recommendation.scoreImprovement.toFixed(2)}`
     );
+  }
+
+  private recommendLineup() {
+    const lineup = this.lineupService!.recommendLineup();
+    DisplayService.displaySquad(lineup.starting11, "Starting XI");
+    console.log();
+    console.log("Subs (Ordered)");
+    DisplayService.displayPlayers(lineup.orderedSubs);
+    console.log(`Captain: ${lineup.captain.player.web_name}`);
+    console.log(`Vice Captain: ${lineup.viceCaptain.player.web_name}`);
+    return lineup;
+  }
+
+  private async setLineup() {
+    const lineup = this.recommendLineup();
+    const picks = lineup.starting11.map((player, index) => ({
+      element: player.player.id,
+      position: index,
+      is_captain: lineup.captain.player.id === player.player.id,
+      is_vice_captain: lineup.viceCaptain.player.id === player.player.id,
+    }));
+    picks.push(
+      ...lineup.orderedSubs.map((player, index) => ({
+        element: player.player.id,
+        position: index + 11,
+        is_captain: false,
+        is_vice_captain: false,
+      }))
+    );
+    await this.fplFetcher!.setLineup({ chips: null, picks: picks });
+    console.log("Successfully updated lineup");
+  }
+
+  private mapTeamToTeamPickWithScore(myTeam: MyTeam): TeamPickWithScore[] {
+    return myTeam.picks.map((pick) => ({
+      pick: pick,
+      playerScore: this.players.find(
+        (player) => player.player.id === pick.element
+      )!,
+    }));
   }
 }

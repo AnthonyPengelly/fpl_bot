@@ -48,4 +48,25 @@ export default class FplFetcher {
     });
     return myTeam;
   }
+
+  async setLineup(lineup: MyTeamRequest) {
+    console.log(lineup);
+    if (!process.env.TEAM_ID) {
+      throw "Env variable TEAM_ID must be set!";
+    }
+    let url = this.baseUrl + "/my-team/" + process.env.TEAM_ID + "/";
+    const response = await WebRequest.post(
+      url,
+      {
+        headers: {
+          Cookie: this.cookies,
+          "Content-Type": "application/json",
+        },
+      },
+      JSON.stringify(lineup)
+    );
+    if (response.statusCode !== 200) {
+      throw response.content;
+    }
+  }
 }

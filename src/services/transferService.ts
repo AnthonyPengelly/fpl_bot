@@ -7,19 +7,18 @@ import { fullSquad } from "../config/optimisationSettings";
 export default class TransferService {
   constructor(
     private optimisationService: OptimisationService,
-    private playerScores: PlayerScore[]
+    private playerScores: PlayerScore[],
+    private myTeam: MyTeam,
+    private picksWithScore: TeamPickWithScore[]
   ) {}
 
-  recommendOneTransfer(
-    teamWithScores: TeamPickWithScore[],
-    myTeam: MyTeam
-  ): TransferWithScores {
-    const options = teamWithScores.map((pickWithScore) => {
+  recommendOneTransfer(): TransferWithScores {
+    const options = this.picksWithScore.map((pickWithScore) => {
       console.log(
         `Attempting to replace ${pickWithScore.playerScore.player.web_name}`
       );
       const remainingBudget =
-        (myTeam.transfers.bank + pickWithScore.pick.selling_price) / 10;
+        (this.myTeam.transfers.bank + pickWithScore.pick.selling_price) / 10;
       const possiblePlayers = this.playerScores
         .filter(
           (player) =>
@@ -28,7 +27,7 @@ export default class TransferService {
         .filter((player) => player.value <= remainingBudget)
         .filter(
           (player) =>
-            teamWithScores.filter(
+            this.picksWithScore.filter(
               (pick) => pick.playerScore.player.id === player.player.id
             ).length === 0
         );
@@ -48,13 +47,10 @@ export default class TransferService {
     return options.sort((a, b) => b.scoreImprovement - a.scoreImprovement)[0];
   }
 
-  recommendTwoTransfers(
-    teamWithScores: TeamPickWithScore[],
-    myTeam: MyTeam
-  ): TransferWithScores {
+  recommendTwoTransfers(): TransferWithScores {
     const options: TransferWithScores[] = [];
-    teamWithScores.forEach((pick1) => {
-      teamWithScores.forEach((pick2) => {
+    this.picksWithScore.forEach((pick1) => {
+      this.picksWithScore.forEach((pick2) => {
         if (pick1.playerScore.player.id === pick2.playerScore.player.id) {
           return;
         }
@@ -62,11 +58,11 @@ export default class TransferService {
           `Attempting to replace ${pick1.playerScore.player.web_name} and ${pick2.playerScore.player.web_name}`
         );
         const remainingBudget =
-          (myTeam.transfers.bank +
+          (this.myTeam.transfers.bank +
             pick1.pick.selling_price +
             pick2.pick.selling_price) /
           10;
-        const remainingTeam = teamWithScores
+        const remainingTeam = this.picksWithScore
           .map((pick) => pick.playerScore)
           .filter(
             (player) =>
@@ -82,7 +78,7 @@ export default class TransferService {
           .filter((player) => player.value <= remainingBudget - 4)
           .filter(
             (player) =>
-              teamWithScores.filter(
+              this.picksWithScore.filter(
                 (pick) => pick.playerScore.player.id === player.player.id
               ).length === 0
           );
