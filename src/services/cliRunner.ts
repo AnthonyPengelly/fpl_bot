@@ -63,48 +63,47 @@ export default class CliRunner {
   }
 
   private topPlayers() {
-    const sortedPlayers = this.players.sort(this.compareScores);
     console.log("All Players:");
-    DisplayService.displayPlayers(sortedPlayers.slice(0, 40));
+    DisplayService.displayPlayers(this.players.slice(0, 40));
 
     console.log("Goalkeepers");
     DisplayService.displayPlayers(
-      sortedPlayers
+      this.players
         .filter((player) => player.position.id === PositionMap.GOALKEEPER)
         .slice(0, 10)
     );
 
     console.log("Defenders");
     DisplayService.displayPlayers(
-      sortedPlayers
+      this.players
         .filter((player) => player.position.id === PositionMap.DEFENDER)
         .slice(0, 20)
     );
 
     console.log("Midfielders");
     DisplayService.displayPlayers(
-      sortedPlayers
+      this.players
         .filter((player) => player.position.id === PositionMap.MIDFIELDER)
         .slice(0, 20)
     );
 
     console.log("Forwards");
     DisplayService.displayPlayers(
-      sortedPlayers
+      this.players
         .filter((player) => player.position.id === PositionMap.FORWARD)
         .slice(0, 20)
     );
 
-    const goalkeepers = sortedPlayers
+    const goalkeepers = this.players
       .filter((player) => player.position.singular_name_short === "GKP")
       .slice(0, 2);
-    const defenders = sortedPlayers
+    const defenders = this.players
       .filter((player) => player.position.singular_name_short === "DEF")
       .slice(0, 5);
-    const midfielders = sortedPlayers
+    const midfielders = this.players
       .filter((player) => player.position.singular_name_short === "MID")
       .slice(0, 5);
-    const forwards = sortedPlayers
+    const forwards = this.players
       .filter((player) => player.position.singular_name_short === "FWD")
       .slice(0, 3);
     const bestSquad = goalkeepers.concat(defenders, midfielders, forwards);
@@ -146,6 +145,4 @@ export default class CliRunner {
   private recommendTransfers() {
     console.log("TODO");
   }
-
-  private compareScores = (a: PlayerScore, b: PlayerScore) => b.score - a.score;
 }

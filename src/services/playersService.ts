@@ -24,7 +24,7 @@ export default class PlayersService {
         )
       );
     });
-    return playerScores;
+    return playerScores.sort(this.compareScores);
   }
 
   private getOpponents(team: Team, teams: Team[], fixtures: Fixture[]) {
@@ -52,4 +52,6 @@ export default class PlayersService {
     });
     return indexedTeams;
   }
+
+  private compareScores = (a: PlayerScore, b: PlayerScore) => b.score - a.score;
 }
