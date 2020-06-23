@@ -1,4 +1,4 @@
-export interface RecommendationSetting {
+export interface OptimisationSettings {
   maxPlayers: number;
   goalkeepers: number;
   defenders: number;
@@ -8,7 +8,7 @@ export interface RecommendationSetting {
   maxPlayersPerTeam: number;
 }
 
-export const fullSquad: RecommendationSetting = {
+export const fullSquad: OptimisationSettings = {
   maxPlayers: 15,
   goalkeepers: 2,
   defenders: 5,
@@ -18,7 +18,7 @@ export const fullSquad: RecommendationSetting = {
   maxPlayersPerTeam: 4,
 };
 
-export const skeleton442Squad: RecommendationSetting = {
+export const skeleton442Squad: OptimisationSettings = {
   maxPlayers: 11,
   goalkeepers: 1,
   defenders: 4,
@@ -28,7 +28,7 @@ export const skeleton442Squad: RecommendationSetting = {
   maxPlayersPerTeam: 4,
 };
 
-export const skeleton433Squad: RecommendationSetting = {
+export const skeleton433Squad: OptimisationSettings = {
   maxPlayers: 11,
   goalkeepers: 1,
   defenders: 4,
@@ -38,7 +38,7 @@ export const skeleton433Squad: RecommendationSetting = {
   maxPlayersPerTeam: 4,
 };
 
-export const skeleton343Squad: RecommendationSetting = {
+export const skeleton343Squad: OptimisationSettings = {
   maxPlayers: 11,
   goalkeepers: 1,
   defenders: 3,
@@ -48,7 +48,7 @@ export const skeleton343Squad: RecommendationSetting = {
   maxPlayersPerTeam: 4,
 };
 
-export const skeleton532Squad: RecommendationSetting = {
+export const skeleton532Squad: OptimisationSettings = {
   maxPlayers: 11,
   goalkeepers: 1,
   defenders: 5,
