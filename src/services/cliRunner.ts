@@ -29,18 +29,20 @@ export default class CliRunner {
   private players: PlayerScore[] = [];
   private myTeam?: MyTeam;
   private picksWithScore: TeamPickWithScore[] = [];
+  private nextEvent?: Gameweek;
 
   public static TOP_PLAYERS_CMD = "top-players";
   public static RECOMMEND_SQUAD_CMD = "recommend-squad";
   public static RECOMMEND_TRANSFERS_CMD = "recommend-transfers";
   public static RECOMMEND_LINEUP_CMD = "recommend-lineup";
   public static SET_LINEUP = "set-lineup";
+  public static PERFORM_TRANSFERS = "perform-transfers";
 
   async init() {
     this.fplFetcher = new FplFetcher();
     const overview = await this.fplFetcher.getOverview();
-    const nextEvent = overview.events.filter((event) => event.is_next)[0];
-    const fixtures = await this.fplFetcher.getFixtures(nextEvent.id);
+    this.nextEvent = overview.events.filter((event) => event.is_next)[0];
+    const fixtures = await this.fplFetcher.getFixtures(this.nextEvent.id);
     this.playerService = new PlayersService(overview, fixtures);
     this.players = await this.playerService.getAllPlayerScores();
     this.myTeam = await this.fplFetcher.getMyTeam();
@@ -79,10 +81,13 @@ export default class CliRunner {
       case CliRunner.SET_LINEUP:
         this.setLineup();
         break;
+      case CliRunner.PERFORM_TRANSFERS:
+        this.performTransfers();
+        break;
       default:
         console.error(
           `Please enter a command to begin. The currently supported commands are:
-          ${CliRunner.TOP_PLAYERS_CMD}, ${CliRunner.RECOMMEND_SQUAD_CMD}, ${CliRunner.RECOMMEND_TRANSFERS_CMD}, ${CliRunner.RECOMMEND_LINEUP_CMD}`
+          ${CliRunner.TOP_PLAYERS_CMD}, ${CliRunner.RECOMMEND_SQUAD_CMD}, ${CliRunner.RECOMMEND_TRANSFERS_CMD}, ${CliRunner.RECOMMEND_LINEUP_CMD}, ${CliRunner.PERFORM_TRANSFERS}`
         );
         exit(1);
     }
@@ -179,6 +184,47 @@ export default class CliRunner {
     console.log(
       `Score improvement: ${recommendation.scoreImprovement.toFixed(2)}`
     );
+    return recommendation;
+  }
+
+  private async performTransfers() {
+    const recommendation = await this.recommendTransfers();
+    if (
+      this.myTeam!.transfers.limit &&
+      recommendation.playersIn.length >
+        this.myTeam!.transfers.limit - this.myTeam!.transfers.made
+    ) {
+      console.log(
+        `Transfers requested: ${
+          recommendation.playersIn.length
+        } exceeds limit: ${
+          this.myTeam!.transfers.limit - this.myTeam!.transfers.made
+        }, postponing until next week`
+      );
+      return;
+    }
+    if (recommendation.scoreImprovement < 0) {
+      console.log("Transfer has a negative value, not performing!");
+      return;
+    }
+    const transferRequest: TransferRequest = {
+      chips: null,
+      entry: parseInt(process.env.TEAM_ID!),
+      event: this.nextEvent!.id,
+      transfers: recommendation.playersIn.map((playerIn, index) => {
+        const playerOut = recommendation.playersOut[index];
+        return {
+          element_in: playerIn.player.id,
+          element_out: playerOut.player.id,
+          purchase_price: playerIn.value * 10,
+          selling_price: this.myTeam!.picks.find(
+            (pick) => pick.element === playerOut.player.id
+          )!.selling_price,
+        };
+      }),
+    };
+    await this.fplFetcher!.performTransfers(transferRequest);
+    console.log("Successfully performed transfers");
   }
 
   private recommendLineup() {

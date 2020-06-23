@@ -50,9 +50,6 @@ export default class FplFetcher {
   }
 
   async setLineup(lineup: MyTeamRequest) {
-    if (!process.env.TEAM_ID) {
-      throw "Env variable TEAM_ID must be set!";
-    }
     let url = this.baseUrl + "/my-team/" + process.env.TEAM_ID + "/";
     const response = await WebRequest.post(
       url,
@@ -63,6 +60,23 @@ export default class FplFetcher {
         },
       },
       JSON.stringify(lineup)
+    );
+    if (response.statusCode !== 200) {
+      throw response.content;
+    }
+  }
+
+  async performTransfers(transferRequest: TransferRequest) {
+    let url = this.baseUrl + "/transfers/";
+    const response = await WebRequest.post(
+      url,
+      {
+        headers: {
+          Cookie: this.cookies,
+          "Content-Type": "application/json",
+        },
+      },
+      JSON.stringify(transferRequest)
     );
     if (response.statusCode !== 200) {
       throw response.content;

@@ -30,7 +30,7 @@ export default class RecommendationService {
     if (this.myTeam.transfers.limit === 1) {
       return twoTransfersAreDouble ? twoTransfers : singleTransfer;
     }
-    // Limit is two - go for 2 a bit more readily
+    // Limit is two or unlimited - go for 2 a bit more readily
     return twoTransfersAre150Percent ? twoTransfers : singleTransfer;
   }
 }
