@@ -22,8 +22,12 @@ export default class ScoreService {
         team,
         opponentFixtures
       ),
-      opponentStrength: this.getOpponentAverageStrength(opponentFixtures),
-      futureOpponentStrength: this.getOpponentAverageStrength(futureFixtures),
+      opponentStrength:
+        weightings.opponentStrength.max -
+        this.getOpponentAverageStrength(opponentFixtures),
+      futureOpponentStrength:
+        weightings.futureOpponentStrength.max -
+        this.getOpponentAverageStrength(futureFixtures),
       chanceOfPlaying:
         player.chance_of_playing_next_round === null
           ? 80
