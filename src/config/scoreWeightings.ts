@@ -3,19 +3,19 @@ import { PositionMap } from "../models/PositionMap";
 const defenderWeightings = {
   form: { max: 8, weight: 3 },
   ictIndex: { max: 450, weight: 1 },
-  teamStrength: { max: 5, weight: 2 },
-  teamStrengthForPosition: { max: 1500, weight: 2 },
-  opponentStrength: { max: 5, weight: 2 },
-  futureOpponentStrength: { max: 5, weight: 1.5 },
+  teamStrength: { max: 5, weight: 2, min: 2 },
+  teamStrengthForPosition: { max: 1500, weight: 2, min: 950 },
+  opponentStrength: { max: 5, weight: 2, min: 2 },
+  futureOpponentStrength: { max: 5, weight: 1.5, min: 2 },
 };
 
 const attackerWeightings = {
   form: { max: 8, weight: 3 },
   ictIndex: { max: 450, weight: 2 },
-  teamStrength: { max: 5, weight: 1 },
-  teamStrengthForPosition: { max: 1500, weight: 1 },
-  opponentStrength: { max: 5, weight: 1 },
-  futureOpponentStrength: { max: 5, weight: 0.75 },
+  teamStrength: { max: 5, weight: 1, min: 2 },
+  teamStrengthForPosition: { max: 1500, weight: 1, min: 950 },
+  opponentStrength: { max: 5, weight: 1, min: 2 },
+  futureOpponentStrength: { max: 5, weight: 0.75, min: 2 },
 };
 
 const commonWeightings = {

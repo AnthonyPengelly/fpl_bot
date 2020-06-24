@@ -22,12 +22,8 @@ export default class ScoreService {
         team,
         opponentFixtures
       ),
-      opponentStrength:
-        weightings.opponentStrength.max -
-        this.getOpponentAverageStrength(opponentFixtures),
-      futureOpponentStrength:
-        weightings.futureOpponentStrength.max -
-        this.getOpponentAverageStrength(futureFixtures),
+      opponentStrength: this.getOpponentAverageStrength(opponentFixtures),
+      futureOpponentStrength: this.getOpponentAverageStrength(futureFixtures),
       chanceOfPlaying:
         player.chance_of_playing_next_round === null
           ? 80
@@ -40,19 +36,24 @@ export default class ScoreService {
     score +=
       (inputs.ictIndex * weightings.ictIndex.weight) / weightings.ictIndex.max;
     score +=
-      (inputs.teamStrength * weightings.teamStrength.weight) /
-      weightings.teamStrength.max;
+      ((inputs.teamStrength - weightings.teamStrength.min) *
+        weightings.teamStrength.weight) /
+      (weightings.teamStrength.max - weightings.teamStrength.min);
     score +=
-      (inputs.teamStrengthForPosition *
+      ((inputs.teamStrengthForPosition -
+        weightings.teamStrengthForPosition.min) *
         weightings.teamStrengthForPosition.weight) /
-      weightings.teamStrengthForPosition.max;
+      (weightings.teamStrengthForPosition.max -
+        weightings.teamStrengthForPosition.min);
     score +=
-      (inputs.opponentStrength * weightings.opponentStrength.weight) /
-      weightings.opponentStrength.max;
+      ((weightings.opponentStrength.max - inputs.opponentStrength) *
+        weightings.opponentStrength.weight) /
+      (weightings.opponentStrength.max - weightings.opponentStrength.min);
     score +=
-      (inputs.futureOpponentStrength *
+      ((weightings.futureOpponentStrength.max - inputs.futureOpponentStrength) *
         weightings.futureOpponentStrength.weight) /
-      weightings.futureOpponentStrength.max;
+      (weightings.futureOpponentStrength.max -
+        weightings.futureOpponentStrength.min);
 
     const maxScore = Object.values(weightings).reduce(
       (total, weight) => total + weight.weight,
