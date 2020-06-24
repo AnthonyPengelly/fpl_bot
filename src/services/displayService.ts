@@ -32,15 +32,13 @@ export default class DisplayService {
     console.log(
       `| ${playerScore.player.id}\t| £${playerScore.value.toFixed(
         2
-      )}m\t| ${playerScore.score.toFixed(2)}\t| ${playerScore.roi.toFixed(
-        2
-      )}\t| ${playerScore.position.singular_name_short}\t\t| ${
-        playerScore.player.web_name
-      }`
+      )}m\t| ${playerScore.score.toFixed(2)}\t| ${
+        playerScore.position.singular_name_short
+      }\t\t| ${playerScore.player.web_name}`
     );
   }
 
   static displayHeader() {
-    console.log("| ID\t| Value\t\t| Score\t| ROI\t| Position\t| Name");
+    console.log("| ID\t| Value\t\t| Score\t| Position\t| Name");
   }
 }

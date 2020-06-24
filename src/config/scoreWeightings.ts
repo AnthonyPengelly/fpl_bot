@@ -1,24 +1,32 @@
-export var Form = {
-  Max: 8,
-  Weighting: 1,
+import { PositionMap } from "../models/PositionMap";
+
+const defenderWeightings = {
+  form: { max: 8, weight: 3 },
+  ictIndex: { max: 450, weight: 1 },
+  teamStrength: { max: 5, weight: 2 },
+  teamStrengthForPosition: { max: 1500, weight: 2 },
+  opponentStrength: { max: 5, weight: 2 },
+  futureOpponentStrength: { max: 5, weight: 1.5 },
 };
-export var ChanceOfPlaying = {
-  Max: 100,
-  Weighting: 0, // Handled differently
+
+const attackerWeightings = {
+  form: { max: 8, weight: 3 },
+  ictIndex: { max: 450, weight: 2 },
+  teamStrength: { max: 5, weight: 1 },
+  teamStrengthForPosition: { max: 1500, weight: 1 },
+  opponentStrength: { max: 5, weight: 1 },
+  futureOpponentStrength: { max: 5, weight: 0.75 },
 };
-export var PointsPerGame = {
-  Max: 8,
-  Weighting: 1,
+
+const commonWeightings = {
+  numberOfGames: { max: 2, weight: 10 },
+  numberOfGamesInNext3Gameweeks: { max: 6, weight: 5 },
 };
-export var ICTIndex = {
-  Max: 450,
-  Weighting: 1,
-};
-export var TeamStrength = {
-  Max: 5,
-  Weighting: 1,
-};
-export var TeamStrengthForPosition = {
-  Max: 1500,
-  Weighting: 1,
-};
+
+export const getWeightingsForPlayer = (player: PlayerOverview) =>
+  player.element_type === PositionMap.GOALKEEPER ||
+  player.element_type === PositionMap.DEFENDER
+    ? defenderWeightings
+    : attackerWeightings;
+
+export const getCommonWeightings = () => commonWeightings;

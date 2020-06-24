@@ -1,52 +1,106 @@
-import * as ScoreWeightings from "../config/scoreWeightings";
+import {
+  getCommonWeightings,
+  getWeightingsForPlayer,
+} from "../config/scoreWeightings";
 import { PositionMap } from "../models/PositionMap";
 
 export default class ScoreService {
   static calculateScore(
-    player: Player,
+    player: PlayerOverview,
     team: Team,
-    opponentFixtures: OpponentFixture[]
+    opponentFixtures: OpponentFixture[],
+    futureFixtures: OpponentFixture[]
   ) {
-    var score = 0;
+    const weightings = getWeightingsForPlayer(player);
+    const commonWeightings = getCommonWeightings();
+    let score = 0;
+    score += (player.form * weightings.form.weight) / weightings.form.max;
     score +=
-      (player.form * ScoreWeightings.Form.Weighting) / ScoreWeightings.Form.Max;
+      (player.ict_index * weightings.ictIndex.weight) / weightings.ictIndex.max;
     score +=
-      (player.points_per_game * ScoreWeightings.PointsPerGame.Weighting) /
-      ScoreWeightings.PointsPerGame.Max;
+      (team.strength * weightings.teamStrength.weight) /
+      weightings.teamStrength.max;
     score +=
-      (player.ict_index * ScoreWeightings.ICTIndex.Weighting) /
-      ScoreWeightings.ICTIndex.Max;
+      (this.teamStrengthForPosition(player, team, opponentFixtures) *
+        weightings.teamStrengthForPosition.weight) /
+      weightings.teamStrengthForPosition.max;
     score +=
-      (team.strength * ScoreWeightings.TeamStrength.Weighting) /
-      ScoreWeightings.TeamStrength.Max;
-    score = score * opponentFixtures.length;
-    opponentFixtures.forEach((opponentFixture) => {
-      score -=
-        (opponentFixture.opponent.strength *
-          ScoreWeightings.TeamStrength.Weighting) /
-        ScoreWeightings.TeamStrength.Max;
-      score +=
-        (this.teamStrengthForPosition(player, team, opponentFixture.isHome) *
-          ScoreWeightings.TeamStrengthForPosition.Weighting) /
-        ScoreWeightings.TeamStrengthForPosition.Max;
-    });
-    score =
-      (score * player.chance_of_playing_next_round) /
-      ScoreWeightings.ChanceOfPlaying.Max;
-    return score;
+      (this.getOpponentAverageStrength(opponentFixtures) *
+        weightings.opponentStrength.weight) /
+      weightings.opponentStrength.max;
+    score +=
+      (this.getOpponentAverageStrength(futureFixtures) *
+        weightings.futureOpponentStrength.weight) /
+      weightings.futureOpponentStrength.max;
+
+    const maxScore = Object.values(weightings).reduce(
+      (total, weight) => total + weight.weight,
+      0
+    );
+    const normalisedScore =
+      player.chance_of_playing_next_round * (score / maxScore);
+
+    let commonWeightingsScore = 0;
+    commonWeightingsScore +=
+      (opponentFixtures.length * commonWeightings.numberOfGames.weight) /
+      commonWeightings.numberOfGames.max;
+    commonWeightingsScore +=
+      (futureFixtures.length *
+        commonWeightings.numberOfGamesInNext3Gameweeks.weight) /
+      commonWeightings.numberOfGamesInNext3Gameweeks.max;
+
+    const commonWeightingsMax = Object.values(commonWeightings).reduce(
+      (total, weight) => total + weight.weight,
+      0
+    );
+    const totalWeight = maxScore + commonWeightingsMax;
+
+    const normalisedCommonScore =
+      player.chance_of_playing_next_round *
+      (commonWeightingsScore / commonWeightingsMax);
+
+    return (
+      (normalisedScore * (totalWeight - commonWeightingsMax)) / totalWeight +
+      (normalisedCommonScore * commonWeightingsMax) / totalWeight
+    );
   }
 
   private static teamStrengthForPosition(
-    player: Player,
+    player: PlayerOverview,
     team: Team,
-    isHome: boolean
+    fixtures: OpponentFixture[]
   ) {
-    if (
-      player.element_type === PositionMap.GOALKEEPER ||
-      PositionMap.DEFENDER
-    ) {
-      return isHome ? team.strength_defence_home : team.strength_defence_away;
+    if (fixtures.length === 0) {
+      return player.element_type === PositionMap.GOALKEEPER ||
+        player.element_type === PositionMap.DEFENDER
+        ? team.strength_defence_home
+        : team.strength_attack_home;
     }
-    return isHome ? team.strength_attack_home : team.strength_attack_away;
+    return (
+      fixtures.reduce(
+        (total, fixture) =>
+          total + player.element_type === PositionMap.GOALKEEPER ||
+          player.element_type === PositionMap.DEFENDER
+            ? fixture.isHome
+              ? team.strength_defence_home
+              : team.strength_defence_away
+            : fixture.isHome
+            ? team.strength_attack_home
+            : team.strength_attack_away,
+        0
+      ) / fixtures.length
+    );
+  }
+
+  private static getOpponentAverageStrength(fixtures: OpponentFixture[]) {
+    if (fixtures.length === 0) {
+      return 3;
+    }
+    return (
+      fixtures.reduce(
+        (total, fixture) => total + fixture.opponent.strength,
+        0
+      ) / fixtures.length
+    );
   }
 }

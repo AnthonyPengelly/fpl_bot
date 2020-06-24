@@ -66,10 +66,11 @@ export default class CliRunner {
   async run(command: string) {
     const overview = await this.fplFetcher.getOverview();
     const nextEvent = overview.events.filter((event) => event.is_next)[0];
-    const fixtures = await this.fplFetcher.getFixtures(nextEvent.id);
+    const fixtures = await this.fplFetcher.getFixtures();
     const players = await this.playerService.getAllPlayerScores(
       overview,
-      fixtures
+      fixtures,
+      nextEvent.id
     );
     const myTeam = await this.fplFetcher.getMyTeam();
     const picksWithScore = this.mapTeamToTeamPickWithScore(myTeam, players);

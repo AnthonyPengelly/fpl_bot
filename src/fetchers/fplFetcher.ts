@@ -30,8 +30,8 @@ export default class FplFetcher {
     return playerDetails;
   }
 
-  async getFixtures(eventId: number) {
-    let url = this.baseUrl + "/fixtures/?event=" + eventId;
+  async getFixtures() {
+    let url = this.baseUrl + "/fixtures/";
     var fixtures = await WebRequest.json<Fixture[]>(url);
     return fixtures;
   }

@@ -2,25 +2,49 @@ import ScoreService from "./scoreService";
 import PlayerScore from "../models/PlayerScore";
 
 export default class PlayersService {
-  async getAllPlayerScores(overview: Overview, fixtures: Fixture[]) {
-    const playerScores: PlayerScore[] = [];
+  async getAllPlayerScores(
+    overview: Overview,
+    fixtures: Fixture[],
+    nextEventId: number
+  ) {
     const teams = this.indexTeams(overview.teams);
+    console.log(`Scoring ${overview.elements.length} players`);
+    let count = 0;
 
-    overview.elements.forEach((player) => {
+    const scorePromises = overview.elements.map(async (player) => {
       const team = teams[player.team];
-      const opponents = this.getOpponents(team, teams, fixtures);
-      const score = ScoreService.calculateScore(player, team, opponents);
-      playerScores.push(
-        new PlayerScore(
+      try {
+        const opponents = this.getOpponents(
+          team,
+          teams,
+          this.getGameweekFixtures(team, fixtures, nextEventId)
+        );
+        const futureOpponents = this.getOpponents(
+          team,
+          teams,
+          this.getFutureGameweekFixtures(team, fixtures, nextEventId)
+        );
+        const score = ScoreService.calculateScore(
+          player,
+          team,
+          opponents,
+          futureOpponents
+        );
+        return new PlayerScore(
           player,
           overview.element_types.filter((e) => e.id === player.element_type)[0],
           player.now_cost / 10,
-          score,
-          (score / player.now_cost) * 100
-        )
-      );
+          score
+        );
+      } catch (e) {
+        console.log(`Failed to score ${player.web_name}`);
+        return;
+      }
     });
-    return playerScores.sort(this.compareScores);
+    const playerScores = await Promise.all(scorePromises);
+    return (playerScores.filter((player) => player) as PlayerScore[]).sort(
+      this.compareScores
+    );
   }
 
   private getOpponents(team: Team, teams: Team[], fixtures: Fixture[]) {
@@ -41,8 +65,33 @@ export default class PlayersService {
     return homeOpponents.concat(awayOpponents);
   }
 
-  private indexTeams(teams: Array<Team>) {
-    var indexedTeams = Array<Team>();
+  private getGameweekFixtures(
+    team: Team,
+    fixtures: Fixture[],
+    nextEventId: number
+  ) {
+    return fixtures.filter(
+      (fixture) =>
+        fixture.event === nextEventId &&
+        (fixture.team_h === team.id || fixture.team_a === team.id)
+    );
+  }
+
+  private getFutureGameweekFixtures(
+    team: Team,
+    fixtures: Fixture[],
+    nextEventId: number
+  ) {
+    return fixtures.filter(
+      (fixture) =>
+        fixture.event > nextEventId &&
+        fixture.event <= nextEventId + 3 &&
+        (fixture.team_h === team.id || fixture.team_a === team.id)
+    );
+  }
+
+  private indexTeams(teams: Team[]) {
+    var indexedTeams: Team[] = [];
     teams.forEach((team) => {
       indexedTeams[team.id] = team;
     });

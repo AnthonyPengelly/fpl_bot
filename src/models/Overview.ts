@@ -1,6 +1,6 @@
 interface Overview {
   phases: any;
-  elements: Player[];
+  elements: PlayerOverview[];
   "game-settings": any;
   "total-players": number;
   teams: Team[];
