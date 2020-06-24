@@ -142,6 +142,8 @@ export default class CliRunner {
 
   private scorePlayer(players: PlayerScore[], playerId: number) {
     const player = players.find((x) => x.player.id === playerId)!;
+    console.log(player.scoreDetails);
+    console.log();
     DisplayService.displayPlayers([player]);
   }
 

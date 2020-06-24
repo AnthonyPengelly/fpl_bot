@@ -3,6 +3,7 @@ export default class PlayerScore {
     public player: PlayerOverview,
     public position: Position,
     public value: number,
-    public score: number
+    public score: number,
+    public scoreDetails: ScoreDetails
   ) {}
 }

@@ -13,23 +13,40 @@ export default class ScoreService {
   ) {
     const weightings = getWeightingsForPlayer(player);
     const commonWeightings = getCommonWeightings();
+    const inputs = {
+      form: player.form,
+      ictIndex: player.ict_index,
+      teamStrength: team.strength,
+      teamStrengthForPosition: this.teamStrengthForPosition(
+        player,
+        team,
+        opponentFixtures
+      ),
+      opponentStrength: this.getOpponentAverageStrength(opponentFixtures),
+      futureOpponentStrength: this.getOpponentAverageStrength(futureFixtures),
+      chanceOfPlaying:
+        player.chance_of_playing_next_round === null
+          ? 80
+          : player.chance_of_playing_next_round,
+      numberOfGames: opponentFixtures.length,
+      numberOfGamesInNext3Gameweeks: futureFixtures.length,
+    };
     let score = 0;
-    score += (player.form * weightings.form.weight) / weightings.form.max;
+    score += (inputs.form * weightings.form.weight) / weightings.form.max;
     score +=
-      (player.ict_index * weightings.ictIndex.weight) / weightings.ictIndex.max;
+      (inputs.ictIndex * weightings.ictIndex.weight) / weightings.ictIndex.max;
     score +=
-      (team.strength * weightings.teamStrength.weight) /
+      (inputs.teamStrength * weightings.teamStrength.weight) /
       weightings.teamStrength.max;
     score +=
-      (this.teamStrengthForPosition(player, team, opponentFixtures) *
+      (inputs.teamStrengthForPosition *
         weightings.teamStrengthForPosition.weight) /
       weightings.teamStrengthForPosition.max;
     score +=
-      (this.getOpponentAverageStrength(opponentFixtures) *
-        weightings.opponentStrength.weight) /
+      (inputs.opponentStrength * weightings.opponentStrength.weight) /
       weightings.opponentStrength.max;
     score +=
-      (this.getOpponentAverageStrength(futureFixtures) *
+      (inputs.futureOpponentStrength *
         weightings.futureOpponentStrength.weight) /
       weightings.futureOpponentStrength.max;
 
@@ -37,18 +54,14 @@ export default class ScoreService {
       (total, weight) => total + weight.weight,
       0
     );
-    const chanceOfPlaying =
-      player.chance_of_playing_next_round === null
-        ? 80
-        : player.chance_of_playing_next_round;
-    const normalisedScore = chanceOfPlaying * (score / maxScore);
+    const normalisedScore = inputs.chanceOfPlaying * (score / maxScore);
 
     let commonWeightingsScore = 0;
     commonWeightingsScore +=
-      (opponentFixtures.length * commonWeightings.numberOfGames.weight) /
+      (inputs.numberOfGames * commonWeightings.numberOfGames.weight) /
       commonWeightings.numberOfGames.max;
     commonWeightingsScore +=
-      (futureFixtures.length *
+      (inputs.numberOfGamesInNext3Gameweeks *
         commonWeightings.numberOfGamesInNext3Gameweeks.weight) /
       commonWeightings.numberOfGamesInNext3Gameweeks.max;
 
@@ -59,12 +72,15 @@ export default class ScoreService {
     const totalWeight = maxScore + commonWeightingsMax;
 
     const normalisedCommonScore =
-      chanceOfPlaying * (commonWeightingsScore / commonWeightingsMax);
+      inputs.chanceOfPlaying * (commonWeightingsScore / commonWeightingsMax);
 
-    return (
+    const finalScore =
       (normalisedScore * (totalWeight - commonWeightingsMax)) / totalWeight +
-      (normalisedCommonScore * commonWeightingsMax) / totalWeight
-    );
+      (normalisedCommonScore * commonWeightingsMax) / totalWeight;
+    return {
+      score: finalScore,
+      inputs: inputs,
+    } as ScoreDetails;
   }
 
   private static teamStrengthForPosition(

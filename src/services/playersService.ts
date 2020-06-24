@@ -24,7 +24,7 @@ export default class PlayersService {
           teams,
           this.getFutureGameweekFixtures(team, fixtures, nextEventId)
         );
-        const score = ScoreService.calculateScore(
+        const scoreDetails = ScoreService.calculateScore(
           player,
           team,
           opponents,
@@ -34,7 +34,8 @@ export default class PlayersService {
           player,
           overview.element_types.filter((e) => e.id === player.element_type)[0],
           player.now_cost / 10,
-          score
+          scoreDetails.score,
+          scoreDetails
         );
       } catch (e) {
         console.log(`Failed to score ${player.web_name}`);
