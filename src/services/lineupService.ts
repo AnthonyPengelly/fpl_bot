@@ -37,7 +37,10 @@ export default class LineupService {
         !starting11.find((x) => x.player.id === player.playerScore.player.id)
     );
     starting11.push(
-      ...omitedPlayers.slice(0, 3).map((player) => player.playerScore)
+      ...omitedPlayers
+        .filter((x) => x.playerScore.position.id !== PositionMap.GOALKEEPER)
+        .slice(0, 3)
+        .map((player) => player.playerScore)
     );
     const substitutes = sortedPlayers.filter(
       (player) =>
