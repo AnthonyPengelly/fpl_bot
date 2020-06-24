@@ -29,6 +29,7 @@ export default class CliRunner {
   private lineupService: LineupService;
 
   public static RUN_CMD = "run";
+  public static SCORE_PLAYER = "score-player";
   public static TOP_PLAYERS_CMD = "top-players";
   public static RECOMMEND_SQUAD_CMD = "recommend-squad";
   public static RECOMMEND_TRANSFERS_CMD = "recommend-transfers";
@@ -37,6 +38,7 @@ export default class CliRunner {
   public static PERFORM_TRANSFERS_CMD = "perform-transfers";
   public static commands = [
     CliRunner.RUN_CMD,
+    CliRunner.SCORE_PLAYER,
     CliRunner.TOP_PLAYERS_CMD,
     CliRunner.RECOMMEND_SQUAD_CMD,
     CliRunner.RECOMMEND_TRANSFERS_CMD,
@@ -63,7 +65,7 @@ export default class CliRunner {
 
   async init() {}
 
-  async run(command: string) {
+  async run(command: string, playerId: string) {
     const overview = await this.fplFetcher.getOverview();
     const nextEvent = overview.events.filter((event) => event.is_next)[0];
     const fixtures = await this.fplFetcher.getFixtures();
@@ -78,6 +80,9 @@ export default class CliRunner {
     switch (command) {
       case CliRunner.RUN_CMD:
         this.runBot(players, myTeam, picksWithScore, nextEvent);
+        break;
+      case CliRunner.SCORE_PLAYER:
+        this.scorePlayer(players, parseInt(playerId));
         break;
       case CliRunner.TOP_PLAYERS_CMD:
         this.topPlayers(players);
@@ -133,6 +138,11 @@ export default class CliRunner {
       players
     );
     await this.setLineup(newPicksWithScore);
+  }
+
+  private scorePlayer(players: PlayerScore[], playerId: number) {
+    const player = players.find((x) => x.player.id === playerId)!;
+    DisplayService.displayPlayers([player]);
   }
 
   private topPlayers(players: PlayerScore[]) {

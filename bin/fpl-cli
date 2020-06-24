@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-if [ $# -ne 4 ]
+if [ $# -lt 4 ]
   then
     echo "Please add the command (e.g. 'recommend-squad'), username, password and team id as arguments"
     exit 1
@@ -11,4 +11,4 @@ export FPL_AUTH_HEADERS=$(curl https://users.premierleague.com/accounts/login/ \
   -H 'content-type: application/x-www-form-urlencoded' \
   --data-raw "login=$2&password=$3&app=plfpl-web&redirect_uri=https%3A%2F%2Ffantasy.premierleague.com%2F" \
   -i)
-TEAM_ID=$4 node ./lib/index.js $1;
+TEAM_ID=$4 node ./lib/index.js $1 $5;

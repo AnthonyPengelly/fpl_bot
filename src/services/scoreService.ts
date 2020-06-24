@@ -37,8 +37,11 @@ export default class ScoreService {
       (total, weight) => total + weight.weight,
       0
     );
-    const normalisedScore =
-      player.chance_of_playing_next_round * (score / maxScore);
+    const chanceOfPlaying =
+      player.chance_of_playing_next_round === null
+        ? 80
+        : player.chance_of_playing_next_round;
+    const normalisedScore = chanceOfPlaying * (score / maxScore);
 
     let commonWeightingsScore = 0;
     commonWeightingsScore +=
@@ -56,8 +59,7 @@ export default class ScoreService {
     const totalWeight = maxScore + commonWeightingsMax;
 
     const normalisedCommonScore =
-      player.chance_of_playing_next_round *
-      (commonWeightingsScore / commonWeightingsMax);
+      chanceOfPlaying * (commonWeightingsScore / commonWeightingsMax);
 
     return (
       (normalisedScore * (totalWeight - commonWeightingsMax)) / totalWeight +
