@@ -10,16 +10,8 @@ export default class RecommendationService {
     private transferService: TransferService
   ) {}
 
-  recommendATeam(
-    playerScores: PlayerScore[],
-    settings: OptimisationSettings,
-    budget: number
-  ) {
-    return this.optimisationService.getOptimalTeamForSettings(
-      playerScores,
-      settings,
-      budget
-    );
+  recommendATeam(playerScores: PlayerScore[], settings: OptimisationSettings, budget: number) {
+    return this.optimisationService.getOptimalTeamForSettings(playerScores, settings, budget);
   }
 
   recommendTransfers(

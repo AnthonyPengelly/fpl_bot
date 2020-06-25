@@ -11,9 +11,7 @@ export default class FplFetcher {
     if (!process.env.FPL_AUTH_HEADERS) {
       throw "Env variable FPL_AUTH_HEADERS must be set!";
     }
-    const splitOnSetCookie = process.env.FPL_AUTH_HEADERS!.split(
-      "set-cookie: "
-    );
+    const splitOnSetCookie = process.env.FPL_AUTH_HEADERS!.split("set-cookie: ");
     const cookiesArray = splitOnSetCookie.slice(1).map((x) => x.split("; ")[0]);
     this.cookies = cookiesArray.join("; ") + ";";
   }

@@ -8,9 +8,7 @@ export default class LineupService {
   constructor(private fplFetcher: FplFetcher) {}
 
   recommendLineup(picksWithScore: TeamPickWithScore[]): Lineup {
-    const sortedPlayers = picksWithScore.sort(
-      (a, b) => b.playerScore.score - a.playerScore.score
-    );
+    const sortedPlayers = picksWithScore.sort((a, b) => b.playerScore.score - a.playerScore.score);
     const starting11: PlayerScore[] = [];
     const goalkeepers = sortedPlayers.filter(
       (player) => player.playerScore.position.id === PositionMap.GOALKEEPER
@@ -25,16 +23,11 @@ export default class LineupService {
       (player) => player.playerScore.position.id === PositionMap.FORWARD
     );
     starting11.push(goalkeepers[0].playerScore);
-    starting11.push(
-      ...defenders.slice(0, 3).map((player) => player.playerScore)
-    );
-    starting11.push(
-      ...midfielders.slice(0, 3).map((player) => player.playerScore)
-    );
+    starting11.push(...defenders.slice(0, 3).map((player) => player.playerScore));
+    starting11.push(...midfielders.slice(0, 3).map((player) => player.playerScore));
     starting11.push(forwards[0].playerScore);
     const omitedPlayers = sortedPlayers.filter(
-      (player) =>
-        !starting11.find((x) => x.player.id === player.playerScore.player.id)
+      (player) => !starting11.find((x) => x.player.id === player.playerScore.player.id)
     );
     starting11.push(
       ...omitedPlayers
@@ -43,16 +36,13 @@ export default class LineupService {
         .map((player) => player.playerScore)
     );
     const substitutes = sortedPlayers.filter(
-      (player) =>
-        !starting11.find((x) => x.player.id === player.playerScore.player.id)
+      (player) => !starting11.find((x) => x.player.id === player.playerScore.player.id)
     );
     const orderedSubstitutes = substitutes.filter(
       (player) => player.playerScore.position.id === PositionMap.GOALKEEPER
     );
     orderedSubstitutes.push(
-      ...substitutes.filter(
-        (player) => player.playerScore.position.id !== PositionMap.GOALKEEPER
-      )
+      ...substitutes.filter((player) => player.playerScore.position.id !== PositionMap.GOALKEEPER)
     );
     return {
       starting11: starting11,

@@ -15,12 +15,7 @@ export default class DataRecorder {
         scoreDetails: player.scoreDetails,
       }));
       const dateString = moment().format("YYYY-MM-DD");
-      fs.writeFile(
-        `./data/${dateString}.json`,
-        JSON.stringify(data),
-        "utf8",
-        () => resolve()
-      );
+      fs.writeFile(`./data/${dateString}.json`, JSON.stringify(data), "utf8", () => resolve());
     });
   }
 }

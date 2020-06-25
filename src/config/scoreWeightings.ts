@@ -26,8 +26,7 @@ const commonWeightings = {
 };
 
 export const getWeightingsForPlayer = (player: PlayerOverview) =>
-  player.element_type === PositionMap.GOALKEEPER ||
-  player.element_type === PositionMap.DEFENDER
+  player.element_type === PositionMap.GOALKEEPER || player.element_type === PositionMap.DEFENDER
     ? defenderWeightings
     : attackerWeightings;
 

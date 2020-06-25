@@ -1,4 +1,4 @@
 interface TeamsList {
-    id: number;
-    team: Team;
+  id: number;
+  team: Team;
 }

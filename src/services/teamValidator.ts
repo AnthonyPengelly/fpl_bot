@@ -19,29 +19,29 @@ export default class TeamValidator {
     }
 
     if (
-      fullTeam.filter((player) => player.position.id === PositionMap.GOALKEEPER)
-        .length > settings.goalkeepers
+      fullTeam.filter((player) => player.position.id === PositionMap.GOALKEEPER).length >
+      settings.goalkeepers
     ) {
       return false;
     }
 
     if (
-      fullTeam.filter((player) => player.position.id === PositionMap.DEFENDER)
-        .length > settings.defenders
+      fullTeam.filter((player) => player.position.id === PositionMap.DEFENDER).length >
+      settings.defenders
     ) {
       return false;
     }
 
     if (
-      fullTeam.filter((player) => player.position.id === PositionMap.MIDFIELDER)
-        .length > settings.midfielders
+      fullTeam.filter((player) => player.position.id === PositionMap.MIDFIELDER).length >
+      settings.midfielders
     ) {
       return false;
     }
 
     if (
-      fullTeam.filter((player) => player.position.id === PositionMap.FORWARD)
-        .length > settings.forwards
+      fullTeam.filter((player) => player.position.id === PositionMap.FORWARD).length >
+      settings.forwards
     ) {
       return false;
     }
@@ -53,23 +53,17 @@ export default class TeamValidator {
     return true;
   };
 
-  private tooManyPlayersFromOneTeam = (
-    players: PlayerScore[],
-    settings: OptimisationSettings
-  ) => {
+  private tooManyPlayersFromOneTeam = (players: PlayerScore[], settings: OptimisationSettings) => {
     const playersPerTeam: { [index: number]: PlayerScore[] } = {};
     players.forEach((playerScore) => {
-      playersPerTeam[playerScore.player.team] = playersPerTeam[
-        playerScore.player.team
-      ]
+      playersPerTeam[playerScore.player.team] = playersPerTeam[playerScore.player.team]
         ? playersPerTeam[playerScore.player.team].concat(playerScore)
         : [playerScore];
     });
 
     return (
-      Object.values(playersPerTeam).filter(
-        (players) => players.length > settings.maxPlayersPerTeam
-      ).length !== 0
+      Object.values(playersPerTeam).filter((players) => players.length > settings.maxPlayersPerTeam)
+        .length !== 0
     );
   };
 
@@ -81,9 +75,6 @@ export default class TeamValidator {
         : [playerScore];
     });
 
-    return (
-      Object.values(playersById).filter((players) => players.length > 1)
-        .length !== 0
-    );
+    return Object.values(playersById).filter((players) => players.length > 1).length !== 0;
   };
 }

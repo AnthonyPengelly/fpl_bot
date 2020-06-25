@@ -8,18 +8,11 @@ export default class DisplayService {
     this.displayPlayers(sortedPlayers);
     console.log(sortedPlayers.length + " players");
     console.log(
-      `Value £${sortedPlayers
-        .reduce((total, player) => total + player.value, 0)
-        .toFixed(2)}m`
+      `Value £${sortedPlayers.reduce((total, player) => total + player.value, 0).toFixed(2)}m`
     );
-    const squadScore = sortedPlayers.reduce(
-      (total, player) => total + player.score,
-      0
-    );
+    const squadScore = sortedPlayers.reduce((total, player) => total + player.score, 0);
     console.log(`Score: ${squadScore.toFixed(2)}`);
-    console.log(
-      `Score per player: ${(squadScore / sortedPlayers.length).toFixed(2)}`
-    );
+    console.log(`Score per player: ${(squadScore / sortedPlayers.length).toFixed(2)}`);
   }
 
   static displayPlayers(players: PlayerScore[]) {
@@ -32,9 +25,9 @@ export default class DisplayService {
     console.log(
       `| ${playerScore.player.id}\t| £${playerScore.value.toFixed(
         2
-      )}m\t| ${playerScore.score.toFixed(2)}\t| ${
-        playerScore.position.singular_name_short
-      }\t\t| ${playerScore.player.web_name}`
+      )}m\t| ${playerScore.score.toFixed(2)}\t| ${playerScore.position.singular_name_short}\t\t| ${
+        playerScore.player.web_name
+      }`
     );
   }
 

@@ -6,10 +6,7 @@ import { fullSquad } from "../config/optimisationSettings";
 import FplFetcher from "../fetchers/fplFetcher";
 
 export default class TransferService {
-  constructor(
-    private fplFetcher: FplFetcher,
-    private optimisationService: OptimisationService
-  ) {}
+  constructor(private fplFetcher: FplFetcher, private optimisationService: OptimisationService) {}
 
   recommendOneTransfer(
     playerScores: PlayerScore[],
@@ -18,19 +15,14 @@ export default class TransferService {
     debug: boolean
   ): TransferWithScores {
     const options = picksWithScore.map((pickWithScore) => {
-      const remainingBudget =
-        (myTeam.transfers.bank + pickWithScore.pick.selling_price) / 10;
+      const remainingBudget = (myTeam.transfers.bank + pickWithScore.pick.selling_price) / 10;
       const possiblePlayers = playerScores
-        .filter(
-          (player) =>
-            player.position.id === pickWithScore.playerScore.position.id
-        )
+        .filter((player) => player.position.id === pickWithScore.playerScore.position.id)
         .filter((player) => player.value <= remainingBudget)
         .filter(
           (player) =>
-            picksWithScore.filter(
-              (pick) => pick.playerScore.player.id === player.player.id
-            ).length === 0
+            picksWithScore.filter((pick) => pick.playerScore.player.id === player.player.id)
+              .length === 0
         );
       const suggestion = possiblePlayers.sort((a, b) => b.score - a.score)[0];
       const improvement = suggestion.score - pickWithScore.playerScore.score;
@@ -63,10 +55,7 @@ export default class TransferService {
           return;
         }
         const remainingBudget =
-          (myTeam.transfers.bank +
-            pick1.pick.selling_price +
-            pick2.pick.selling_price) /
-          10;
+          (myTeam.transfers.bank + pick1.pick.selling_price + pick2.pick.selling_price) / 10;
         const remainingTeam = picksWithScore
           .map((pick) => pick.playerScore)
           .filter(
@@ -83,9 +72,8 @@ export default class TransferService {
           .filter((player) => player.value <= remainingBudget - 4)
           .filter(
             (player) =>
-              picksWithScore.filter(
-                (pick) => pick.playerScore.player.id === player.player.id
-              ).length === 0
+              picksWithScore.filter((pick) => pick.playerScore.player.id === player.player.id)
+                .length === 0
           );
         const suggestions = this.optimisationService.getOptimalTeamForSettings(
           possiblePlayers,
@@ -129,9 +117,7 @@ export default class TransferService {
       });
     });
     console.log();
-    console.log(
-      `Failed to suggest options for ${failedSuggestions} combinations`
-    );
+    console.log(`Failed to suggest options for ${failedSuggestions} combinations`);
     console.log();
     return options.sort((a, b) => b.scoreImprovement - a.scoreImprovement)[0];
   }
@@ -167,9 +153,8 @@ export default class TransferService {
           element_in: playerIn.player.id,
           element_out: playerOut.player.id,
           purchase_price: playerIn.value * 10,
-          selling_price: myTeam.picks.find(
-            (pick) => pick.element === playerOut.player.id
-          )!.selling_price,
+          selling_price: myTeam.picks.find((pick) => pick.element === playerOut.player.id)!
+            .selling_price,
         };
       }),
     };

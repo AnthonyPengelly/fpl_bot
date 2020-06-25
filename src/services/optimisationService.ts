@@ -24,19 +24,13 @@ export default class OptimisationService {
       for (let j = 0; j < W + 1; j++) {
         if (i === 0 || j === 0) cache[i][j] = [];
         else if (Math.round(players[i - 1].value * 100) <= j) {
-          const included = cache[i - 1][
-            j - Math.round(players[i - 1].value * 100)
-          ].concat(players[i - 1]);
+          const included = cache[i - 1][j - Math.round(players[i - 1].value * 100)].concat(
+            players[i - 1]
+          );
           const excluded = cache[i - 1][j];
           cache[i][j] =
-            included.reduce(
-              (total, player) => total + Math.round(player.score * 100),
-              0
-            ) >
-              excluded.reduce(
-                (total, player) => total + Math.round(player.score * 100),
-                0
-              ) &&
+            included.reduce((total, player) => total + Math.round(player.score * 100), 0) >
+              excluded.reduce((total, player) => total + Math.round(player.score * 100), 0) &&
             this.teamValidator.isValid(included, settings, otherPlayersInTeam)
               ? included
               : excluded;

@@ -1,7 +1,4 @@
-import {
-  getCommonWeightings,
-  getWeightingsForPlayer,
-} from "../config/scoreWeightings";
+import { getCommonWeightings, getWeightingsForPlayer } from "../config/scoreWeightings";
 import { PositionMap } from "../models/PositionMap";
 
 export default class ScoreService {
@@ -17,38 +14,28 @@ export default class ScoreService {
       form: player.form,
       ictIndex: player.ict_index,
       teamStrength: team.strength,
-      teamStrengthForPosition: this.teamStrengthForPosition(
-        player,
-        team,
-        opponentFixtures
-      ),
+      teamStrengthForPosition: this.teamStrengthForPosition(player, team, opponentFixtures),
       opponentStrength: this.getOpponentAverageStrength(opponentFixtures),
       futureOpponentStrength: this.getOpponentAverageStrength(futureFixtures),
       chanceOfPlaying:
-        player.chance_of_playing_next_round === null
-          ? 80
-          : player.chance_of_playing_next_round,
+        player.chance_of_playing_next_round === null ? 80 : player.chance_of_playing_next_round,
       numberOfGames: opponentFixtures.length,
       numberOfGamesInNext3Gameweeks: futureFixtures.length,
     };
     const weightedInputs = {} as ScoreInputs;
-    weightedInputs.form =
-      (inputs.form * weightings.form.weight) / weightings.form.max;
+    weightedInputs.form = (inputs.form * weightings.form.weight) / weightings.form.max;
 
     weightedInputs.ictIndex =
       (inputs.ictIndex * weightings.ictIndex.weight) / weightings.ictIndex.max;
 
     weightedInputs.teamStrength =
-      ((inputs.teamStrength - weightings.teamStrength.min) *
-        weightings.teamStrength.weight) /
+      ((inputs.teamStrength - weightings.teamStrength.min) * weightings.teamStrength.weight) /
       (weightings.teamStrength.max - weightings.teamStrength.min);
 
     weightedInputs.teamStrengthForPosition =
-      ((inputs.teamStrengthForPosition -
-        weightings.teamStrengthForPosition.min) *
+      ((inputs.teamStrengthForPosition - weightings.teamStrengthForPosition.min) *
         weightings.teamStrengthForPosition.weight) /
-      (weightings.teamStrengthForPosition.max -
-        weightings.teamStrengthForPosition.min);
+      (weightings.teamStrengthForPosition.max - weightings.teamStrengthForPosition.min);
 
     weightedInputs.opponentStrength =
       ((weightings.opponentStrength.max - inputs.opponentStrength) *
@@ -58,17 +45,12 @@ export default class ScoreService {
     weightedInputs.futureOpponentStrength =
       ((weightings.futureOpponentStrength.max - inputs.futureOpponentStrength) *
         weightings.futureOpponentStrength.weight) /
-      (weightings.futureOpponentStrength.max -
-        weightings.futureOpponentStrength.min);
+      (weightings.futureOpponentStrength.max - weightings.futureOpponentStrength.min);
 
     weightedInputs.chanceOfPlaying =
-      (inputs.chanceOfPlaying * weightings.chanceOfPlaying.weight) /
-      weightings.chanceOfPlaying.max;
+      (inputs.chanceOfPlaying * weightings.chanceOfPlaying.weight) / weightings.chanceOfPlaying.max;
 
-    const score = Object.values(weightedInputs).reduce(
-      (total, value) => total + value,
-      0
-    );
+    const score = Object.values(weightedInputs).reduce((total, value) => total + value, 0);
     const weightingsMax = Object.values(weightings).reduce(
       (total, weight) => total + weight.weight,
       0
@@ -79,23 +61,20 @@ export default class ScoreService {
       (inputs.numberOfGames * commonWeightings.numberOfGames.weight) /
       commonWeightings.numberOfGames.max;
     weightedInputs.numberOfGamesInNext3Gameweeks =
-      ((inputs.numberOfGamesInNext3Gameweeks -
-        commonWeightings.numberOfGamesInNext3Gameweeks.min) *
+      ((inputs.numberOfGamesInNext3Gameweeks - commonWeightings.numberOfGamesInNext3Gameweeks.min) *
         commonWeightings.numberOfGamesInNext3Gameweeks.weight) /
       (commonWeightings.numberOfGamesInNext3Gameweeks.max -
         commonWeightings.numberOfGamesInNext3Gameweeks.min);
 
     const commonWeightingsScore =
-      weightedInputs.numberOfGames +
-      weightedInputs.numberOfGamesInNext3Gameweeks;
+      weightedInputs.numberOfGames + weightedInputs.numberOfGamesInNext3Gameweeks;
     const commonWeightingsMax = Object.values(commonWeightings).reduce(
       (total, weight) => total + weight.weight,
       0
     );
     const totalWeight = weightingsMax + commonWeightingsMax;
 
-    const normalisedCommonScore =
-      100 * (commonWeightingsScore / commonWeightingsMax);
+    const normalisedCommonScore = 100 * (commonWeightingsScore / commonWeightingsMax);
 
     const finalScore =
       (normalisedScore * weightingsMax) / totalWeight +
@@ -140,10 +119,7 @@ export default class ScoreService {
       return 3;
     }
     return (
-      fixtures.reduce(
-        (total, fixture) => total + fixture.opponent.strength,
-        0
-      ) / fixtures.length
+      fixtures.reduce((total, fixture) => total + fixture.opponent.strength, 0) / fixtures.length
     );
   }
 }

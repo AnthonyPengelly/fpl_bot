@@ -59,10 +59,7 @@ export default class CliRunner {
     this.teamValidator = new TeamValidator();
     this.optimisationService = new OptimisationService(this.teamValidator);
     this.lineupService = new LineupService(this.fplFetcher);
-    this.transferService = new TransferService(
-      this.fplFetcher,
-      this.optimisationService
-    );
+    this.transferService = new TransferService(this.fplFetcher, this.optimisationService);
     this.recommendationService = new RecommendationService(
       this.optimisationService,
       this.transferService
@@ -76,11 +73,7 @@ export default class CliRunner {
     const overview = await this.fplFetcher.getOverview();
     const nextEvent = overview.events.filter((event) => event.is_next)[0];
     const fixtures = await this.fplFetcher.getFixtures();
-    const players = await this.playerService.getAllPlayerScores(
-      overview,
-      fixtures,
-      nextEvent.id
-    );
+    const players = await this.playerService.getAllPlayerScores(overview, fixtures, nextEvent.id);
     const myDetails = await this.fplFetcher.getMyDetails();
     const teamId = myDetails.player.entry;
     const myTeam = await this.fplFetcher.getMyTeam(teamId);
@@ -100,10 +93,7 @@ export default class CliRunner {
         this.wildcardSquad(players, myTeam);
         break;
       case CliRunner.RECOMMEND_SQUAD_CMD:
-        this.recommendSquad(
-          players,
-          optionalParameter ? parseInt(optionalParameter) : 100
-        );
+        this.recommendSquad(players, optionalParameter ? parseInt(optionalParameter) : 100);
         break;
       case CliRunner.RECOMMEND_TRANSFERS_CMD:
         this.recommendTransfers(players, myTeam, picksWithScore, true);
@@ -115,13 +105,7 @@ export default class CliRunner {
         this.setLineup(picksWithScore, teamId);
         break;
       case CliRunner.PERFORM_TRANSFERS_CMD:
-        this.performTransfers(
-          players,
-          myTeam,
-          picksWithScore,
-          nextEvent,
-          teamId
-        );
+        this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId);
         break;
       case CliRunner.RECORD_DATA_CMD:
         this.recordData(players);
@@ -147,16 +131,8 @@ export default class CliRunner {
     const deadlineTime = moment(nextEvent.deadline_time);
     const hoursTilDeadline = deadlineTime.diff(timeNow, "hours");
     if (hoursTilDeadline < 24) {
-      console.log(
-        `Deadline in ${hoursTilDeadline} hours, performing transfers`
-      );
-      await this.performTransfers(
-        players,
-        myTeam,
-        picksWithScore,
-        nextEvent,
-        teamId
-      );
+      console.log(`Deadline in ${hoursTilDeadline} hours, performing transfers`);
+      await this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId);
       this.recordData(players);
     } else {
       console.log(
@@ -167,10 +143,7 @@ export default class CliRunner {
     }
     console.log("Updating lineup...");
     const myNewTeam = await this.fplFetcher.getMyTeam(teamId);
-    const newPicksWithScore = this.mapTeamToTeamPickWithScore(
-      myNewTeam,
-      players
-    );
+    const newPicksWithScore = this.mapTeamToTeamPickWithScore(myNewTeam, players);
     await this.setLineup(newPicksWithScore, teamId);
 
     console.log();
@@ -190,30 +163,22 @@ export default class CliRunner {
 
     console.log("Goalkeepers");
     DisplayService.displayPlayers(
-      players
-        .filter((player) => player.position.id === PositionMap.GOALKEEPER)
-        .slice(0, 10)
+      players.filter((player) => player.position.id === PositionMap.GOALKEEPER).slice(0, 10)
     );
 
     console.log("Defenders");
     DisplayService.displayPlayers(
-      players
-        .filter((player) => player.position.id === PositionMap.DEFENDER)
-        .slice(0, 20)
+      players.filter((player) => player.position.id === PositionMap.DEFENDER).slice(0, 20)
     );
 
     console.log("Midfielders");
     DisplayService.displayPlayers(
-      players
-        .filter((player) => player.position.id === PositionMap.MIDFIELDER)
-        .slice(0, 20)
+      players.filter((player) => player.position.id === PositionMap.MIDFIELDER).slice(0, 20)
     );
 
     console.log("Forwards");
     DisplayService.displayPlayers(
-      players
-        .filter((player) => player.position.id === PositionMap.FORWARD)
-        .slice(0, 20)
+      players.filter((player) => player.position.id === PositionMap.FORWARD).slice(0, 20)
     );
 
     const goalkeepers = players
@@ -234,11 +199,7 @@ export default class CliRunner {
 
   private recommendSquad(players: PlayerScore[], budget: number) {
     console.log(`Recommending squads based on a budget of £${budget}m`);
-    const all15Positions = this.recommendationService.recommendATeam(
-      players,
-      fullSquad,
-      budget
-    );
+    const all15Positions = this.recommendationService.recommendATeam(players, fullSquad, budget);
     DisplayService.displaySquad(all15Positions, "Full Squad");
 
     const skeleton442 = this.recommendationService.recommendATeam(
@@ -271,8 +232,7 @@ export default class CliRunner {
   }
 
   private wildcardSquad(playerScores: PlayerScore[], myTeam: MyTeam) {
-    const totalSales =
-      myTeam.picks.reduce((total, pick) => total + pick.selling_price, 0) / 10;
+    const totalSales = myTeam.picks.reduce((total, pick) => total + pick.selling_price, 0) / 10;
     const budget = totalSales + myTeam.transfers.bank / 10;
     this.recommendSquad(playerScores, budget);
   }
@@ -296,9 +256,7 @@ export default class CliRunner {
     console.log("Players In");
     DisplayService.displayPlayers(recommendation.playersIn);
     console.log();
-    console.log(
-      `Score improvement: ${recommendation.scoreImprovement.toFixed(2)}`
-    );
+    console.log(`Score improvement: ${recommendation.scoreImprovement.toFixed(2)}`);
     return recommendation;
   }
 
@@ -349,10 +307,7 @@ export default class CliRunner {
     await this.dataRecorder.recordData(players);
   }
 
-  private mapTeamToTeamPickWithScore(
-    myTeam: MyTeam,
-    players: PlayerScore[]
-  ): TeamPickWithScore[] {
+  private mapTeamToTeamPickWithScore(myTeam: MyTeam, players: PlayerScore[]): TeamPickWithScore[] {
     return myTeam.picks.map((pick) => ({
       pick: pick,
       playerScore: players.find((player) => player.player.id === pick.element)!,
