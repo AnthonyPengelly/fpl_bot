@@ -157,6 +157,7 @@ export default class CliRunner {
         nextEvent,
         teamId
       );
+      this.recordData(players);
     } else {
       console.log(
         `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week. ` +
