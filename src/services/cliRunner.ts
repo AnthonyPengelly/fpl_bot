@@ -128,8 +128,10 @@ export default class CliRunner {
       await this.performTransfers(players, myTeam, picksWithScore, nextEvent);
     } else {
       console.log(
-        `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week`
+        `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week. ` +
+          "Showing recommended transfers"
       );
+      await this.recommendTransfers(players, myTeam, picksWithScore);
     }
     console.log("Updating lineup...");
     const myNewTeam = await this.fplFetcher.getMyTeam();
@@ -242,6 +244,7 @@ export default class CliRunner {
       myTeam,
       picksWithScore
     );
+    console.log();
     console.log("Players Out:");
     DisplayService.displayPlayers(recommendation.playersOut);
     console.log();
