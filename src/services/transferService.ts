@@ -14,7 +14,8 @@ export default class TransferService {
   recommendOneTransfer(
     playerScores: PlayerScore[],
     myTeam: MyTeam,
-    picksWithScore: TeamPickWithScore[]
+    picksWithScore: TeamPickWithScore[],
+    debug: boolean
   ): TransferWithScores {
     const options = picksWithScore.map((pickWithScore) => {
       const remainingBudget =
@@ -33,10 +34,11 @@ export default class TransferService {
         );
       const suggestion = possiblePlayers.sort((a, b) => b.score - a.score)[0];
       const improvement = suggestion.score - pickWithScore.playerScore.score;
-      console.log(
+      this.debug(
         `Suggested ${suggestion.player.web_name} to replace ${
           pickWithScore.playerScore.player.web_name
-        } for an improvement of ${improvement.toFixed(2)}`
+        } for an improvement of ${improvement.toFixed(2)}`,
+        debug
       );
       return {
         playersIn: [suggestion],
@@ -50,9 +52,11 @@ export default class TransferService {
   recommendTwoTransfers(
     playerScores: PlayerScore[],
     myTeam: MyTeam,
-    picksWithScore: TeamPickWithScore[]
+    picksWithScore: TeamPickWithScore[],
+    debug: boolean
   ): TransferWithScores {
     const options: TransferWithScores[] = [];
+    let failedSuggestions = 0;
     picksWithScore.forEach((pick1) => {
       picksWithScore.forEach((pick2) => {
         if (pick1.playerScore.player.id === pick2.playerScore.player.id) {
@@ -90,25 +94,32 @@ export default class TransferService {
           remainingTeam
         );
         if (!suggestions) {
-          console.warn(
-            `No suggestions to replace ${pick1.playerScore.player.web_name} and ${pick2.playerScore.player.web_name}`
+          this.debug(
+            `No suggestions to replace ${pick1.playerScore.player.web_name} and ${pick2.playerScore.player.web_name}`,
+            debug
           );
+          failedSuggestions++;
           return;
         }
         if (suggestions.length !== 2) {
-          console.warn(`Only found ${suggestions.length} suggestions`);
+          this.debug(
+            `Only found ${suggestions.length} suggestions to replace ${pick1.playerScore.player.web_name} and ${pick2.playerScore.player.web_name}`,
+            debug
+          );
+          failedSuggestions++;
           return;
         }
         const scoreImprovement =
           suggestions[0].score +
           suggestions[1].score -
           (pick1.playerScore.score + pick2.playerScore.score);
-        console.log(
+        this.debug(
           `Suggesting ${suggestions[0].player.web_name} and ${
             suggestions[1].player.web_name
           } to replace ${pick1.playerScore.player.web_name} and ${
             pick2.playerScore.player.web_name
-          } for a ${scoreImprovement.toFixed(2)} score boost`
+          } for a ${scoreImprovement.toFixed(2)} score boost`,
+          debug
         );
         options.push({
           playersOut: [pick1.playerScore, pick2.playerScore],
@@ -117,6 +128,11 @@ export default class TransferService {
         });
       });
     });
+    console.log();
+    console.log(
+      `Failed to suggest options for ${failedSuggestions} combinations`
+    );
+    console.log();
     return options.sort((a, b) => b.scoreImprovement - a.scoreImprovement)[0];
   }
 
@@ -158,5 +174,11 @@ export default class TransferService {
     };
     await this.fplFetcher!.performTransfers(transferRequest);
     return true;
+  }
+
+  private debug(message: string, debug: boolean) {
+    if (debug) {
+      console.log(message);
+    }
   }
 }

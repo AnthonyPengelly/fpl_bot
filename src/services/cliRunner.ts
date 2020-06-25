@@ -91,7 +91,7 @@ export default class CliRunner {
         this.recommendSquad(players);
         break;
       case CliRunner.RECOMMEND_TRANSFERS_CMD:
-        this.recommendTransfers(players, myTeam, picksWithScore);
+        this.recommendTransfers(players, myTeam, picksWithScore, true);
         break;
       case CliRunner.RECOMMEND_LINEUP_CMD:
         this.recommendLineup(picksWithScore);
@@ -131,7 +131,7 @@ export default class CliRunner {
         `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week. ` +
           "Showing recommended transfers"
       );
-      await this.recommendTransfers(players, myTeam, picksWithScore);
+      await this.recommendTransfers(players, myTeam, picksWithScore, false);
     }
     console.log("Updating lineup...");
     const myNewTeam = await this.fplFetcher.getMyTeam();
@@ -237,12 +237,14 @@ export default class CliRunner {
   private async recommendTransfers(
     playerScores: PlayerScore[],
     myTeam: MyTeam,
-    picksWithScore: TeamPickWithScore[]
+    picksWithScore: TeamPickWithScore[],
+    debug: boolean
   ) {
     const recommendation = this.recommendationService.recommendTransfers(
       playerScores,
       myTeam,
-      picksWithScore
+      picksWithScore,
+      debug
     );
     console.log();
     console.log("Players Out:");
@@ -266,7 +268,8 @@ export default class CliRunner {
     const recommendation = await this.recommendTransfers(
       playerScores,
       myTeam,
-      picksWithScore
+      picksWithScore,
+      false
     );
     const didPerformTransfer = await this.transferService.performTransfers(
       recommendation,

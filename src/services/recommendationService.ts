@@ -25,17 +25,20 @@ export default class RecommendationService {
   recommendTransfers(
     playerScores: PlayerScore[],
     myTeam: MyTeam,
-    picksWithScore: TeamPickWithScore[]
+    picksWithScore: TeamPickWithScore[],
+    debug: boolean
   ) {
     const singleTransfer = this.transferService.recommendOneTransfer(
       playerScores,
       myTeam,
-      picksWithScore
+      picksWithScore,
+      debug
     );
     const twoTransfers = this.transferService.recommendTwoTransfers(
       playerScores,
       myTeam,
-      picksWithScore
+      picksWithScore,
+      debug
     );
     const twoTransfersAreDouble =
       twoTransfers.scoreImprovement > singleTransfer.scoreImprovement * 2;
