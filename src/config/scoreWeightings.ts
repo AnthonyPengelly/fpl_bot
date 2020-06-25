@@ -1,26 +1,26 @@
 import { PositionMap } from "../models/PositionMap";
 
 const defenderWeightings = {
-  form: { max: 8, weight: 3 },
-  ictIndex: { max: 450, weight: 1 },
-  teamStrength: { max: 5, weight: 2, min: 2 },
-  teamStrengthForPosition: { max: 1500, weight: 2, min: 950 },
-  opponentStrength: { max: 5, weight: 2, min: 2 },
-  futureOpponentStrength: { max: 5, weight: 1.5, min: 2 },
+  form: { max: 8, weight: 20 },
+  ictIndex: { max: 450, weight: 10 },
+  teamStrength: { max: 5, weight: 15, min: 2 },
+  teamStrengthForPosition: { max: 1500, weight: 20, min: 950 },
+  opponentStrength: { max: 5, weight: 20, min: 2 },
+  futureOpponentStrength: { max: 5, weight: 15, min: 2 },
 };
 
 const attackerWeightings = {
-  form: { max: 8, weight: 3 },
-  ictIndex: { max: 450, weight: 2 },
-  teamStrength: { max: 5, weight: 1, min: 2 },
-  teamStrengthForPosition: { max: 1500, weight: 1, min: 950 },
-  opponentStrength: { max: 5, weight: 1, min: 2 },
-  futureOpponentStrength: { max: 5, weight: 0.75, min: 2 },
+  form: { max: 8, weight: 25 },
+  ictIndex: { max: 450, weight: 25 },
+  teamStrength: { max: 5, weight: 15, min: 2 },
+  teamStrengthForPosition: { max: 1500, weight: 10, min: 950 },
+  opponentStrength: { max: 5, weight: 15, min: 2 },
+  futureOpponentStrength: { max: 5, weight: 10, min: 2 },
 };
 
 const commonWeightings = {
-  numberOfGames: { max: 2, weight: 10 },
-  numberOfGamesInNext3Gameweeks: { max: 6, weight: 5 },
+  numberOfGames: { max: 2, weight: 30 },
+  numberOfGamesInNext3Gameweeks: { max: 6, weight: 20, min: 2 },
 };
 
 export const getWeightingsForPlayer = (player: PlayerOverview) =>

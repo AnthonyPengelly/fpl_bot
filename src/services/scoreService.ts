@@ -66,9 +66,11 @@ export default class ScoreService {
       (inputs.numberOfGames * commonWeightings.numberOfGames.weight) /
       commonWeightings.numberOfGames.max;
     commonWeightingsScore +=
-      (inputs.numberOfGamesInNext3Gameweeks *
+      ((inputs.numberOfGamesInNext3Gameweeks -
+        commonWeightings.numberOfGamesInNext3Gameweeks.min) *
         commonWeightings.numberOfGamesInNext3Gameweeks.weight) /
-      commonWeightings.numberOfGamesInNext3Gameweeks.max;
+      (commonWeightings.numberOfGamesInNext3Gameweeks.max -
+        commonWeightings.numberOfGamesInNext3Gameweeks.min);
 
     const commonWeightingsMax = Object.values(commonWeightings).reduce(
       (total, weight) => total + weight.weight,
