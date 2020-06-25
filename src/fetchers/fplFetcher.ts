@@ -36,11 +36,18 @@ export default class FplFetcher {
     return fixtures;
   }
 
-  async getMyTeam() {
-    if (!process.env.TEAM_ID) {
-      throw "Env variable TEAM_ID must be set!";
-    }
-    let url = this.baseUrl + "/my-team/" + process.env.TEAM_ID;
+  async getMyDetails() {
+    let url = this.baseUrl + "/me/";
+    var myTeam = await WebRequest.json<MyDetails>(url, {
+      headers: {
+        Cookie: this.cookies,
+      },
+    });
+    return myTeam;
+  }
+
+  async getMyTeam(teamId: number) {
+    let url = this.baseUrl + "/my-team/" + teamId;
     var myTeam = await WebRequest.json<MyTeam>(url, {
       headers: {
         Cookie: this.cookies,
@@ -49,8 +56,8 @@ export default class FplFetcher {
     return myTeam;
   }
 
-  async setLineup(lineup: MyTeamRequest) {
-    let url = this.baseUrl + "/my-team/" + process.env.TEAM_ID + "/";
+  async setLineup(lineup: MyTeamRequest, teamId: number) {
+    let url = this.baseUrl + "/my-team/" + teamId + "/";
     const response = await WebRequest.post(
       url,
       {

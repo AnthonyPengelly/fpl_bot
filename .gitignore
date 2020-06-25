@@ -1,4 +1,5 @@
 /node_modules
 /lib
 /log
-/srcipts/run-with-creds.sh
+/data
+/scripts/run-with-creds.sh

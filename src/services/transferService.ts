@@ -139,7 +139,8 @@ export default class TransferService {
   async performTransfers(
     transfer: TransferWithScores,
     nextEvent: Gameweek,
-    myTeam: MyTeam
+    myTeam: MyTeam,
+    teamId: number
   ) {
     if (
       myTeam.transfers.limit &&
@@ -158,7 +159,7 @@ export default class TransferService {
     }
     const transferRequest: TransferRequest = {
       chips: null,
-      entry: parseInt(process.env.TEAM_ID!),
+      entry: teamId,
       event: nextEvent.id,
       transfers: transfer.playersIn.map((playerIn, index) => {
         const playerOut = transfer.playersOut[index];

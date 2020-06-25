@@ -31,6 +31,7 @@ export default class CliRunner {
   public static RUN_CMD = "run";
   public static SCORE_PLAYER = "score-player";
   public static TOP_PLAYERS_CMD = "top-players";
+  public static WILDCARD_SQUAD_CMD = "wildcard-squad";
   public static RECOMMEND_SQUAD_CMD = "recommend-squad";
   public static RECOMMEND_TRANSFERS_CMD = "recommend-transfers";
   public static RECOMMEND_LINEUP_CMD = "recommend-lineup";
@@ -40,6 +41,7 @@ export default class CliRunner {
     CliRunner.RUN_CMD,
     CliRunner.SCORE_PLAYER,
     CliRunner.TOP_PLAYERS_CMD,
+    CliRunner.WILDCARD_SQUAD_CMD,
     CliRunner.RECOMMEND_SQUAD_CMD,
     CliRunner.RECOMMEND_TRANSFERS_CMD,
     CliRunner.RECOMMEND_LINEUP_CMD,
@@ -65,7 +67,7 @@ export default class CliRunner {
 
   async init() {}
 
-  async run(command: string, playerId: string) {
+  async run(command: string, optionalParameter: string) {
     const overview = await this.fplFetcher.getOverview();
     const nextEvent = overview.events.filter((event) => event.is_next)[0];
     const fixtures = await this.fplFetcher.getFixtures();
@@ -74,21 +76,29 @@ export default class CliRunner {
       fixtures,
       nextEvent.id
     );
-    const myTeam = await this.fplFetcher.getMyTeam();
+    const myDetails = await this.fplFetcher.getMyDetails();
+    const teamId = myDetails.player.entry;
+    const myTeam = await this.fplFetcher.getMyTeam(teamId);
     const picksWithScore = this.mapTeamToTeamPickWithScore(myTeam, players);
 
     switch (command) {
       case CliRunner.RUN_CMD:
-        this.runBot(players, myTeam, picksWithScore, nextEvent);
+        this.runBot(players, myTeam, picksWithScore, nextEvent, teamId);
         break;
       case CliRunner.SCORE_PLAYER:
-        this.scorePlayer(players, parseInt(playerId));
+        this.scorePlayer(players, parseInt(optionalParameter));
         break;
       case CliRunner.TOP_PLAYERS_CMD:
         this.topPlayers(players);
         break;
+      case CliRunner.WILDCARD_SQUAD_CMD:
+        this.wildcardSquad(players, myTeam);
+        break;
       case CliRunner.RECOMMEND_SQUAD_CMD:
-        this.recommendSquad(players);
+        this.recommendSquad(
+          players,
+          optionalParameter ? parseInt(optionalParameter) : 100
+        );
         break;
       case CliRunner.RECOMMEND_TRANSFERS_CMD:
         this.recommendTransfers(players, myTeam, picksWithScore, true);
@@ -97,10 +107,16 @@ export default class CliRunner {
         this.recommendLineup(picksWithScore);
         break;
       case CliRunner.SET_LINEUP_CMD:
-        this.setLineup(picksWithScore);
+        this.setLineup(picksWithScore, teamId);
         break;
       case CliRunner.PERFORM_TRANSFERS_CMD:
-        this.performTransfers(players, myTeam, picksWithScore, nextEvent);
+        this.performTransfers(
+          players,
+          myTeam,
+          picksWithScore,
+          nextEvent,
+          teamId
+        );
         break;
       default:
         console.error(
@@ -115,7 +131,8 @@ export default class CliRunner {
     players: PlayerScore[],
     myTeam: MyTeam,
     picksWithScore: TeamPickWithScore[],
-    nextEvent: Gameweek
+    nextEvent: Gameweek,
+    teamId: number
   ) {
     console.log("Running Bot...");
     const timeNow = moment();
@@ -125,7 +142,13 @@ export default class CliRunner {
       console.log(
         `Deadline in ${hoursTilDeadline} hours, performing transfers`
       );
-      await this.performTransfers(players, myTeam, picksWithScore, nextEvent);
+      await this.performTransfers(
+        players,
+        myTeam,
+        picksWithScore,
+        nextEvent,
+        teamId
+      );
     } else {
       console.log(
         `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week. ` +
@@ -134,12 +157,12 @@ export default class CliRunner {
       await this.recommendTransfers(players, myTeam, picksWithScore, false);
     }
     console.log("Updating lineup...");
-    const myNewTeam = await this.fplFetcher.getMyTeam();
+    const myNewTeam = await this.fplFetcher.getMyTeam(teamId);
     const newPicksWithScore = this.mapTeamToTeamPickWithScore(
       myNewTeam,
       players
     );
-    await this.setLineup(newPicksWithScore);
+    await this.setLineup(newPicksWithScore, teamId);
   }
 
   private scorePlayer(players: PlayerScore[], playerId: number) {
@@ -197,41 +220,49 @@ export default class CliRunner {
     DisplayService.displaySquad(bestSquad, "Best Squad");
   }
 
-  private recommendSquad(players: PlayerScore[]) {
+  private recommendSquad(players: PlayerScore[], budget: number) {
+    console.log(`Recommending squads based on a budget of £${budget}m`);
     const all15Positions = this.recommendationService.recommendATeam(
       players,
       fullSquad,
-      100
+      budget
     );
     DisplayService.displaySquad(all15Positions, "Full Squad");
 
     const skeleton442 = this.recommendationService.recommendATeam(
       players,
       skeleton442Squad,
-      100
+      budget
     );
     DisplayService.displaySquad(skeleton442, "Skeleton 442 Squad");
 
     const skeleton433 = this.recommendationService.recommendATeam(
       players,
       skeleton433Squad,
-      100
+      budget
     );
     DisplayService.displaySquad(skeleton433, "Skeleton 433 Squad");
 
     const skeleton343 = this.recommendationService.recommendATeam(
       players,
       skeleton343Squad,
-      100
+      budget
     );
     DisplayService.displaySquad(skeleton343, "Skeleton 343 Squad");
 
     const skeleton532 = this.recommendationService.recommendATeam(
       players,
       skeleton532Squad,
-      100
+      budget
     );
     DisplayService.displaySquad(skeleton532, "Skeleton 532 Squad");
+  }
+
+  private wildcardSquad(playerScores: PlayerScore[], myTeam: MyTeam) {
+    const totalSales =
+      myTeam.picks.reduce((total, pick) => total + pick.selling_price, 0) / 10;
+    const budget = totalSales + myTeam.transfers.bank / 10;
+    this.recommendSquad(playerScores, budget);
   }
 
   private async recommendTransfers(
@@ -263,7 +294,8 @@ export default class CliRunner {
     playerScores: PlayerScore[],
     myTeam: MyTeam,
     picksWithScore: TeamPickWithScore[],
-    nextEvent: Gameweek
+    nextEvent: Gameweek,
+    teamId: number
   ) {
     const recommendation = await this.recommendTransfers(
       playerScores,
@@ -274,7 +306,8 @@ export default class CliRunner {
     const didPerformTransfer = await this.transferService.performTransfers(
       recommendation,
       nextEvent,
-      myTeam
+      myTeam,
+      teamId
     );
     if (didPerformTransfer) {
       console.log("Successfully performed transfers");
@@ -294,9 +327,9 @@ export default class CliRunner {
     return lineup;
   }
 
-  private async setLineup(picksWithScore: TeamPickWithScore[]) {
+  private async setLineup(picksWithScore: TeamPickWithScore[], teamId: number) {
     const lineup = this.recommendLineup(picksWithScore);
-    await this.lineupService.setLineup(lineup);
+    await this.lineupService.setLineup(lineup, teamId);
     console.log("Successfully updated lineup");
   }
 

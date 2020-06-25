@@ -54,12 +54,15 @@ export default class ScoreService {
         weightings.futureOpponentStrength.weight) /
       (weightings.futureOpponentStrength.max -
         weightings.futureOpponentStrength.min);
+    score +=
+      (inputs.chanceOfPlaying * weightings.chanceOfPlaying.weight) /
+      weightings.chanceOfPlaying.max;
 
     const maxScore = Object.values(weightings).reduce(
       (total, weight) => total + weight.weight,
       0
     );
-    const normalisedScore = inputs.chanceOfPlaying * (score / maxScore);
+    const normalisedScore = 100 * (score / maxScore);
 
     let commonWeightingsScore = 0;
     commonWeightingsScore +=
@@ -79,7 +82,7 @@ export default class ScoreService {
     const totalWeight = maxScore + commonWeightingsMax;
 
     const normalisedCommonScore =
-      inputs.chanceOfPlaying * (commonWeightingsScore / commonWeightingsMax);
+      100 * (commonWeightingsScore / commonWeightingsMax);
 
     const finalScore =
       (normalisedScore * (totalWeight - commonWeightingsMax)) / totalWeight +

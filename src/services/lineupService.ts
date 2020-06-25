@@ -62,7 +62,7 @@ export default class LineupService {
     };
   }
 
-  async setLineup(lineup: Lineup) {
+  async setLineup(lineup: Lineup, teamId: number) {
     const picks = lineup.starting11.map((player, index) => ({
       element: player.player.id,
       position: index,
@@ -77,6 +77,6 @@ export default class LineupService {
         is_vice_captain: false,
       }))
     );
-    await this.fplFetcher.setLineup({ chips: null, picks: picks });
+    await this.fplFetcher.setLineup({ chips: null, picks: picks }, teamId);
   }
 }

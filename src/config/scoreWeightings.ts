@@ -7,6 +7,7 @@ const defenderWeightings = {
   teamStrengthForPosition: { max: 1500, weight: 20, min: 950 },
   opponentStrength: { max: 5, weight: 20, min: 2 },
   futureOpponentStrength: { max: 5, weight: 15, min: 2 },
+  chanceOfPlaying: { max: 100, weight: 50 },
 };
 
 const attackerWeightings = {
@@ -16,11 +17,12 @@ const attackerWeightings = {
   teamStrengthForPosition: { max: 1500, weight: 10, min: 950 },
   opponentStrength: { max: 5, weight: 15, min: 2 },
   futureOpponentStrength: { max: 5, weight: 10, min: 2 },
+  chanceOfPlaying: { max: 100, weight: 50 },
 };
 
 const commonWeightings = {
-  numberOfGames: { max: 2, weight: 30 },
-  numberOfGamesInNext3Gameweeks: { max: 6, weight: 20, min: 2 },
+  numberOfGames: { max: 2, weight: 45 },
+  numberOfGamesInNext3Gameweeks: { max: 6, weight: 30, min: 2 },
 };
 
 export const getWeightingsForPlayer = (player: PlayerOverview) =>
