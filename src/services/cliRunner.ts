@@ -172,6 +172,9 @@ export default class CliRunner {
       players
     );
     await this.setLineup(newPicksWithScore, teamId);
+
+    console.log();
+    this.topPlayers(players);
   }
 
   private scorePlayer(players: PlayerScore[], playerId: number) {
