@@ -1,14 +1,6 @@
 interface ScoreDetails {
   score: number;
-  inputs: {
-    form: number;
-    ictIndex: number;
-    teamStrength: number;
-    teamStrengthForPosition: number;
-    opponentStrength: number;
-    futureOpponentStrength: number;
-    chanceOfPlaying: number;
-    numberOfGames: number;
-    numberOfGamesInNext3Gameweeks: number;
-  };
+  inputs: ScoreInputs;
+  weightedInputs: ScoreInputs;
+  weights: { [weight: string]: { min?: number; max: number; weight: number } };
 }

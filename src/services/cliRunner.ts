@@ -18,6 +18,7 @@ import {
 import TransferService from "./transferService";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import LineupService from "./lineupService";
+import DataRecorder from "./dataRecorder";
 
 export default class CliRunner {
   private fplFetcher: FplFetcher;
@@ -27,9 +28,10 @@ export default class CliRunner {
   private teamValidator: TeamValidator;
   private transferService: TransferService;
   private lineupService: LineupService;
+  private dataRecorder: DataRecorder;
 
   public static RUN_CMD = "run";
-  public static SCORE_PLAYER = "score-player";
+  public static SCORE_PLAYER_CMD = "score-player";
   public static TOP_PLAYERS_CMD = "top-players";
   public static WILDCARD_SQUAD_CMD = "wildcard-squad";
   public static RECOMMEND_SQUAD_CMD = "recommend-squad";
@@ -37,9 +39,10 @@ export default class CliRunner {
   public static RECOMMEND_LINEUP_CMD = "recommend-lineup";
   public static SET_LINEUP_CMD = "set-lineup";
   public static PERFORM_TRANSFERS_CMD = "perform-transfers";
+  public static RECORD_DATA_CMD = "record-data";
   public static commands = [
     CliRunner.RUN_CMD,
-    CliRunner.SCORE_PLAYER,
+    CliRunner.SCORE_PLAYER_CMD,
     CliRunner.TOP_PLAYERS_CMD,
     CliRunner.WILDCARD_SQUAD_CMD,
     CliRunner.RECOMMEND_SQUAD_CMD,
@@ -47,6 +50,7 @@ export default class CliRunner {
     CliRunner.RECOMMEND_LINEUP_CMD,
     CliRunner.SET_LINEUP_CMD,
     CliRunner.PERFORM_TRANSFERS_CMD,
+    CliRunner.RECORD_DATA_CMD,
   ];
 
   constructor() {
@@ -63,6 +67,7 @@ export default class CliRunner {
       this.optimisationService,
       this.transferService
     );
+    this.dataRecorder = new DataRecorder();
   }
 
   async init() {}
@@ -85,7 +90,7 @@ export default class CliRunner {
       case CliRunner.RUN_CMD:
         this.runBot(players, myTeam, picksWithScore, nextEvent, teamId);
         break;
-      case CliRunner.SCORE_PLAYER:
+      case CliRunner.SCORE_PLAYER_CMD:
         this.scorePlayer(players, parseInt(optionalParameter));
         break;
       case CliRunner.TOP_PLAYERS_CMD:
@@ -117,6 +122,9 @@ export default class CliRunner {
           nextEvent,
           teamId
         );
+        break;
+      case CliRunner.RECORD_DATA_CMD:
+        this.recordData(players);
         break;
       default:
         console.error(
@@ -331,6 +339,10 @@ export default class CliRunner {
     const lineup = this.recommendLineup(picksWithScore);
     await this.lineupService.setLineup(lineup, teamId);
     console.log("Successfully updated lineup");
+  }
+
+  private async recordData(players: PlayerScore[]) {
+    await this.dataRecorder.recordData(players);
   }
 
   private mapTeamToTeamPickWithScore(

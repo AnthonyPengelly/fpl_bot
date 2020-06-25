@@ -13,7 +13,7 @@ export default class ScoreService {
   ) {
     const weightings = getWeightingsForPlayer(player);
     const commonWeightings = getCommonWeightings();
-    const inputs = {
+    const inputs: ScoreInputs = {
       form: player.form,
       ictIndex: player.ict_index,
       teamStrength: team.strength,
@@ -31,65 +31,80 @@ export default class ScoreService {
       numberOfGames: opponentFixtures.length,
       numberOfGamesInNext3Gameweeks: futureFixtures.length,
     };
-    let score = 0;
-    score += (inputs.form * weightings.form.weight) / weightings.form.max;
-    score +=
+    const weightedInputs = {} as ScoreInputs;
+    weightedInputs.form =
+      (inputs.form * weightings.form.weight) / weightings.form.max;
+
+    weightedInputs.ictIndex =
       (inputs.ictIndex * weightings.ictIndex.weight) / weightings.ictIndex.max;
-    score +=
+
+    weightedInputs.teamStrength =
       ((inputs.teamStrength - weightings.teamStrength.min) *
         weightings.teamStrength.weight) /
       (weightings.teamStrength.max - weightings.teamStrength.min);
-    score +=
+
+    weightedInputs.teamStrengthForPosition =
       ((inputs.teamStrengthForPosition -
         weightings.teamStrengthForPosition.min) *
         weightings.teamStrengthForPosition.weight) /
       (weightings.teamStrengthForPosition.max -
         weightings.teamStrengthForPosition.min);
-    score +=
+
+    weightedInputs.opponentStrength =
       ((weightings.opponentStrength.max - inputs.opponentStrength) *
         weightings.opponentStrength.weight) /
       (weightings.opponentStrength.max - weightings.opponentStrength.min);
-    score +=
+
+    weightedInputs.futureOpponentStrength =
       ((weightings.futureOpponentStrength.max - inputs.futureOpponentStrength) *
         weightings.futureOpponentStrength.weight) /
       (weightings.futureOpponentStrength.max -
         weightings.futureOpponentStrength.min);
-    score +=
+
+    weightedInputs.chanceOfPlaying =
       (inputs.chanceOfPlaying * weightings.chanceOfPlaying.weight) /
       weightings.chanceOfPlaying.max;
 
-    const maxScore = Object.values(weightings).reduce(
+    const score = Object.values(weightedInputs).reduce(
+      (total, value) => total + value,
+      0
+    );
+    const weightingsMax = Object.values(weightings).reduce(
       (total, weight) => total + weight.weight,
       0
     );
-    const normalisedScore = 100 * (score / maxScore);
+    const normalisedScore = 100 * (score / weightingsMax);
 
-    let commonWeightingsScore = 0;
-    commonWeightingsScore +=
+    weightedInputs.numberOfGames =
       (inputs.numberOfGames * commonWeightings.numberOfGames.weight) /
       commonWeightings.numberOfGames.max;
-    commonWeightingsScore +=
+    weightedInputs.numberOfGamesInNext3Gameweeks =
       ((inputs.numberOfGamesInNext3Gameweeks -
         commonWeightings.numberOfGamesInNext3Gameweeks.min) *
         commonWeightings.numberOfGamesInNext3Gameweeks.weight) /
       (commonWeightings.numberOfGamesInNext3Gameweeks.max -
         commonWeightings.numberOfGamesInNext3Gameweeks.min);
 
+    const commonWeightingsScore =
+      weightedInputs.numberOfGames +
+      weightedInputs.numberOfGamesInNext3Gameweeks;
     const commonWeightingsMax = Object.values(commonWeightings).reduce(
       (total, weight) => total + weight.weight,
       0
     );
-    const totalWeight = maxScore + commonWeightingsMax;
+    const totalWeight = weightingsMax + commonWeightingsMax;
 
     const normalisedCommonScore =
       100 * (commonWeightingsScore / commonWeightingsMax);
 
     const finalScore =
-      (normalisedScore * (totalWeight - commonWeightingsMax)) / totalWeight +
+      (normalisedScore * weightingsMax) / totalWeight +
       (normalisedCommonScore * commonWeightingsMax) / totalWeight;
     return {
       score: finalScore,
       inputs: inputs,
+      weightedInputs: weightedInputs,
+      weights: { ...weightings, ...commonWeightings },
     } as ScoreDetails;
   }
 
