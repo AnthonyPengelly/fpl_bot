@@ -7,9 +7,9 @@
     "fpl-cli": "./bin/fpl-cli"
   },
   "scripts": {
-    "start": "npm run build && npm run global",
-    "build": "npm run clean:some && tsc -p .",
-    "global": "npm i -g && fpl-cli",
+    "start": "npm run build && && fpl-cli",
+    "build": "npm run clean:some && tsc -p . && npm run global",
+    "global": "npm i -g",
     "clean:some": "rm -rf ./lib",
     "clean:all": "rm -rf ./node_modules ./package-lock.json ./lib",
     "refresh": "npm run clean:all && npm install"
