@@ -5,7 +5,7 @@
     "lib": ["ES6", "ES2015", "DOM"],
     "outDir": "lib",
     "rootDir": "src",
-    "types": ["node"],
+    "types": ["node", "jest"],
     "experimentalDecorators": true,
     "strict": true,
     "esModuleInterop": true,
