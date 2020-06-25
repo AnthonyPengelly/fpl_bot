@@ -5,7 +5,7 @@ import moment from "moment";
 export default class DataRecorder {
   recordData(players: PlayerScore[]) {
     return new Promise((resolve, reject) => {
-      const data = players.slice(0, 150).map((player) => ({
+      const data = players.map((player) => ({
         name: player.player.web_name,
         id: player.player.id,
         team: player.player.team,
