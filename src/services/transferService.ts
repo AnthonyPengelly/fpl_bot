@@ -17,9 +17,6 @@ export default class TransferService {
     picksWithScore: TeamPickWithScore[]
   ): TransferWithScores {
     const options = picksWithScore.map((pickWithScore) => {
-      console.log(
-        `Attempting to replace ${pickWithScore.playerScore.player.web_name}`
-      );
       const remainingBudget =
         (myTeam.transfers.bank + pickWithScore.pick.selling_price) / 10;
       const possiblePlayers = playerScores
@@ -61,9 +58,6 @@ export default class TransferService {
         if (pick1.playerScore.player.id === pick2.playerScore.player.id) {
           return;
         }
-        console.log(
-          `Attempting to replace ${pick1.playerScore.player.web_name} and ${pick2.playerScore.player.web_name}`
-        );
         const remainingBudget =
           (myTeam.transfers.bank +
             pick1.pick.selling_price +
@@ -96,7 +90,9 @@ export default class TransferService {
           remainingTeam
         );
         if (!suggestions) {
-          console.warn("No suggestions");
+          console.warn(
+            `No suggestions to replace ${pick1.playerScore.player.web_name} and ${pick2.playerScore.player.web_name}`
+          );
           return;
         }
         if (suggestions.length !== 2) {
@@ -110,6 +106,8 @@ export default class TransferService {
         console.log(
           `Suggesting ${suggestions[0].player.web_name} and ${
             suggestions[1].player.web_name
+          } to replace ${pick1.playerScore.player.web_name} and ${
+            pick2.playerScore.player.web_name
           } for a ${scoreImprovement.toFixed(2)} score boost`
         );
         options.push({
@@ -122,11 +120,14 @@ export default class TransferService {
     return options.sort((a, b) => b.scoreImprovement - a.scoreImprovement)[0];
   }
 
-  async performTransfers(transfer: TransferWithScores, nextEvent: Gameweek, myTeam: MyTeam) {
+  async performTransfers(
+    transfer: TransferWithScores,
+    nextEvent: Gameweek,
+    myTeam: MyTeam
+  ) {
     if (
       myTeam.transfers.limit &&
-      transfer.playersIn.length >
-        myTeam.transfers.limit - myTeam.transfers.made
+      transfer.playersIn.length > myTeam.transfers.limit - myTeam.transfers.made
     ) {
       console.log(
         `Transfers requested: ${transfer.playersIn.length} exceeds limit: ${
