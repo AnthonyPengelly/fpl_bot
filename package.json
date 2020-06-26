@@ -9,11 +9,12 @@
   "scripts": {
     "start": "npm run build && fpl-cli",
     "build": "npm run clean:some && tsc -p . && npm run global",
+    "build-for-tests": "npm run clean:some && tsc -p .",
     "global": "npm i -g",
     "clean:some": "rm -rf ./lib",
     "clean:all": "rm -rf ./node_modules ./package-lock.json ./lib",
     "refresh": "npm run clean:all && npm install",
-    "test": "npm run build && jest lib/tests"
+    "test": "npm run build-for-tests && jest lib/tests"
   },
   "author": "Anthony Pengelly",
   "license": "ISC",
