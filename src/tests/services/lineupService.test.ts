@@ -57,39 +57,48 @@ const generatePlayers = (
       new PlayerScoreBuilder().withPlayerId(12).withPositionId(1).withScore(1).build()
     )
     .build();
-  const defenderSubs = Array.from(Array(5 - numberOfDefenders), (_, i) =>
-    new TeamPickWithScoreBuilder()
-      .withPlayerScore(
-        new PlayerScoreBuilder()
-          .withPlayerId(i + 13)
-          .withPositionId(2)
-          .withScore(1)
-          .build()
-      )
-      .build()
-  );
-  const midfielderSubs = Array.from(Array(5 - numberOfMidfielders), (_, i) =>
-    new TeamPickWithScoreBuilder()
-      .withPlayerScore(
-        new PlayerScoreBuilder()
-          .withPlayerId(i + 13 + defenderSubs.length)
-          .withPositionId(3)
-          .withScore(1)
-          .build()
-      )
-      .build()
-  );
-  const forwardSubs = Array.from(Array(3 - numberOfForwards), (_, i) =>
-    new TeamPickWithScoreBuilder()
-      .withPlayerScore(
-        new PlayerScoreBuilder()
-          .withPlayerId(i + 13 + defenderSubs.length + midfielderSubs.length)
-          .withPositionId(4)
-          .withScore(1)
-          .build()
-      )
-      .build()
-  );
+  const defenderSubs =
+    numberOfDefenders < 5
+      ? Array.from(Array(5 - numberOfDefenders), (_, i) =>
+          new TeamPickWithScoreBuilder()
+            .withPlayerScore(
+              new PlayerScoreBuilder()
+                .withPlayerId(i + 13)
+                .withPositionId(2)
+                .withScore(1)
+                .build()
+            )
+            .build()
+        )
+      : [];
+  const midfielderSubs =
+    numberOfMidfielders < 5
+      ? Array.from(Array(5 - numberOfMidfielders), (_, i) =>
+          new TeamPickWithScoreBuilder()
+            .withPlayerScore(
+              new PlayerScoreBuilder()
+                .withPlayerId(i + 13 + defenderSubs.length)
+                .withPositionId(3)
+                .withScore(1)
+                .build()
+            )
+            .build()
+        )
+      : [];
+  const forwardSubs =
+    numberOfForwards < 3
+      ? Array.from(Array(3 - numberOfForwards), (_, i) =>
+          new TeamPickWithScoreBuilder()
+            .withPlayerScore(
+              new PlayerScoreBuilder()
+                .withPlayerId(i + 13 + defenderSubs.length + midfielderSubs.length)
+                .withPositionId(4)
+                .withScore(1)
+                .build()
+            )
+            .build()
+        )
+      : [];
   const squad = [goalkeeper, goalkeeperSub].concat(
     defenders,
     defenderSubs,
@@ -144,6 +153,7 @@ describe("lineupService", () => {
     ["253", generatePlayers(2, 5, 3)],
     ["262", generatePlayers(2, 6, 2)],
     ["271", generatePlayers(2, 7, 1)],
+    ["665", generatePlayers(2, 7, 1)],
   ])(
     "Does not force an invalid lineup, with a %s formation",
     (formation: string, players: TeamPickWithScore[]) => {
