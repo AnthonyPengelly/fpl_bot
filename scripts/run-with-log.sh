@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 cd "$(dirname "$0")"
 cd ..
-mkdir -p log
-mkdir -p data
-DATE=$(date +'%Y-%m-%d')
+
+DATE=$(date +'%Y/%m/%d')
+FOLDER_DATE=$(date +'%Y/%m')
+mkdir -p "log/$FOLDER_DATE"
 
 ./bin/fpl-cli run &> "log/$DATE.log"
 cat "log/$DATE.log"
