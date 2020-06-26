@@ -13,7 +13,7 @@
     "clean:some": "rm -rf ./lib",
     "clean:all": "rm -rf ./node_modules ./package-lock.json ./lib",
     "refresh": "npm run clean:all && npm install",
-    "test": "jest"
+    "test": "npm run build && jest lib/tests"
   },
   "author": "Anthony Pengelly",
   "license": "ISC",
@@ -36,8 +36,5 @@
   },
   "prettier": {
     "printWidth": 100
-  },
-  "jest": {
-    "preset": "ts-jest"
   }
 }

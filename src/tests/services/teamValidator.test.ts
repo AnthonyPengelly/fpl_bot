@@ -1,6 +1,7 @@
-import TeamValidator from "../../src/services/teamValidator";
-import { OptimisationSettings } from "../../src/config/optimisationSettings";
-import PlayerScore from "../../src/models/PlayerScore";
+import TeamValidator from "../../services/teamValidator";
+import { OptimisationSettings } from "../../config/optimisationSettings";
+import PlayerScore from "../../models/PlayerScore";
+import PlayerScoreBuilder from "../builders/playerScoreBuilder";
 
 const validator = new TeamValidator();
 
@@ -229,16 +230,10 @@ describe("teamValidator", () => {
   });
 });
 
-const createPlayer = (team: number, position: number, id?: number): PlayerScore =>
-  new PlayerScore(
-    {
-      id: id || Math.floor(Math.random() * 1000000),
-      team: team,
-    } as PlayerOverview,
-    {
-      id: position,
-    } as Position,
-    0,
-    0,
-    {} as ScoreDetails
-  );
+const createPlayer = (team: number, position: number, id?: number): PlayerScore => {
+  const builder = new PlayerScoreBuilder().withTeamId(team).withPositionId(position);
+  if (id) {
+    builder.withPlayerId(id);
+  }
+  return builder.build();
+};
