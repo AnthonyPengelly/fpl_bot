@@ -14,6 +14,7 @@ export default class DisplayService {
     const squadScore = sortedPlayers.reduce((total, player) => total + player.score, 0);
     console.log(`Score: ${squadScore.toFixed(2)}`);
     console.log(`Score per player: ${(squadScore / sortedPlayers.length).toFixed(2)}`);
+    console.log();
   }
 
   static displayPlayers(players: PlayerScore[]) {
@@ -41,6 +42,7 @@ export default class DisplayService {
     DisplayService.displayPlayers(transfer.playersIn);
     console.log();
     console.log(`Score improvement: ${transfer.scoreImprovement.toFixed(2)}`);
+    console.log();
   }
 
   static displayHeader() {

@@ -285,6 +285,7 @@ export default class CliRunner {
     DisplayService.displayPlayers(lineup.orderedSubs);
     console.log(`Captain: ${lineup.captain.player.web_name}`);
     console.log(`Vice Captain: ${lineup.viceCaptain.player.web_name}`);
+    DisplayService.displaySquad([...lineup.starting11, ...lineup.orderedSubs], "My Squad");
     return lineup;
   }
 
