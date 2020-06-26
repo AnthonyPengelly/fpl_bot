@@ -108,7 +108,7 @@ export default class CliRunner {
         this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId);
         break;
       case CliRunner.RECORD_DATA_CMD:
-        this.recordData(players);
+        this.recordData(players, nextEvent.id);
         break;
       default:
         console.error(
@@ -133,7 +133,7 @@ export default class CliRunner {
     if (hoursTilDeadline < 24) {
       console.log(`Deadline in ${hoursTilDeadline} hours, performing transfers`);
       await this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId);
-      this.recordData(players);
+      this.recordData(players, nextEvent.id);
     } else {
       console.log(
         `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week. ` +
@@ -303,8 +303,8 @@ export default class CliRunner {
     console.log("Successfully updated lineup");
   }
 
-  private async recordData(players: PlayerScore[]) {
-    await this.dataRecorder.recordData(players);
+  private async recordData(players: PlayerScore[], nextEventId: number) {
+    await this.dataRecorder.recordData(players, nextEventId);
   }
 
   private mapTeamToTeamPickWithScore(myTeam: MyTeam, players: PlayerScore[]): TeamPickWithScore[] {
