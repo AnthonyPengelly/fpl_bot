@@ -1,4 +1,5 @@
 import PlayerScore from "../models/PlayerScore";
+import { TransferWithScores } from "../models/TransferWithScores";
 
 export default class DisplayService {
   static displaySquad(players: PlayerScore[], squadName: string) {
@@ -29,6 +30,17 @@ export default class DisplayService {
         playerScore.player.web_name
       }`
     );
+  }
+
+  static displayTransfer(transfer: TransferWithScores) {
+    console.log();
+    console.log("Players Out:");
+    DisplayService.displayPlayers(transfer.playersOut);
+    console.log();
+    console.log("Players In");
+    DisplayService.displayPlayers(transfer.playersIn);
+    console.log();
+    console.log(`Score improvement: ${transfer.scoreImprovement.toFixed(2)}`);
   }
 
   static displayHeader() {

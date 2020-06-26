@@ -3,6 +3,8 @@ import PlayerScore from "../models/PlayerScore";
 import OptimisationService from "./optimisationService";
 import TransferService from "./transferService";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
+import { TransferWithScores } from "../models/TransferWithScores";
+import DisplayService from "./displayService";
 
 export default class RecommendationService {
   constructor(
@@ -37,9 +39,26 @@ export default class RecommendationService {
     const twoTransfersAre150Percent =
       twoTransfers.scoreImprovement > singleTransfer.scoreImprovement * 1.5;
     if (myTeam.transfers.limit === 1) {
-      return twoTransfersAreDouble ? twoTransfers : singleTransfer;
+      return this.returnTransferAndLogRejected(twoTransfersAreDouble, singleTransfer, twoTransfers);
     }
     // Limit is two or unlimited - go for 2 a bit more readily
-    return twoTransfersAre150Percent ? twoTransfers : singleTransfer;
+    return this.returnTransferAndLogRejected(
+      twoTransfersAre150Percent,
+      singleTransfer,
+      twoTransfers
+    );
+  }
+
+  private returnTransferAndLogRejected(
+    recommendTwoTransfers: boolean,
+    singleTransfer: TransferWithScores,
+    doubleTransfer: TransferWithScores
+  ) {
+    console.log("Rejected transfer option:");
+    DisplayService.displayTransfer(recommendTwoTransfers ? singleTransfer : doubleTransfer);
+    console.log("Recommended transfer option:");
+    DisplayService.displayTransfer(recommendTwoTransfers ? doubleTransfer : singleTransfer);
+
+    return recommendTwoTransfers ? doubleTransfer : singleTransfer;
   }
 }

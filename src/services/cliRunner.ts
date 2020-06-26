@@ -243,21 +243,12 @@ export default class CliRunner {
     picksWithScore: TeamPickWithScore[],
     debug: boolean
   ) {
-    const recommendation = this.recommendationService.recommendTransfers(
+    return this.recommendationService.recommendTransfers(
       playerScores,
       myTeam,
       picksWithScore,
       debug
     );
-    console.log();
-    console.log("Players Out:");
-    DisplayService.displayPlayers(recommendation.playersOut);
-    console.log();
-    console.log("Players In");
-    DisplayService.displayPlayers(recommendation.playersIn);
-    console.log();
-    console.log(`Score improvement: ${recommendation.scoreImprovement.toFixed(2)}`);
-    return recommendation;
   }
 
   private async performTransfers(
