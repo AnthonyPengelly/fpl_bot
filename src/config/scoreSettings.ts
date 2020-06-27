@@ -33,9 +33,9 @@ const defenderSettings: ScoreSettings = {
 const attackerSettings: ScoreSettings = {
   weights: {
     form: { max: 8, weight: 22 },
-    pointsPerGame: { max: 6, weight: 10 },
+    pointsPerGame: { max: 6, weight: 15 },
     ictIndex: { max: 450, weight: 20 },
-    teamStrength: { max: 5, weight: 15, min: 2 },
+    teamStrength: { max: 5, weight: 10, min: 2 },
     teamStrengthForPosition: { max: 1350, weight: 10, min: 950 },
     opponentStrength: { max: 5 + 1, weight: 13, min: 2 }, // home advantage to max opp strength
     futureOpponentStrength: { max: 5 + 1, weight: 10, min: 2 },
