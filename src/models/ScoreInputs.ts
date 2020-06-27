@@ -1,5 +1,6 @@
 interface ScoreInputs {
   form: number;
+  pointsPerGame: number;
   ictIndex: number;
   teamStrength: number;
   teamStrengthForPosition: number;

@@ -6,6 +6,7 @@ const basePlayer = {
   ict_index: 0,
   chance_of_playing_next_round: 0,
   element_type: 1,
+  points_per_game: 0,
 } as PlayerOverview;
 
 const scoreSettings = getScoreSettingsForPlayer(basePlayer);
@@ -39,6 +40,26 @@ describe("scoreService", () => {
   test("Calculates form correctly", () => {
     const player = { ...basePlayer, form: scoreSettings.weights.form.max };
     const expectedScoreFromPlayer = (100 * scoreSettings.weights.form.weight) / totalWeight;
+    const expectedScoreFromGames =
+      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+
+    const result = ScoreService.calculateScore(
+      player,
+      baseTeam,
+      [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
+      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+        getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
+      )
+    );
+
+    expect(result.score.toFixed(3)).toBe(
+      (expectedScoreFromPlayer + expectedScoreFromGames - scoreSettings.positionPenalty).toFixed(3)
+    );
+  });
+  test("Calculates points per game correctly", () => {
+    const player = { ...basePlayer, points_per_game: scoreSettings.weights.pointsPerGame.max };
+    const expectedScoreFromPlayer =
+      (100 * scoreSettings.weights.pointsPerGame.weight) / totalWeight;
     const expectedScoreFromGames =
       (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
@@ -109,9 +130,14 @@ describe("scoreService", () => {
     const result = ScoreService.calculateScore(
       basePlayer,
       team,
-      [getOpponent(scoreSettings.weights.opponentStrength.max, false)],
+      [
+        getOpponent(
+          scoreSettings.weights.opponentStrength.max - scoreSettings.homeAdvantage,
+          false
+        ),
+      ],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
-        getOpponent(scoreSettings.weights.futureOpponentStrength.max, false)
+        getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       )
     );
 
@@ -133,9 +159,9 @@ describe("scoreService", () => {
     const result = ScoreService.calculateScore(
       player,
       baseTeam,
-      [getOpponent(scoreSettings.weights.opponentStrength.max, false)],
+      [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
-        getOpponent(scoreSettings.weights.futureOpponentStrength.max, false)
+        getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       )
     );
 
@@ -164,6 +190,31 @@ describe("scoreService", () => {
     );
   });
 
+  test("Calculates opponent strength for away matches correctly", () => {
+    const opponentWeight =
+      ((scoreSettings.weights.opponentStrength.max -
+        scoreSettings.weights.opponentStrength.min -
+        scoreSettings.homeAdvantage) *
+        scoreSettings.weights.opponentStrength.weight) /
+      (scoreSettings.weights.opponentStrength.max - scoreSettings.weights.opponentStrength.min);
+    const expectedScoreFromPlayer = (100 * opponentWeight) / totalWeight;
+    const expectedScoreFromGames =
+      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+
+    const result = ScoreService.calculateScore(
+      basePlayer,
+      baseTeam,
+      [getOpponent(scoreSettings.weights.opponentStrength.min, false)],
+      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+        getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
+      )
+    );
+
+    expect(result.score.toFixed(3)).toBe(
+      (expectedScoreFromPlayer + expectedScoreFromGames - scoreSettings.positionPenalty).toFixed(3)
+    );
+  });
+
   test("Calculates future opponent strength correctly", () => {
     const expectedScoreFromPlayer =
       (100 * scoreSettings.weights.futureOpponentStrength.weight) / totalWeight;
@@ -176,6 +227,32 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.min, true)
+      )
+    );
+
+    expect(result.score.toFixed(3)).toBe(
+      (expectedScoreFromPlayer + expectedScoreFromGames - scoreSettings.positionPenalty).toFixed(3)
+    );
+  });
+
+  test("Calculates future opponent strength for away games correctly", () => {
+    const opponentWeight =
+      ((scoreSettings.weights.futureOpponentStrength.max -
+        scoreSettings.weights.futureOpponentStrength.min -
+        scoreSettings.homeAdvantage) *
+        scoreSettings.weights.futureOpponentStrength.weight) /
+      (scoreSettings.weights.futureOpponentStrength.max -
+        scoreSettings.weights.futureOpponentStrength.min);
+    const expectedScoreFromPlayer = (100 * opponentWeight) / totalWeight;
+    const expectedScoreFromGames =
+      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+
+    const result = ScoreService.calculateScore(
+      basePlayer,
+      baseTeam,
+      [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
+      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+        getOpponent(scoreSettings.weights.futureOpponentStrength.min, false)
       )
     );
 

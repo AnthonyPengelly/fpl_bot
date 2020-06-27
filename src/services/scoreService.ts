@@ -1,4 +1,8 @@
-import { getCommonInputsSettings, getScoreSettingsForPlayer } from "../config/scoreSettings";
+import {
+  getCommonInputsSettings,
+  getScoreSettingsForPlayer,
+  ScoreSettings,
+} from "../config/scoreSettings";
 import { PositionMap } from "../models/PositionMap";
 
 export default class ScoreService {
@@ -13,11 +17,12 @@ export default class ScoreService {
     const commonInputsWeights = getCommonInputsSettings().weights;
     const inputs: ScoreInputs = {
       form: player.form,
+      pointsPerGame: player.points_per_game,
       ictIndex: player.ict_index,
       teamStrength: team.strength,
       teamStrengthForPosition: this.teamStrengthForPosition(player, team, opponentFixtures),
-      opponentStrength: this.getOpponentAverageStrength(opponentFixtures),
-      futureOpponentStrength: this.getOpponentAverageStrength(futureFixtures),
+      opponentStrength: this.getOpponentAverageStrength(opponentFixtures, settings),
+      futureOpponentStrength: this.getOpponentAverageStrength(futureFixtures, settings),
       chanceOfPlaying:
         player.chance_of_playing_next_round === null ? 80 : player.chance_of_playing_next_round,
       numberOfGames: opponentFixtures.length,
@@ -25,6 +30,9 @@ export default class ScoreService {
     };
     const weightedInputs = {} as ScoreInputs;
     weightedInputs.form = (inputs.form * weights.form.weight) / weights.form.max;
+
+    weightedInputs.pointsPerGame =
+      (inputs.pointsPerGame * weights.pointsPerGame.weight) / weights.pointsPerGame.max;
 
     weightedInputs.ictIndex = (inputs.ictIndex * weights.ictIndex.weight) / weights.ictIndex.max;
 
@@ -118,12 +126,16 @@ export default class ScoreService {
     );
   }
 
-  private static getOpponentAverageStrength(fixtures: OpponentFixture[]) {
+  private static getOpponentAverageStrength(fixtures: OpponentFixture[], settings: ScoreSettings) {
     if (fixtures.length === 0) {
-      return 3.5;
+      return (settings.weights.opponentStrength.max - settings.weights.opponentStrength.min) / 2;
     }
     return (
-      fixtures.reduce((total, fixture) => total + fixture.opponent.strength, 0) / fixtures.length
+      fixtures.reduce(
+        (total, fixture) =>
+          total + fixture.opponent.strength + (!fixture.isHome ? settings.homeAdvantage : 0),
+        0
+      ) / fixtures.length
     );
   }
 }
