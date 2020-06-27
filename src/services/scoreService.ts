@@ -104,14 +104,15 @@ export default class ScoreService {
     return (
       fixtures.reduce(
         (total, fixture) =>
-          total + player.element_type === PositionMap.GOALKEEPER ||
+          total +
+          (player.element_type === PositionMap.GOALKEEPER ||
           player.element_type === PositionMap.DEFENDER
             ? fixture.isHome
               ? team.strength_defence_home
               : team.strength_defence_away
             : fixture.isHome
             ? team.strength_attack_home
-            : team.strength_attack_away,
+            : team.strength_attack_away),
         0
       ) / fixtures.length
     );
@@ -119,7 +120,7 @@ export default class ScoreService {
 
   private static getOpponentAverageStrength(fixtures: OpponentFixture[]) {
     if (fixtures.length === 0) {
-      return 3;
+      return 3.5;
     }
     return (
       fixtures.reduce((total, fixture) => total + fixture.opponent.strength, 0) / fixtures.length
