@@ -19,6 +19,10 @@ export default class DataRecorder {
     const dateString = moment().format("YYYY/MM/DD");
     const folderDate = moment().format("YYYY/MM");
     await fs.promises.mkdir(`./data/${folderDate}`, { recursive: true });
-    return fs.promises.writeFile(`./data/${dateString}.json`, JSON.stringify(data), "utf8");
+    return fs.promises.writeFile(
+      `./data/${dateString}.json`,
+      JSON.stringify(data, null, 2),
+      "utf8"
+    );
   }
 }
