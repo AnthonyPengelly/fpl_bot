@@ -9,6 +9,7 @@ export default class DataRecorder {
       playerData: players.map((player) => ({
         name: player.player.web_name,
         id: player.player.id,
+        code: player.player.code,
         team: player.player.team,
         position: player.position.singular_name_short,
         score: player.score,

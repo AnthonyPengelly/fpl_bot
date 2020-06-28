@@ -31,7 +31,7 @@ export default class PlayersService {
           opponents,
           futureOpponents,
           gameweeksPlayed,
-          previousData?.playerData.find((x) => x.id === player.id)?.scoreDetails
+          previousData?.playerData.find((x) => x.code === player.code)?.scoreDetails
         );
         return new PlayerScore(
           player,
