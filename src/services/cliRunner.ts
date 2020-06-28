@@ -210,7 +210,7 @@ export default class CliRunner {
     }
 
     console.log();
-    this.topPlayers(players);
+    this.draftTopPlayers(players);
   }
 
   private scorePlayer(players: PlayerScore[], playerId: number) {
