@@ -1,5 +1,6 @@
 /node_modules
 /lib
 /log
+/draft-log
 /data
 /scripts/run-with-creds.sh
