@@ -14,7 +14,7 @@
     "clean:some": "rm -rf ./lib",
     "clean:all": "rm -rf ./node_modules ./package-lock.json ./lib",
     "refresh": "npm run clean:all && npm install",
-    "test": "npm run build-for-tests && jest lib/tests"
+    "test": "npm run build-for-tests && ./scripts/run-tests.sh"
   },
   "author": "Anthony Pengelly",
   "license": "ISC",
