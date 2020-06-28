@@ -21,7 +21,9 @@ export default class ScoreService {
       opponentStrength: this.getOpponentAverageStrength(opponentFixtures, settings),
       futureOpponentStrength: this.getOpponentAverageStrength(futureFixtures, settings),
       chanceOfPlaying:
-        player.chance_of_playing_next_round === null ? 80 : player.chance_of_playing_next_round,
+        // I think any injuries/suspensions will be reported explicitly, so if it is null,
+        // it's probably meant to be 100% chance of playing
+        player.chance_of_playing_next_round === null ? 100 : player.chance_of_playing_next_round,
       numberOfGames: opponentFixtures.length,
       numberOfGamesInNext3Gameweeks: futureFixtures.length,
     };
