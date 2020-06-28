@@ -1,5 +1,6 @@
 import PlayerScore from "../models/PlayerScore";
 import { TransferWithScores } from "../models/TransferWithScores";
+import { TransactionPlayerIn, Transaction } from "../models/Transaction";
 
 export default class DisplayService {
   static displaySquad(players: PlayerScore[], squadName: string) {
@@ -35,12 +36,33 @@ export default class DisplayService {
     );
   }
 
+  static displayTransaction(transaction: Transaction) {
+    console.log("Player Out:");
+    DisplayService.displayPlayer(transaction.playerOut);
+    console.log();
+    console.log("Players In:");
+    DisplayService.displayTransactionHeader();
+    transaction.playersIn.forEach(DisplayService.displayTransactionPlayerIn);
+    console.log();
+  }
+
+  static displayTransactionPlayerIn(player: TransactionPlayerIn) {
+    const playerScore = player.player;
+    console.log(
+      `| ${playerScore.player.id}\t| ${player.improvement.toFixed(
+        2
+      )}\t\t| ${playerScore.score.toFixed(2)}\t| ${playerScore.position.singular_name_short}\t\t| ${
+        playerScore.player.web_name
+      }`
+    );
+  }
+
   static displayTransfer(transfer: TransferWithScores) {
     console.log();
     console.log("Players Out:");
     DisplayService.displayPlayers(transfer.playersOut);
     console.log();
-    console.log("Players In");
+    console.log("Players In:");
     DisplayService.displayPlayers(transfer.playersIn);
     console.log();
     console.log(`Score improvement: ${transfer.scoreImprovement.toFixed(2)}`);
@@ -49,5 +71,9 @@ export default class DisplayService {
 
   static displayHeader(displayValue: boolean = true) {
     console.log(`| ID\t|${displayValue ? "Value\t\t|" : ""} Score\t| Position\t| Name`);
+  }
+
+  static displayTransactionHeader(displayValue: boolean = true) {
+    console.log(`| ID\t|Improvement\t| Score\t| Position\t| Name`);
   }
 }

@@ -34,6 +34,7 @@ export default class CliRunner {
   private draftService: DraftService;
 
   public static RUN_CMD = "run";
+  public static DRAFT_RUN_CMD = "draft-run";
   public static SCORE_PLAYER_CMD = "score-player";
   public static TOP_PLAYERS_CMD = "top-players";
   public static WILDCARD_SQUAD_CMD = "wildcard-squad";
@@ -45,8 +46,10 @@ export default class CliRunner {
   public static RECORD_DATA_CMD = "record-data";
   public static DRAFT_TOP_PLAYERS = "draft-top-players";
   public static DRAFT_RECOMMEND_LINEUP_CMD = "draft-recommend-lineup";
+  public static DRAFT_RECOMMEND_TRANSACTIONS_CMD = "draft-recommend-transactions";
   public static commands = [
     CliRunner.RUN_CMD,
+    CliRunner.DRAFT_RUN_CMD,
     CliRunner.SCORE_PLAYER_CMD,
     CliRunner.TOP_PLAYERS_CMD,
     CliRunner.WILDCARD_SQUAD_CMD,
@@ -58,6 +61,7 @@ export default class CliRunner {
     CliRunner.RECORD_DATA_CMD,
     CliRunner.DRAFT_TOP_PLAYERS,
     CliRunner.DRAFT_RECOMMEND_LINEUP_CMD,
+    CliRunner.DRAFT_RECOMMEND_TRANSACTIONS_CMD,
   ];
 
   constructor() {
@@ -98,6 +102,9 @@ export default class CliRunner {
       case CliRunner.RUN_CMD:
         this.runBot(players, myTeam, picksWithScore, nextEvent, teamId);
         break;
+      case CliRunner.DRAFT_RUN_CMD:
+        this.runDraftBot(players, picksWithScore, nextEvent);
+        break;
       case CliRunner.SCORE_PLAYER_CMD:
         this.scorePlayer(players, parseInt(optionalParameter));
         break;
@@ -130,6 +137,9 @@ export default class CliRunner {
         break;
       case CliRunner.DRAFT_RECOMMEND_LINEUP_CMD:
         this.recommendLineup(picksWithScore);
+        break;
+      case CliRunner.DRAFT_RECOMMEND_TRANSACTIONS_CMD:
+        this.recommendTransactions(players, picksWithScore);
         break;
       default:
         console.error(
@@ -166,6 +176,38 @@ export default class CliRunner {
     const myNewTeam = await this.fplFetcher.getMyTeam(teamId);
     const newPicksWithScore = this.mapTeamToTeamPickWithScore(myNewTeam, players);
     await this.setLineup(newPicksWithScore, teamId);
+
+    console.log();
+    this.topPlayers(players);
+  }
+
+  private async runDraftBot(
+    players: PlayerScore[],
+    picksWithScore: TeamPickWithScore[],
+    nextEvent: Gameweek
+  ) {
+    console.log("Running Draft Bot...");
+    const timeNow = moment();
+    const deadlineTime = moment(nextEvent.deadline_time);
+    const hoursTilDeadline = deadlineTime.diff(timeNow, "hours");
+    if (hoursTilDeadline < 24) {
+      console.log(`Deadline in ${hoursTilDeadline} hours, consider the following lineup`);
+      this.recommendLineup(picksWithScore);
+      console.log();
+      console.log("SEND EMAIL"); // can be checked by a script to consider sending emails
+    } else if (hoursTilDeadline < 48) {
+      console.log(
+        `Waiver deadline in ${hoursTilDeadline - 24} hours, consider the following changes`
+      );
+      await this.recommendTransactions(players, picksWithScore);
+      console.log();
+      console.log("SEND EMAIL"); // can be checked by a script to consider sending emails
+    } else {
+      console.log(
+        `Waiver deadline in ${hoursTilDeadline - 24} hours, showing recommended transactions.`
+      );
+      await this.recommendTransactions(players, picksWithScore);
+    }
 
     console.log();
     this.topPlayers(players);
@@ -329,6 +371,12 @@ export default class CliRunner {
     }
     console.log("Best Players:");
     this.topPlayers(players);
+  }
+
+  private async recommendTransactions(players: PlayerScore[], picksWithScore: TeamPickWithScore[]) {
+    const recommendations = await this.draftService.recommendTransactions(players, picksWithScore);
+    console.log("Recommended Transactions");
+    recommendations.forEach(DisplayService.displayTransaction);
   }
 
   private async getMyTeamId(draft: boolean) {
