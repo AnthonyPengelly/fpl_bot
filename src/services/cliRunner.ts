@@ -55,7 +55,8 @@ export default class CliRunner {
 
   constructor() {
     this.fplFetcher = new FplFetcher();
-    this.playerService = new PlayersService();
+    this.dataRecorder = new DataRecorder();
+    this.playerService = new PlayersService(this.dataRecorder);
     this.teamValidator = new TeamValidator();
     this.optimisationService = new OptimisationService(this.teamValidator);
     this.lineupService = new LineupService(this.fplFetcher);
@@ -64,10 +65,7 @@ export default class CliRunner {
       this.optimisationService,
       this.transferService
     );
-    this.dataRecorder = new DataRecorder();
   }
-
-  async init() {}
 
   async run(command: string, optionalParameter: string) {
     const overview = await this.fplFetcher.getOverview();

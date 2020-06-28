@@ -49,13 +49,42 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
       (expectedScoreFromPlayer + expectedScoreFromGames - scoreSettings.positionPenalty).toFixed(3)
     );
   });
+
+  test("Calculates form correctly from previous results", () => {
+    const player = { ...basePlayer, form: scoreSettings.weights.form.max };
+    const previousScore = {
+      inputs: { form: scoreSettings.weights.form.max / 2 },
+    } as ScoreDetails;
+    const expectedFactorPercent = 62.5; // avg of 100% for this week, and 3 * 50% for previous score
+    const expectedScoreFromPlayer =
+      (expectedFactorPercent * scoreSettings.weights.form.weight) / totalWeight;
+    const expectedScoreFromGames =
+      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+
+    const result = ScoreService.calculateScore(
+      player,
+      baseTeam,
+      [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
+      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+        getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
+      ),
+      2,
+      previousScore
+    );
+
+    expect(result.score.toFixed(3)).toBe(
+      (expectedScoreFromPlayer + expectedScoreFromGames - scoreSettings.positionPenalty).toFixed(3)
+    );
+  });
+
   test("Calculates points per game correctly", () => {
     const player = { ...basePlayer, points_per_game: scoreSettings.weights.pointsPerGame.max };
     const expectedScoreFromPlayer =
@@ -69,7 +98,8 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
@@ -89,7 +119,8 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
@@ -109,7 +140,8 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
@@ -138,7 +170,8 @@ describe("scoreService", () => {
       ],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
@@ -162,7 +195,8 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
@@ -182,7 +216,8 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.min, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
@@ -207,7 +242,8 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.min, false)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
@@ -227,7 +263,8 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.min, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
@@ -253,7 +290,8 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.min, false)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
@@ -273,7 +311,8 @@ describe("scoreService", () => {
       ),
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(
@@ -294,7 +333,8 @@ describe("scoreService", () => {
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
       Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.max), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
-      )
+      ),
+      10
     );
 
     expect(result.score.toFixed(3)).toBe(

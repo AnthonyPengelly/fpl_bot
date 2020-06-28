@@ -1,11 +1,16 @@
 import ScoreService from "./scoreService";
 import PlayerScore from "../models/PlayerScore";
+import DataRecorder from "./dataRecorder";
 
 export default class PlayersService {
+  constructor(private dataRecorder: DataRecorder) {}
+
   async getAllPlayerScores(overview: Overview, fixtures: Fixture[], nextEventId: number) {
     const teams = this.indexTeams(overview.teams);
     console.log(`Scoring ${overview.elements.length} players`);
-    let count = 0;
+    const fixturesPlayed = fixtures.filter((x) => x.finished);
+    const gameweeksPlayed = new Set(fixturesPlayed.map((x) => x.event)).size;
+    const previousData = await this.dataRecorder.getLatestScores();
 
     const scorePromises = overview.elements.map(async (player) => {
       const team = teams[player.team];
@@ -20,7 +25,14 @@ export default class PlayersService {
           teams,
           this.getFutureGameweekFixtures(team, fixtures, nextEventId)
         );
-        const scoreDetails = ScoreService.calculateScore(player, team, opponents, futureOpponents);
+        const scoreDetails = ScoreService.calculateScore(
+          player,
+          team,
+          opponents,
+          futureOpponents,
+          gameweeksPlayed,
+          previousData?.playerData.find((x) => x.id === player.id)?.scoreDetails
+        );
         return new PlayerScore(
           player,
           overview.element_types.filter((e) => e.id === player.element_type)[0],

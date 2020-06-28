@@ -4,7 +4,7 @@ import moment from "moment";
 
 export default class DataRecorder {
   async recordData(players: PlayerScore[], nextEventId: number) {
-    const data = {
+    const data: GameweekScores = {
       event: nextEventId,
       playerData: players.map((player) => ({
         name: player.player.web_name,
@@ -24,5 +24,30 @@ export default class DataRecorder {
       JSON.stringify(data, null, 2),
       "utf8"
     );
+  }
+
+  async getLatestScores() {
+    const years = await this.getSortedContentsInPath("./data");
+    if (years.length === 0) {
+      return undefined;
+    }
+    const year = years.pop()!;
+    const months = await this.getSortedContentsInPath(`./data/${year}`);
+    if (months.length === 0) {
+      return undefined;
+    }
+    const month = months.pop();
+    const scoreFiles = await this.getSortedContentsInPath(`./data/${year}/${month}`);
+    if (scoreFiles.length === 0) {
+      return undefined;
+    }
+    const latestScoreFile = scoreFiles.pop();
+    return require(`../../data/${year}/${month}/${latestScoreFile}`) as GameweekScores;
+  }
+
+  private async getSortedContentsInPath(path: string) {
+    return (await fs.promises.readdir(path, { withFileTypes: true }))
+      .map((fileOrDirectory) => fileOrDirectory.name)
+      .sort();
   }
 }

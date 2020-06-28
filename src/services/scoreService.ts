@@ -10,13 +10,15 @@ export default class ScoreService {
     player: PlayerOverview,
     team: Team,
     opponentFixtures: OpponentFixture[],
-    futureFixtures: OpponentFixture[]
+    futureFixtures: OpponentFixture[],
+    gamesPlayed: number,
+    previousScore?: ScoreDetails
   ) {
     const settings = getScoreSettingsForPlayer(player);
     const weights = settings.weights;
     const commonInputsWeights = getCommonInputsSettings().weights;
     const inputs: ScoreInputs = {
-      form: player.form,
+      form: this.getForm(player, gamesPlayed, previousScore),
       pointsPerGame: player.points_per_game,
       ictIndex: player.ict_index,
       teamStrength: team.strength,
@@ -96,6 +98,17 @@ export default class ScoreService {
       weightedInputs: weightedInputs,
       weights: { ...weights, ...commonInputsWeights },
     } as ScoreDetails;
+  }
+
+  private static getForm(
+    player: PlayerOverview,
+    gamesPlayed: number,
+    previousScore?: ScoreDetails
+  ) {
+    if (gamesPlayed < 4 && previousScore) {
+      return (player.form + 3 * previousScore.inputs.form) / 4;
+    }
+    return player.form;
   }
 
   private static teamStrengthForPosition(
