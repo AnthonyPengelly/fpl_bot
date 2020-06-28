@@ -3,6 +3,7 @@ import axios from "axios";
 
 export default class FplFetcher {
   private baseUrl: string = "https://fantasy.premierleague.com/api";
+  private draftBaseUrl: string = "https://draft.premierleague.com/api";
   private cookies: string;
 
   constructor() {
@@ -17,36 +18,36 @@ export default class FplFetcher {
   }
 
   async getOverview() {
-    let url = this.baseUrl + "/bootstrap-static/";
-    var overview = await WebRequest.json<Overview>(url);
+    const url = this.baseUrl + "/bootstrap-static/";
+    const overview = await WebRequest.json<Overview>(url);
     return overview;
   }
 
   async getPlayer(id: number) {
-    let url = this.baseUrl + "/element-summary/" + id + "/";
-    var playerDetails = await WebRequest.json<PlayerDetails>(url);
+    const url = this.baseUrl + "/element-summary/" + id + "/";
+    const playerDetails = await WebRequest.json<PlayerDetails>(url);
     return playerDetails;
   }
 
   async getFixtures() {
-    let url = this.baseUrl + "/fixtures/";
-    var fixtures = await WebRequest.json<Fixture[]>(url);
+    const url = this.baseUrl + "/fixtures/";
+    const fixtures = await WebRequest.json<Fixture[]>(url);
     return fixtures;
   }
 
   async getMyDetails() {
-    let url = this.baseUrl + "/me/";
-    var myTeam = await WebRequest.json<MyDetails>(url, {
+    const url = this.baseUrl + "/me/";
+    const myDetails = await WebRequest.json<MyDetails>(url, {
       headers: {
         Cookie: this.cookies,
       },
     });
-    return myTeam;
+    return myDetails;
   }
 
   async getMyTeam(teamId: number) {
-    let url = this.baseUrl + "/my-team/" + teamId;
-    var myTeam = await WebRequest.json<MyTeam>(url, {
+    const url = this.baseUrl + "/my-team/" + teamId;
+    const myTeam = await WebRequest.json<MyTeam>(url, {
       headers: {
         Cookie: this.cookies,
       },
@@ -55,7 +56,7 @@ export default class FplFetcher {
   }
 
   async setLineup(lineup: MyTeamRequest, teamId: number) {
-    let url = this.baseUrl + "/my-team/" + teamId + "/";
+    const url = this.baseUrl + "/my-team/" + teamId + "/";
     const response = await WebRequest.post(
       url,
       {
@@ -72,7 +73,7 @@ export default class FplFetcher {
   }
 
   async performTransfers(transferRequest: TransferRequest) {
-    let url = this.baseUrl + "/transfers/";
+    const url = this.baseUrl + "/transfers/";
     const response = await WebRequest.post(
       url,
       {
@@ -86,5 +87,41 @@ export default class FplFetcher {
     if (response.statusCode !== 200) {
       throw response.content;
     }
+  }
+
+  async getDraftOverview() {
+    const url = this.draftBaseUrl + "/bootstrap-static";
+    const overview = await WebRequest.json<Overview>(url);
+    return overview;
+  }
+
+  async getMyDraftInfo() {
+    const url = this.draftBaseUrl + "/bootstrap-dynamic";
+    const draftStatus = await WebRequest.json<DraftInfo>(url, {
+      headers: {
+        Cookie: this.cookies,
+      },
+    });
+    return draftStatus;
+  }
+
+  async getDraftStatus(leagueId: number) {
+    const url = this.draftBaseUrl + `/league/${leagueId}/element-status`;
+    const draftStatus = await WebRequest.json<DraftStatus>(url, {
+      headers: {
+        Cookie: this.cookies,
+      },
+    });
+    return draftStatus;
+  }
+
+  async getMyDraftTeam(teamId: number) {
+    const url = this.draftBaseUrl + `/entry/${teamId}/my-team`;
+    const myTeam = await WebRequest.json<MyTeam>(url, {
+      headers: {
+        Cookie: this.cookies,
+      },
+    });
+    return myTeam;
   }
 }

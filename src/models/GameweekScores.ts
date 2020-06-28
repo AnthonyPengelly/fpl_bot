@@ -3,6 +3,7 @@ interface GameweekScores {
   playerData: {
     name: string;
     id: number;
+    code: number;
     team: number;
     position: string;
     score: number;

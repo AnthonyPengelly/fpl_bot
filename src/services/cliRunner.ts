@@ -19,6 +19,8 @@ import TransferService from "./transferService";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import LineupService from "./lineupService";
 import DataRecorder from "./dataRecorder";
+import DraftService from "./draftService";
+import PlayerScoreBuilder from "../tests/builders/playerScoreBuilder";
 
 export default class CliRunner {
   private fplFetcher: FplFetcher;
@@ -29,6 +31,7 @@ export default class CliRunner {
   private transferService: TransferService;
   private lineupService: LineupService;
   private dataRecorder: DataRecorder;
+  private draftService: DraftService;
 
   public static RUN_CMD = "run";
   public static SCORE_PLAYER_CMD = "score-player";
@@ -40,6 +43,8 @@ export default class CliRunner {
   public static SET_LINEUP_CMD = "set-lineup";
   public static PERFORM_TRANSFERS_CMD = "perform-transfers";
   public static RECORD_DATA_CMD = "record-data";
+  public static DRAFT_TOP_PLAYERS = "draft-top-players";
+  public static DRAFT_RECOMMEND_LINEUP_CMD = "draft-recommend-lineup";
   public static commands = [
     CliRunner.RUN_CMD,
     CliRunner.SCORE_PLAYER_CMD,
@@ -51,6 +56,8 @@ export default class CliRunner {
     CliRunner.SET_LINEUP_CMD,
     CliRunner.PERFORM_TRANSFERS_CMD,
     CliRunner.RECORD_DATA_CMD,
+    CliRunner.DRAFT_TOP_PLAYERS,
+    CliRunner.DRAFT_RECOMMEND_LINEUP_CMD,
   ];
 
   constructor() {
@@ -65,16 +72,26 @@ export default class CliRunner {
       this.optimisationService,
       this.transferService
     );
+    this.draftService = new DraftService(this.fplFetcher);
   }
 
   async run(command: string, optionalParameter: string) {
+    const draft = command.startsWith("draft-");
     const overview = await this.fplFetcher.getOverview();
+    if (draft) {
+      await this.updateOverviewIdsFromDraftOverview(overview);
+    }
     const nextEvent = overview.events.filter((event) => event.is_next)[0];
     const fixtures = await this.fplFetcher.getFixtures();
     const players = await this.playerService.getAllPlayerScores(overview, fixtures, nextEvent.id);
-    const myDetails = await this.fplFetcher.getMyDetails();
-    const teamId = myDetails.player.entry;
-    const myTeam = await this.fplFetcher.getMyTeam(teamId);
+
+    const teamId = await this.getMyTeamId(draft);
+    if (!teamId) {
+      return;
+    }
+    const myTeam = draft
+      ? await this.fplFetcher.getMyDraftTeam(teamId)
+      : await this.fplFetcher.getMyTeam(teamId);
     const picksWithScore = this.mapTeamToTeamPickWithScore(myTeam, players);
 
     switch (command) {
@@ -107,6 +124,12 @@ export default class CliRunner {
         break;
       case CliRunner.RECORD_DATA_CMD:
         this.recordData(players, nextEvent.id);
+        break;
+      case CliRunner.DRAFT_TOP_PLAYERS:
+        this.draftTopPlayers(players);
+        break;
+      case CliRunner.DRAFT_RECOMMEND_LINEUP_CMD:
+        this.recommendLineup(picksWithScore);
         break;
       default:
         console.error(
@@ -297,10 +320,43 @@ export default class CliRunner {
     await this.dataRecorder.recordData(players, nextEventId);
   }
 
+  private async draftTopPlayers(players: PlayerScore[]) {
+    const availablePlayers = await this.draftService.getTopAvailablePlayers(players);
+    if (availablePlayers) {
+      console.log("Available Players:");
+      this.topPlayers(availablePlayers);
+      console.log();
+    }
+    console.log("Best Players:");
+    this.topPlayers(players);
+  }
+
+  private async getMyTeamId(draft: boolean) {
+    if (draft) {
+      const draftInfo = await this.fplFetcher.getMyDraftInfo();
+      if (draftInfo.player.entry_set.length === 0) {
+        console.log("No draft entries!");
+        return;
+      }
+      return draftInfo.player.entry_set[0];
+    }
+
+    const myDetails = await this.fplFetcher.getMyDetails();
+    return myDetails.player.entry;
+  }
+
   private mapTeamToTeamPickWithScore(myTeam: MyTeam, players: PlayerScore[]): TeamPickWithScore[] {
     return myTeam.picks.map((pick) => ({
       pick: pick,
       playerScore: players.find((player) => player.player.id === pick.element)!,
     }));
+  }
+
+  private async updateOverviewIdsFromDraftOverview(overview: Overview) {
+    const draftOverview = await this.fplFetcher.getDraftOverview();
+    overview.elements.forEach((element) => {
+      element.id = draftOverview.elements.find((x) => x.code === element.code)?.id!;
+    });
+    overview.elements = overview.elements.filter((x) => x.id);
   }
 }

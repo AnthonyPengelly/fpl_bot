@@ -8,9 +8,10 @@ export default class DisplayService {
     const sortedPlayers = players.sort((a, b) => a.position.id - b.position.id);
     this.displayPlayers(sortedPlayers);
     console.log(sortedPlayers.length + " players");
-    console.log(
-      `Value £${sortedPlayers.reduce((total, player) => total + player.value, 0).toFixed(2)}m`
-    );
+    const value = sortedPlayers.reduce((total, player) => total + player.value, 0);
+    if (value) {
+      console.log(`Value £${value.toFixed(2)}m`);
+    }
     const squadScore = sortedPlayers.reduce((total, player) => total + player.score, 0);
     console.log(`Score: ${squadScore.toFixed(2)}`);
     console.log(`Score per player: ${(squadScore / sortedPlayers.length).toFixed(2)}`);
@@ -18,16 +19,17 @@ export default class DisplayService {
   }
 
   static displayPlayers(players: PlayerScore[]) {
-    this.displayHeader();
-    players.forEach((player) => this.displayPlayer(player));
+    const displayValue = !!players[0].value;
+    this.displayHeader(displayValue);
+    players.forEach((player) => this.displayPlayer(player, displayValue));
     console.log();
   }
 
-  static displayPlayer(playerScore: PlayerScore) {
+  static displayPlayer(playerScore: PlayerScore, displayValue: boolean = true) {
     console.log(
-      `| ${playerScore.player.id}\t| £${playerScore.value.toFixed(
-        2
-      )}m\t| ${playerScore.score.toFixed(2)}\t| ${playerScore.position.singular_name_short}\t\t| ${
+      `| ${playerScore.player.id}\t| ${
+        displayValue ? `£${playerScore.value.toFixed(2)}m\t|` : ""
+      } ${playerScore.score.toFixed(2)}\t| ${playerScore.position.singular_name_short}\t\t| ${
         playerScore.player.web_name
       }`
     );
@@ -45,7 +47,7 @@ export default class DisplayService {
     console.log();
   }
 
-  static displayHeader() {
-    console.log("| ID\t| Value\t\t| Score\t| Position\t| Name");
+  static displayHeader(displayValue: boolean = true) {
+    console.log(`| ID\t|${displayValue ? "Value\t\t|" : ""} Score\t| Position\t| Name`);
   }
 }
