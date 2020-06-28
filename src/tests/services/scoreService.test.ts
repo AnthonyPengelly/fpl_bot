@@ -1,4 +1,4 @@
-import { getScoreSettingsForPlayer, getCommonInputsSettings } from "../../config/scoreSettings";
+import { getScoreSettingsForPlayer } from "../../config/scoreSettings";
 import ScoreService from "../../services/scoreService";
 
 const basePlayer = {
@@ -10,16 +10,10 @@ const basePlayer = {
 } as PlayerOverview;
 
 const scoreSettings = getScoreSettingsForPlayer(basePlayer);
-const commonInputsSettings = getCommonInputsSettings();
-const maxScore = Object.values(scoreSettings.weights).reduce(
+const totalWeight = Object.values(scoreSettings.weights).reduce(
   (total, weight) => total + weight.weight,
   0
 );
-const maxCommonInputsScore = Object.values(commonInputsSettings.weights).reduce(
-  (total, weight) => total + weight.weight,
-  0
-);
-const totalWeight = maxScore + maxCommonInputsScore;
 
 const baseTeam = {
   strength: scoreSettings.weights.teamStrength.min,
@@ -41,13 +35,13 @@ describe("scoreService", () => {
     const player = { ...basePlayer, form: scoreSettings.weights.form.max };
     const expectedScoreFromPlayer = (100 * scoreSettings.weights.form.weight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       player,
       baseTeam,
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       10
@@ -67,13 +61,13 @@ describe("scoreService", () => {
     const expectedScoreFromPlayer =
       (expectedFactorPercent * scoreSettings.weights.form.weight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       player,
       baseTeam,
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       2,
@@ -90,13 +84,13 @@ describe("scoreService", () => {
     const expectedScoreFromPlayer =
       (100 * scoreSettings.weights.pointsPerGame.weight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       player,
       baseTeam,
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       10
@@ -111,13 +105,13 @@ describe("scoreService", () => {
     const player = { ...basePlayer, ict_index: scoreSettings.weights.ictIndex.max };
     const expectedScoreFromPlayer = (100 * scoreSettings.weights.ictIndex.weight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       player,
       baseTeam,
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       10
@@ -132,13 +126,13 @@ describe("scoreService", () => {
     const team = { ...baseTeam, strength: scoreSettings.weights.teamStrength.max };
     const expectedScoreFromPlayer = (100 * scoreSettings.weights.teamStrength.weight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       basePlayer,
       team,
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       10
@@ -157,7 +151,7 @@ describe("scoreService", () => {
     const expectedScoreFromPlayer =
       (100 * scoreSettings.weights.teamStrengthForPosition.weight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       basePlayer,
@@ -168,7 +162,7 @@ describe("scoreService", () => {
           false
         ),
       ],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       10
@@ -187,13 +181,13 @@ describe("scoreService", () => {
     const expectedScoreFromPlayer =
       (100 * scoreSettings.weights.chanceOfPlaying.weight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       player,
       baseTeam,
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       10
@@ -208,13 +202,13 @@ describe("scoreService", () => {
     const expectedScoreFromPlayer =
       (100 * scoreSettings.weights.opponentStrength.weight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       basePlayer,
       baseTeam,
       [getOpponent(scoreSettings.weights.opponentStrength.min, true)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       10
@@ -234,13 +228,13 @@ describe("scoreService", () => {
       (scoreSettings.weights.opponentStrength.max - scoreSettings.weights.opponentStrength.min);
     const expectedScoreFromPlayer = (100 * opponentWeight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       basePlayer,
       baseTeam,
       [getOpponent(scoreSettings.weights.opponentStrength.min, false)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       10
@@ -255,13 +249,13 @@ describe("scoreService", () => {
     const expectedScoreFromPlayer =
       (100 * scoreSettings.weights.futureOpponentStrength.weight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       basePlayer,
       baseTeam,
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.min, true)
       ),
       10
@@ -282,13 +276,13 @@ describe("scoreService", () => {
         scoreSettings.weights.futureOpponentStrength.min);
     const expectedScoreFromPlayer = (100 * opponentWeight) / totalWeight;
     const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / 2 / totalWeight;
+      (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
 
     const result = ScoreService.calculateScore(
       basePlayer,
       baseTeam,
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.min, false)
       ),
       10
@@ -300,16 +294,15 @@ describe("scoreService", () => {
   });
 
   test("Calculates number of games correctly", () => {
-    const expectedScoreFromGames =
-      (100 * commonInputsSettings.weights.numberOfGames.weight) / totalWeight;
+    const expectedScoreFromGames = (100 * scoreSettings.weights.numberOfGames.weight) / totalWeight;
 
     const result = ScoreService.calculateScore(
       basePlayer,
       baseTeam,
-      Array.from(Array(commonInputsSettings.weights.numberOfGames.max), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGames.max), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.min), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       10
@@ -323,15 +316,15 @@ describe("scoreService", () => {
   test("Calculates number of games in next 3 gameweeks correctly", () => {
     const expectedScoreFromGames =
       (100 *
-        (commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.weight +
-          commonInputsSettings.weights.numberOfGames.weight / 2)) /
+        (scoreSettings.weights.numberOfGamesInNext3Gameweeks.weight +
+          scoreSettings.weights.numberOfGames.weight / 2)) /
       totalWeight;
 
     const result = ScoreService.calculateScore(
       basePlayer,
       baseTeam,
       [getOpponent(scoreSettings.weights.opponentStrength.max, true)],
-      Array.from(Array(commonInputsSettings.weights.numberOfGamesInNext3Gameweeks.max), () =>
+      Array.from(Array(scoreSettings.weights.numberOfGamesInNext3Gameweeks.max), () =>
         getOpponent(scoreSettings.weights.futureOpponentStrength.max, true)
       ),
       10
