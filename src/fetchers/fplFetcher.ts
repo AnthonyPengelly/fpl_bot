@@ -5,6 +5,8 @@ export default class FplFetcher {
   private baseUrl: string = "https://fantasy.premierleague.com/api";
   private draftBaseUrl: string = "https://draft.premierleague.com/api";
   private cookies: string;
+  private draftCookies?: string;
+  private draftCsrfToken?: string;
 
   constructor() {
     // Parse the response from the auth request, which was performed in
@@ -15,6 +17,14 @@ export default class FplFetcher {
     const splitOnSetCookie = process.env.FPL_AUTH_HEADERS!.split("set-cookie: ");
     const cookiesArray = splitOnSetCookie.slice(1).map((x) => x.split("; ")[0]);
     this.cookies = cookiesArray.join("; ") + ";";
+
+    if (process.env.DRAFT_AUTH_HEADERS) {
+      const draftSplitOnSetCookie = process.env.DRAFT_AUTH_HEADERS!.split("set-cookie: ");
+      const draftCookiesArray = draftSplitOnSetCookie.slice(1).map((x) => x.split("; ")[0]);
+      this.draftCookies = draftCookiesArray.join("; ") + ";";
+      const csrfCookie = draftCookiesArray.find((x) => x.indexOf("csrf") !== -1)!;
+      this.draftCsrfToken = csrfCookie.split("=")[1];
+    }
   }
 
   async getOverview() {
@@ -123,5 +133,24 @@ export default class FplFetcher {
       },
     });
     return myTeam;
+  }
+
+  async setDraftLineup(lineup: MyTeamRequest, teamId: number) {
+    const url = this.draftBaseUrl + `/entry/${teamId}/my-team`;
+    const response = await WebRequest.post(
+      url,
+      {
+        headers: {
+          Cookie: `${this.cookies} ${this.draftCookies}`,
+          "Content-Type": "application/json",
+          referer: "https://draft.premierleague.com/team/my",
+          "x-csrftoken": this.draftCsrfToken,
+        },
+      },
+      JSON.stringify(lineup)
+    );
+    if (response.statusCode !== 200) {
+      throw response.content;
+    }
   }
 }

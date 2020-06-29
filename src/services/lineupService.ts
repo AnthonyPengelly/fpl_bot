@@ -52,21 +52,25 @@ export default class LineupService {
     };
   }
 
-  async setLineup(lineup: Lineup, teamId: number) {
+  async setLineup(lineup: Lineup, teamId: number, draft: boolean) {
     const picks = lineup.starting11.map((player, index) => ({
       element: player.player.id,
-      position: index,
-      is_captain: lineup.captain.player.id === player.player.id,
-      is_vice_captain: lineup.viceCaptain.player.id === player.player.id,
+      position: index + 1,
+      is_captain: !draft && lineup.captain.player.id === player.player.id,
+      is_vice_captain: !draft && lineup.viceCaptain.player.id === player.player.id,
     }));
     picks.push(
       ...lineup.orderedSubs.map((player, index) => ({
         element: player.player.id,
-        position: index + 11,
+        position: index + 12,
         is_captain: false,
         is_vice_captain: false,
       }))
     );
-    await this.fplFetcher.setLineup({ chips: null, picks: picks }, teamId);
+    if (draft) {
+      await this.fplFetcher.setDraftLineup({ chips: null, picks: picks }, teamId);
+    } else {
+      await this.fplFetcher.setLineup({ chips: null, picks: picks }, teamId);
+    }
   }
 }

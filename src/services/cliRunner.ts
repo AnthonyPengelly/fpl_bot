@@ -46,6 +46,7 @@ export default class CliRunner {
   public static RECORD_DATA_CMD = "record-data";
   public static DRAFT_TOP_PLAYERS = "draft-top-players";
   public static DRAFT_RECOMMEND_LINEUP_CMD = "draft-recommend-lineup";
+  public static DRAFT_SET_LINEUP_CMD = "draft-set-lineup";
   public static DRAFT_RECOMMEND_TRANSACTIONS_CMD = "draft-recommend-transactions";
   public static commands = [
     CliRunner.RUN_CMD,
@@ -61,6 +62,7 @@ export default class CliRunner {
     CliRunner.RECORD_DATA_CMD,
     CliRunner.DRAFT_TOP_PLAYERS,
     CliRunner.DRAFT_RECOMMEND_LINEUP_CMD,
+    CliRunner.DRAFT_SET_LINEUP_CMD,
     CliRunner.DRAFT_RECOMMEND_TRANSACTIONS_CMD,
   ];
 
@@ -124,7 +126,7 @@ export default class CliRunner {
         this.recommendLineup(picksWithScore);
         break;
       case CliRunner.SET_LINEUP_CMD:
-        this.setLineup(picksWithScore, teamId);
+        this.setLineup(picksWithScore, teamId, false);
         break;
       case CliRunner.PERFORM_TRANSFERS_CMD:
         this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId);
@@ -137,6 +139,9 @@ export default class CliRunner {
         break;
       case CliRunner.DRAFT_RECOMMEND_LINEUP_CMD:
         this.recommendLineup(picksWithScore);
+        break;
+      case CliRunner.DRAFT_SET_LINEUP_CMD:
+        this.setLineup(picksWithScore, teamId, true);
         break;
       case CliRunner.DRAFT_RECOMMEND_TRANSACTIONS_CMD:
         this.recommendTransactions(players, picksWithScore);
@@ -175,7 +180,7 @@ export default class CliRunner {
     console.log("Updating lineup...");
     const myNewTeam = await this.fplFetcher.getMyTeam(teamId);
     const newPicksWithScore = this.mapTeamToTeamPickWithScore(myNewTeam, players);
-    await this.setLineup(newPicksWithScore, teamId);
+    await this.setLineup(newPicksWithScore, teamId, false);
 
     console.log();
     this.topPlayers(players);
@@ -352,9 +357,9 @@ export default class CliRunner {
     return lineup;
   }
 
-  private async setLineup(picksWithScore: TeamPickWithScore[], teamId: number) {
+  private async setLineup(picksWithScore: TeamPickWithScore[], teamId: number, draft: boolean) {
     const lineup = this.recommendLineup(picksWithScore);
-    await this.lineupService.setLineup(lineup, teamId);
+    await this.lineupService.setLineup(lineup, teamId, draft);
     console.log("Successfully updated lineup");
   }
 

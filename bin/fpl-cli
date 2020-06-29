@@ -23,5 +23,10 @@ fi
 export FPL_AUTH_HEADERS=$(curl -s https://users.premierleague.com/accounts/login/ \
   -H 'content-type: application/x-www-form-urlencoded' \
   --data-raw "login=$FPL_EMAIL&password=$FPL_PASSWORD&app=plfpl-web&redirect_uri=https%3A%2F%2Ffantasy.premierleague.com%2F" \
-  -i)
+  -i -c cookies.txt)
+
+if [[ $1 == *"draft-"* ]]; then
+  export DRAFT_AUTH_HEADERS=$(curl -s https://draft.premierleague.com/api/bootstrap-dynamic -I -b cookies.txt)
+fi
+
 node ./lib/index.js $1 $2;
