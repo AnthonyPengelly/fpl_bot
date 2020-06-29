@@ -1,6 +1,5 @@
 import PlayerScore from "../models/PlayerScore";
 import { TransferWithScores } from "../models/TransferWithScores";
-import { TransactionPlayerIn, Transaction } from "../models/Transaction";
 
 export default class DisplayService {
   static displaySquad(players: PlayerScore[], squadName: string) {
@@ -31,27 +30,6 @@ export default class DisplayService {
       `| ${playerScore.player.id}\t| ${
         displayValue ? `£${playerScore.value.toFixed(2)}m\t|` : ""
       } ${playerScore.score.toFixed(2)}\t| ${playerScore.position.singular_name_short}\t\t| ${
-        playerScore.player.web_name
-      }`
-    );
-  }
-
-  static displayTransaction(transaction: Transaction) {
-    console.log("Player Out:");
-    DisplayService.displayPlayer(transaction.playerOut);
-    console.log();
-    console.log("Players In:");
-    DisplayService.displayTransactionHeader();
-    transaction.playersIn.forEach(DisplayService.displayTransactionPlayerIn);
-    console.log();
-  }
-
-  static displayTransactionPlayerIn(player: TransactionPlayerIn) {
-    const playerScore = player.player;
-    console.log(
-      `| ${playerScore.player.id}\t| ${player.improvement.toFixed(
-        2
-      )}\t\t| ${playerScore.score.toFixed(2)}\t| ${playerScore.position.singular_name_short}\t\t| ${
         playerScore.player.web_name
       }`
     );

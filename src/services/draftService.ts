@@ -1,7 +1,8 @@
 import FplFetcher from "../fetchers/fplFetcher";
 import PlayerScore from "../models/PlayerScore";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
-import { TransactionPlayerIn, Transaction } from "../models/Transaction";
+import { TransferWithScores } from "../models/TransferWithScores";
+import DisplayService from "./displayService";
 
 export default class DraftService {
   constructor(private fplFetcher: FplFetcher) {}
@@ -24,32 +25,42 @@ export default class DraftService {
   async recommendTransactions(
     players: PlayerScore[],
     picksWithScore: TeamPickWithScore[]
-  ): Promise<Transaction[]> {
+  ): Promise<TransferWithScores[]> {
     const availablePlayers = await this.getTopAvailablePlayers(players);
     if (!availablePlayers) {
       console.log("Not part of any draft leagues!");
       return [];
     }
-    const recommendations = picksWithScore
-      .map((pick) => ({
-        playerOut: pick.playerScore,
-        playersIn: this.recommendTransactionsForPlayer(availablePlayers, pick.playerScore),
-      }))
-      .filter((x) => x.playersIn.length !== 0);
-    return recommendations.sort((a, b) => b.playersIn[0].improvement - a.playersIn[0].improvement);
+    const recommendations = picksWithScore.reduce((array, pick) => {
+      const transfers = this.recommendTransactionsForPlayer(availablePlayers, pick.playerScore);
+      return array.concat(transfers);
+    }, [] as TransferWithScores[]);
+    const sortedRecommendations = recommendations.sort(
+      (a, b) => b.scoreImprovement - a.scoreImprovement
+    );
+    const rejectedTransactions = sortedRecommendations.filter((x) => x.playersOut[0].value >= 7.5);
+    const acceptedTransactions = sortedRecommendations.filter((x) => x.playersOut[0].value < 7.5);
+    console.log("Transactions rejected due to high value of player out:");
+    rejectedTransactions.forEach(DisplayService.displayTransfer);
+    console.log();
+    console.log("Transactions proposed:");
+    acceptedTransactions.forEach(DisplayService.displayTransfer);
+    console.log();
+    return acceptedTransactions;
   }
 
   recommendTransactionsForPlayer(
     players: PlayerScore[],
     playerOut: PlayerScore
-  ): TransactionPlayerIn[] {
+  ): TransferWithScores[] {
     return players
       .filter((player) => player.position.id === playerOut.position.id)
       .filter((player) => player.score > playerOut.score)
-      .slice(0, 10)
+      .slice(0, 5)
       .map((player) => ({
-        player: player,
-        improvement: player.score - playerOut.score,
+        playersOut: [playerOut],
+        playersIn: [player],
+        scoreImprovement: player.score - playerOut.score,
       }));
   }
 }

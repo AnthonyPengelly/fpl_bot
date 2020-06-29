@@ -379,9 +379,7 @@ export default class CliRunner {
   }
 
   private async recommendTransactions(players: PlayerScore[], picksWithScore: TeamPickWithScore[]) {
-    const recommendations = await this.draftService.recommendTransactions(players, picksWithScore);
-    console.log("Recommended Transactions");
-    recommendations.forEach(DisplayService.displayTransaction);
+    return await this.draftService.recommendTransactions(players, picksWithScore);
   }
 
   private async getMyTeamId(draft: boolean) {
