@@ -1,3 +1,4 @@
-// Calls score service with expected fixtures etc.
-
-// Calls score service with double gameweek info
+describe("playerService", () => {
+  test.todo("calls scoreService with expected fixtures");
+  test.todo("calls scoreService with double gameweek info");
+});

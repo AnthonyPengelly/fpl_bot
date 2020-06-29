@@ -1,1 +1,3 @@
-// Lots of inputs and expected outputs
+describe("optimisationService", () => {
+  test.todo("selects the optimal results for given inputs");
+});

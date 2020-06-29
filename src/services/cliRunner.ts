@@ -20,7 +20,6 @@ import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import LineupService from "./lineupService";
 import DataRecorder from "./dataRecorder";
 import DraftService from "./draftService";
-import PlayerScoreBuilder from "../tests/builders/playerScoreBuilder";
 
 export default class CliRunner {
   private fplFetcher: FplFetcher;
