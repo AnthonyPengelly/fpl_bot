@@ -153,4 +153,23 @@ export default class FplFetcher {
       throw response.content;
     }
   }
+
+  async performTransactions(waivers: Waiver[], teamId: number) {
+    const url = this.draftBaseUrl + `/draft/entry/${teamId}/waivers`;
+    const response = await WebRequest.post(
+      url,
+      {
+        headers: {
+          Cookie: `${this.cookies} ${this.draftCookies}`,
+          "Content-Type": "application/json",
+          referer: "https://draft.premierleague.com/team/transactions",
+          "x-csrftoken": this.draftCsrfToken,
+        },
+      },
+      JSON.stringify(waivers)
+    );
+    if (response.statusCode !== 200 && response.statusCode !== 201) {
+      throw response.content;
+    }
+  }
 }

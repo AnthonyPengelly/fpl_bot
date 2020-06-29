@@ -43,19 +43,36 @@ export default class DraftService {
     console.log("Transactions rejected due to high value of player out:");
     rejectedTransactions.forEach(DisplayService.displayTransfer);
     console.log();
+    console.log();
+    console.log();
     console.log("Transactions proposed:");
     acceptedTransactions.forEach(DisplayService.displayTransfer);
     console.log();
     return acceptedTransactions;
   }
 
-  recommendTransactionsForPlayer(
+  async performTransactions(transactions: TransferWithScores[], teamId: number) {
+    if (transactions.length === 0) {
+      console.log("No transactions");
+      return;
+    }
+
+    const waivers = transactions.map((transaction, index) => ({
+      element_out: transaction.playersOut[0].player.id,
+      element_in: transaction.playersIn[0].player.id,
+      priority: index + 1,
+    }));
+
+    await this.fplFetcher.performTransactions(waivers, teamId);
+  }
+
+  private recommendTransactionsForPlayer(
     players: PlayerScore[],
     playerOut: PlayerScore
   ): TransferWithScores[] {
     return players
       .filter((player) => player.position.id === playerOut.position.id)
-      .filter((player) => player.score > playerOut.score)
+      .filter((player) => player.score > playerOut.score + 5)
       .slice(0, 5)
       .map((player) => ({
         playersOut: [playerOut],

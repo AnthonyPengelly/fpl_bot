@@ -48,6 +48,7 @@ export default class CliRunner {
   public static DRAFT_RECOMMEND_LINEUP_CMD = "draft-recommend-lineup";
   public static DRAFT_SET_LINEUP_CMD = "draft-set-lineup";
   public static DRAFT_RECOMMEND_TRANSACTIONS_CMD = "draft-recommend-transactions";
+  public static DRAFT_PERFORM_TRANSACTIONS_CMD = "draft-perform-transactions";
   public static commands = [
     CliRunner.RUN_CMD,
     CliRunner.DRAFT_RUN_CMD,
@@ -64,6 +65,7 @@ export default class CliRunner {
     CliRunner.DRAFT_RECOMMEND_LINEUP_CMD,
     CliRunner.DRAFT_SET_LINEUP_CMD,
     CliRunner.DRAFT_RECOMMEND_TRANSACTIONS_CMD,
+    CliRunner.DRAFT_PERFORM_TRANSACTIONS_CMD,
   ];
 
   constructor() {
@@ -105,7 +107,7 @@ export default class CliRunner {
         this.runBot(players, myTeam, picksWithScore, nextEvent, teamId);
         break;
       case CliRunner.DRAFT_RUN_CMD:
-        this.runDraftBot(players, picksWithScore, nextEvent);
+        this.runDraftBot(players, picksWithScore, nextEvent, teamId);
         break;
       case CliRunner.SCORE_PLAYER_CMD:
         this.scorePlayer(players, parseInt(optionalParameter));
@@ -145,6 +147,9 @@ export default class CliRunner {
         break;
       case CliRunner.DRAFT_RECOMMEND_TRANSACTIONS_CMD:
         this.recommendTransactions(players, picksWithScore);
+        break;
+      case CliRunner.DRAFT_PERFORM_TRANSACTIONS_CMD:
+        this.performTransactions(players, picksWithScore, teamId);
         break;
       default:
         console.error(
@@ -189,22 +194,24 @@ export default class CliRunner {
   private async runDraftBot(
     players: PlayerScore[],
     picksWithScore: TeamPickWithScore[],
-    nextEvent: Gameweek
+    nextEvent: Gameweek,
+    teamId: number
   ) {
     console.log("Running Draft Bot...");
     const timeNow = moment();
     const deadlineTime = moment(nextEvent.deadline_time);
     const hoursTilDeadline = deadlineTime.diff(timeNow, "hours");
     if (hoursTilDeadline < 24) {
-      console.log(`Deadline in ${hoursTilDeadline} hours, consider the following lineup`);
-      this.recommendLineup(picksWithScore);
+      console.log(`Deadline in ${hoursTilDeadline} hours, setting lineup`);
+      await this.setLineup(picksWithScore, teamId, true);
       console.log();
       console.log("SEND EMAIL"); // can be checked by a script to consider sending emails
     } else if (hoursTilDeadline < 48) {
       console.log(
-        `Waiver deadline in ${hoursTilDeadline - 24} hours, consider the following changes`
+        `Waiver deadline in ${hoursTilDeadline - 24} hours, settings uncontroversial transactions`
       );
-      await this.recommendTransactions(players, picksWithScore);
+      console.log("Consider manually settings some of the more expensive transactions");
+      await this.performTransactions(players, picksWithScore, teamId);
       console.log();
       console.log("SEND EMAIL"); // can be checked by a script to consider sending emails
     } else {
@@ -215,7 +222,7 @@ export default class CliRunner {
     }
 
     console.log();
-    this.draftTopPlayers(players);
+    await this.draftTopPlayers(players);
   }
 
   private scorePlayer(players: PlayerScore[], playerId: number) {
@@ -380,6 +387,16 @@ export default class CliRunner {
 
   private async recommendTransactions(players: PlayerScore[], picksWithScore: TeamPickWithScore[]) {
     return await this.draftService.recommendTransactions(players, picksWithScore);
+  }
+
+  private async performTransactions(
+    players: PlayerScore[],
+    picksWithScore: TeamPickWithScore[],
+    teamId: number
+  ) {
+    const transactions = await this.recommendTransactions(players, picksWithScore);
+    await this.draftService.performTransactions(transactions, teamId);
+    console.log("Successfully set transactions");
   }
 
   private async getMyTeamId(draft: boolean) {
