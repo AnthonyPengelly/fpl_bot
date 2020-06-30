@@ -8,9 +8,11 @@ export default class PlayerScoreBuilder {
       {
         id: Math.ceil(Math.random() * 1000000),
         team: Math.ceil(Math.random() * 1000000),
+        web_name: "Gazza",
       } as PlayerOverview,
       {
-        id: Math.ceil(Math.random() * 1000000),
+        id: 4,
+        singular_name_short: "FWD",
       } as Position,
       0,
       0,
