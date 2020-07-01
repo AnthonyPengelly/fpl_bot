@@ -5,6 +5,7 @@ import TransferService from "./transferService";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import { TransferWithScores } from "../models/TransferWithScores";
 import DisplayService from "./displayService";
+import { receiveMessageOnPort } from "worker_threads";
 
 export default class RecommendationService {
   constructor(
@@ -13,7 +14,37 @@ export default class RecommendationService {
   ) {}
 
   recommendATeam(playerScores: PlayerScore[], settings: OptimisationSettings, budget: number) {
-    return this.optimisationService.getOptimalTeamForSettings(playerScores, settings, budget);
+    const initialSquad = this.optimisationService.getOptimalTeamForSettings(
+      playerScores,
+      settings,
+      budget
+    );
+
+    let recommendedTransfer: TransferWithScores;
+    let attempts = 0;
+    let newSquad = initialSquad;
+    do {
+      recommendedTransfer = this.recommendTransferUsingExistSquad(
+        playerScores,
+        newSquad,
+        settings,
+        budget
+      );
+      if (
+        !recommendedTransfer ||
+        recommendedTransfer.playersIn.length < 1 ||
+        recommendedTransfer.scoreImprovement < 0.2
+      ) {
+        break;
+      }
+      console.log(
+        `${recommendedTransfer.playersIn[0].player.web_name} in to replace ${recommendedTransfer.playersOut[0].player.web_name}`
+      );
+
+      newSquad = this.rebuildSquadBasedOnTransfer(newSquad, recommendedTransfer);
+      attempts++;
+    } while (attempts < 50);
+    return newSquad;
   }
 
   recommendTransfers(
@@ -60,5 +91,28 @@ export default class RecommendationService {
     DisplayService.displayTransfer(recommendTwoTransfers ? doubleTransfer : singleTransfer);
 
     return recommendTwoTransfers ? doubleTransfer : singleTransfer;
+  }
+
+  private recommendTransferUsingExistSquad(
+    playerScores: PlayerScore[],
+    squad: PlayerScore[],
+    settings: OptimisationSettings,
+    budget: number
+  ) {
+    const value = squad.reduce((total, player) => player.value + total, 0);
+    const myTeam = {
+      transfers: { bank: (budget - settings.budgetOffset - value) * 10 },
+    } as MyTeam;
+    const teamWithScores: TeamPickWithScore[] = squad.map((player) => ({
+      pick: { selling_price: player.value * 10, element: player.player.id } as FantasyPick,
+      playerScore: player,
+    }));
+    return this.transferService.recommendOneTransfer(playerScores, myTeam, teamWithScores, false);
+  }
+
+  private rebuildSquadBasedOnTransfer(squad: PlayerScore[], transfer: TransferWithScores) {
+    const newSquad = squad.filter((x) => x.player.id !== transfer.playersOut[0].player.id);
+    newSquad.push(transfer.playersIn[0]);
+    return newSquad;
   }
 }
