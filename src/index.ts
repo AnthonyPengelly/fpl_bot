@@ -13,4 +13,4 @@ if (process.argv.length < 3) {
 }
 
 const cliRunner = new CliRunner();
-cliRunner.run(process.argv[2], process.argv[3]);
+cliRunner.run(process.argv[2], process.argv[3]).catch((error) => console.error(error));

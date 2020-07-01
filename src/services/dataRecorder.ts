@@ -47,6 +47,9 @@ export default class DataRecorder {
   }
 
   private async getSortedContentsInPath(path: string) {
+    if (!fs.existsSync(path)) {
+      return [];
+    }
     return (await fs.promises.readdir(path, { withFileTypes: true }))
       .map((fileOrDirectory) => fileOrDirectory.name)
       .sort();
