@@ -15,10 +15,15 @@ export default class RecommendationService {
 
   recommendATeam(playerScores: PlayerScore[], settings: OptimisationSettings, budget: number) {
     const initialSquad = this.optimisationService.getOptimalTeamForSettings(
-      playerScores,
+      playerScores.slice(0, 150),
       settings,
       budget
     );
+    if (!initialSquad) {
+      console.log(`Unable to recommend squad for budget £${budget}m and settings: `);
+      console.log(settings);
+      return [];
+    }
 
     let recommendedTransfer: TransferWithScores;
     let attempts = 0;

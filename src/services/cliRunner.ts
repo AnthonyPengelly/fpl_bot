@@ -274,35 +274,45 @@ export default class CliRunner {
   private recommendSquad(players: PlayerScore[], budget: number) {
     console.log(`Recommending squads based on a budget of £${budget}m`);
     const all15Positions = this.recommendationService.recommendATeam(players, fullSquad, budget);
-    DisplayService.displaySquad(all15Positions, "Full Squad");
+    if (all15Positions.length >= 11) {
+      DisplayService.displaySquad(all15Positions, "Full Squad");
+    }
 
     const skeleton442 = this.recommendationService.recommendATeam(
       players,
       skeleton442Squad,
       budget
     );
-    DisplayService.displaySquad(skeleton442, "Skeleton 442 Squad");
+    if (skeleton442.length >= 11) {
+      DisplayService.displaySquad(skeleton442, "Skeleton 442 Squad");
+    }
 
     const skeleton433 = this.recommendationService.recommendATeam(
       players,
       skeleton433Squad,
       budget
     );
-    DisplayService.displaySquad(skeleton433, "Skeleton 433 Squad");
+    if (skeleton433.length >= 11) {
+      DisplayService.displaySquad(skeleton433, "Skeleton 433 Squad");
+    }
 
     const skeleton343 = this.recommendationService.recommendATeam(
       players,
       skeleton343Squad,
       budget
     );
-    DisplayService.displaySquad(skeleton343, "Skeleton 343 Squad");
+    if (skeleton343.length >= 11) {
+      DisplayService.displaySquad(skeleton343, "Skeleton 343 Squad");
+    }
 
     const skeleton532 = this.recommendationService.recommendATeam(
       players,
       skeleton532Squad,
       budget
     );
-    DisplayService.displaySquad(skeleton532, "Skeleton 532 Squad");
+    if (skeleton532.length >= 11) {
+      DisplayService.displaySquad(skeleton532, "Skeleton 532 Squad");
+    }
   }
 
   private wildcardSquad(playerScores: PlayerScore[], myTeam: MyTeam) {
