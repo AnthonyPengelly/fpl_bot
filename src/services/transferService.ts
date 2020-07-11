@@ -5,6 +5,10 @@ import OptimisationService from "./optimisationService";
 import { fullSquad } from "../config/optimisationSettings";
 import FplFetcher from "../fetchers/fplFetcher";
 
+interface TeamCount {
+  [index: number]: number;
+}
+
 export default class TransferService {
   constructor(private fplFetcher: FplFetcher, private optimisationService: OptimisationService) {}
 
@@ -15,10 +19,15 @@ export default class TransferService {
     debug: boolean
   ): TransferWithScores {
     const options = picksWithScore.map((pickWithScore) => {
+      const remainingTeam = picksWithScore.filter(
+        (player) => player.playerScore.player.id !== pickWithScore.playerScore.player.id
+      );
+      const teamCount = this.countPlayersOnTeam(remainingTeam);
       const remainingBudget = (myTeam.transfers.bank + pickWithScore.pick.selling_price) / 10;
       const possiblePlayers = playerScores
         .filter((player) => player.position.id === pickWithScore.playerScore.position.id)
         .filter((player) => player.value <= remainingBudget)
+        .filter((player) => !teamCount[player.player.team] || teamCount[player.player.team] < 3)
         .filter(
           (player) =>
             picksWithScore.filter((pick) => pick.playerScore.player.id === player.player.id)
@@ -161,6 +170,17 @@ export default class TransferService {
     await this.fplFetcher!.performTransfers(transferRequest);
     return true;
   }
+
+  private countPlayersOnTeam = (picksWithScore: TeamPickWithScore[]) => {
+    const teams = picksWithScore.map((pick) => pick.playerScore.player.team);
+    return teams.reduce(
+      (total, teamId) => ({
+        ...total,
+        [teamId]: total[teamId] ? total[teamId] + 1 : 1,
+      }),
+      {} as TeamCount
+    );
+  };
 
   private debug(message: string, debug: boolean) {
     if (debug) {

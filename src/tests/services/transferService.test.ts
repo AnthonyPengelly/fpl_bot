@@ -16,7 +16,7 @@ const optimisationService = ({
 
 const transferService = new TransferService(fplFetcher, optimisationService);
 
-describe("optimisationService", () => {
+describe("transferService", () => {
   beforeEach(() => {
     mockGetOptimalTeamForSettings.mockReturnValue([]);
   });
@@ -71,7 +71,7 @@ describe("optimisationService", () => {
       new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(5).build()
     );
     const existingGoodPlayer = getPlayerPick(
-      100, // a factor of 10 different from value. This is the equivalent of '5'
+      100, // a factor of 10 different from value. This is the equivalent of '10'
       new PlayerScoreBuilder().withPositionId(1).withScore(200).withValue(5).build()
     );
     const picks = [existingWeakPlayer, existingGoodPlayer];
@@ -101,7 +101,7 @@ describe("optimisationService", () => {
       new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(5).build()
     );
     const existingGoodPlayer = getPlayerPick(
-      100, // a factor of 10 different from value. This is the equivalent of '5'
+      100, // a factor of 10 different from value. This is the equivalent of '10'
       new PlayerScoreBuilder().withPositionId(1).withScore(50).withValue(5).build()
     );
     const picks = [existingWeakPlayer, existingGoodPlayer];
@@ -112,6 +112,93 @@ describe("optimisationService", () => {
     expect(result.playersIn[0].player.id).toBe(bestPlayer.player.id);
     expect(result.playersOut[0].player.id).toBe(existingGoodPlayer.playerScore.player.id);
     expect(result.scoreImprovement).toBe(50);
+  });
+
+  test("Does not suggest player when team count would be too high", () => {
+    const bestPlayer = new PlayerScoreBuilder()
+      .withPositionId(1)
+      .withScore(100)
+      .withValue(15)
+      .withTeamId(3)
+      .build();
+    const otherPlayer = new PlayerScoreBuilder()
+      .withPositionId(1)
+      .withScore(10)
+      .withValue(10)
+      .withTeamId(2)
+      .build();
+    const players = [bestPlayer, otherPlayer];
+    const existingPlayer1 = getPlayerPick(
+      50,
+      new PlayerScoreBuilder().withPositionId(1).withScore(2).withValue(5).withTeamId(3).build()
+    );
+    const existingPlayer2 = getPlayerPick(
+      100,
+      new PlayerScoreBuilder().withPositionId(1).withScore(2).withValue(5).withTeamId(3).build()
+    );
+    const existingPlayer3 = getPlayerPick(
+      100,
+      new PlayerScoreBuilder().withPositionId(1).withScore(2).withValue(5).withTeamId(3).build()
+    );
+    const existingPlayer4 = getPlayerPick(
+      100,
+      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(5).withTeamId(3).build()
+    );
+    const picks = [existingPlayer1, existingPlayer2, existingPlayer3, existingPlayer4];
+    const myTeam = { picks: [], chips: [], transfers: { bank: 500 } as TransferInfo } as MyTeam;
+
+    const result = transferService.recommendOneTransfer(players, myTeam, picks, false);
+
+    expect(result.playersIn[0].player.id).toBe(otherPlayer.player.id);
+    expect(result.playersOut[0].player.id).toBe(existingPlayer4.playerScore.player.id);
+    expect(result.scoreImprovement).toBe(9);
+  });
+
+  test("Replaces a player from the same team to allow a better player", () => {
+    const bestPlayer = new PlayerScoreBuilder()
+      .withPositionId(1)
+      .withScore(100)
+      .withValue(15)
+      .withTeamId(3)
+      .build();
+    const otherPlayer = new PlayerScoreBuilder()
+      .withPositionId(1)
+      .withScore(10)
+      .withValue(10)
+      .withTeamId(1)
+      .build();
+    const players = [bestPlayer, otherPlayer];
+    const existingGoodPlayerFromTheSameTeam = getPlayerPick(
+      50,
+      new PlayerScoreBuilder().withPositionId(1).withScore(50).withValue(5).withTeamId(3).build()
+    );
+    const existingPlayer2 = getPlayerPick(
+      100,
+      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(5).withTeamId(3).build()
+    );
+    const existingPlayer3 = getPlayerPick(
+      100,
+      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(5).withTeamId(3).build()
+    );
+    const existingPlayer4 = getPlayerPick(
+      100,
+      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(5).withTeamId(2).build()
+    );
+    const picks = [
+      existingGoodPlayerFromTheSameTeam,
+      existingPlayer2,
+      existingPlayer3,
+      existingPlayer4,
+    ];
+    const myTeam = { picks: [], chips: [], transfers: { bank: 500 } as TransferInfo } as MyTeam;
+
+    const result = transferService.recommendOneTransfer(players, myTeam, picks, false);
+
+    expect(result.playersIn[0].player.id).toBe(bestPlayer.player.id);
+    expect(result.playersOut[0].player.id).toBe(
+      existingGoodPlayerFromTheSameTeam.playerScore.player.id
+    );
+    expect(result.scoreImprovement).toBe(99);
   });
 
   test("Gets 2 transfers with the highest value", () => {
