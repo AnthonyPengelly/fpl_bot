@@ -5,6 +5,7 @@ import OptimisationService from "./optimisationService";
 import { fullSquad } from "../config/optimisationSettings";
 import FplFetcher from "../fetchers/fplFetcher";
 import { PositionMap } from "../models/PositionMap";
+import { DumpPlayerSettings } from '../config/dumpPlayerSettings';
 
 interface TeamCount {
   [index: number]: number;
@@ -17,12 +18,10 @@ export default class TransferService {
     playerScores: PlayerScore[],
     myTeam: MyTeam,
     picksWithScore: TeamPickWithScore[],
-    useDumpPlayers: boolean,
+    dumpPlayerSettings: DumpPlayerSettings,
     debug: boolean
   ): TransferWithScores {
-    const playersToSuggest = useDumpPlayers
-      ? this.filterOutDumpPlayers(picksWithScore)
-      : this.filterOutDumpGoalkeeper(picksWithScore);
+    const playersToSuggest = this.getPlayersFromDumpSettings(picksWithScore, dumpPlayerSettings);
     const options = playersToSuggest.map((pickWithScore) => {
       const remainingTeam = picksWithScore.filter(
         (player) => player.playerScore.player.id !== pickWithScore.playerScore.player.id
@@ -59,14 +58,12 @@ export default class TransferService {
     playerScores: PlayerScore[],
     myTeam: MyTeam,
     picksWithScore: TeamPickWithScore[],
-    useDumpPlayers: boolean,
+    dumpPlayerSettings: DumpPlayerSettings,
     debug: boolean
   ): TransferWithScores {
     const options: TransferWithScores[] = [];
     let failedSuggestions = 0;
-    const playersToSuggest = useDumpPlayers
-      ? this.filterOutDumpPlayers(picksWithScore)
-      : this.filterOutDumpGoalkeeper(picksWithScore);
+    const playersToSuggest = this.getPlayersFromDumpSettings(picksWithScore, dumpPlayerSettings);
     playersToSuggest.forEach((pick1) => {
       playersToSuggest.forEach((pick2) => {
         if (pick1.playerScore.player.id === pick2.playerScore.player.id) {
@@ -178,6 +175,17 @@ export default class TransferService {
     };
     await this.fplFetcher!.performTransfers(transferRequest);
     return true;
+  }
+
+  private getPlayersFromDumpSettings = (picksWithScore: TeamPickWithScore[], dumpPlayerSettings: DumpPlayerSettings) => {
+    switch(dumpPlayerSettings) {
+      case DumpPlayerSettings.DontDump:
+        return picksWithScore;
+      case DumpPlayerSettings.DumpGoalkeeper:
+        return this.filterOutDumpGoalkeeper(picksWithScore);
+      case DumpPlayerSettings.DumpPlayers:
+        return this.filterOutDumpPlayers(picksWithScore);
+    }
   }
 
   private filterOutDumpPlayers = (picksWithScore: TeamPickWithScore[]) => {

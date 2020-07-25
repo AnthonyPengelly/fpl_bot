@@ -1,20 +1,31 @@
 import PlayerScore from "../models/PlayerScore";
 import { TransferWithScores } from "../models/TransferWithScores";
+import { Lineup } from "../models/Lineup";
 
 export default class DisplayService {
-  static displaySquad(players: PlayerScore[], squadName: string) {
+  static displaySquad(lineup: Lineup, squadName: string) {
+    const allPlayers = lineup.starting11.concat(lineup.orderedSubs);
     console.log();
     console.log(squadName);
-    const sortedPlayers = players.sort((a, b) => a.position.id - b.position.id);
-    this.displayPlayers(sortedPlayers);
-    console.log(sortedPlayers.length + " players");
-    const value = sortedPlayers.reduce((total, player) => total + player.value, 0);
+    const sortedStarting11 = lineup.starting11.sort((a, b) => a.position.id - b.position.id);
+    this.displayPlayers(sortedStarting11);
+    const starting11Score = sortedStarting11.reduce((total, player) => total + player.score, 0);
+    console.log(`Score: ${starting11Score.toFixed(2)}`);
+    console.log(`Score per player: ${(starting11Score / sortedStarting11.length).toFixed(2)}`);
+    console.log();
+    console.log("Subs");
+    this.displayPlayers(lineup.orderedSubs);
+    console.log(allPlayers.length + " players");
+    const value = allPlayers.reduce((total, player) => total + player.value, 0);
     if (value) {
       console.log(`Value £${value.toFixed(2)}m`);
     }
-    const squadScore = sortedPlayers.reduce((total, player) => total + player.score, 0);
-    console.log(`Score: ${squadScore.toFixed(2)}`);
-    console.log(`Score per player: ${(squadScore / sortedPlayers.length).toFixed(2)}`);
+    const squadScore = allPlayers.reduce((total, player) => total + player.score, 0);
+    console.log(`Total Score: ${squadScore.toFixed(2)}`);
+    console.log(`Score per player: ${(squadScore / allPlayers.length).toFixed(2)}`);
+    console.log();
+    console.log(`Captain: ${lineup.captain.player.web_name}`);
+    console.log(`Vice Captain: ${lineup.viceCaptain.player.web_name}`);
     console.log();
   }
 

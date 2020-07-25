@@ -3,6 +3,7 @@ import TransferService from "../../services/transferService";
 import RecommendationService from "../../services/recommendationService";
 import { TransferWithScores } from "../../models/TransferWithScores";
 import PlayerScoreBuilder from "../builders/playerScoreBuilder";
+import { DumpPlayerSettings } from '../../config/dumpPlayerSettings';
 
 const playerIn1 = new PlayerScoreBuilder().build();
 const playerIn2 = new PlayerScoreBuilder().build();
@@ -39,7 +40,7 @@ describe("recommendationService", () => {
     recommendOneTransfer.mockReturnValueOnce(singleTransfer);
     recommendTwoTransfers.mockReturnValueOnce(doubleTransfer);
 
-    const result = recommendationService.recommendTransfers([], myTeam, [], false, false);
+    const result = recommendationService.recommendTransfers([], myTeam, [], DumpPlayerSettings.DontDump, false);
 
     expect(result).toBe(singleTransfer);
   });
@@ -63,7 +64,7 @@ describe("recommendationService", () => {
     recommendOneTransfer.mockReturnValueOnce(singleTransfer);
     recommendTwoTransfers.mockReturnValueOnce(doubleTransfer);
 
-    const result = recommendationService.recommendTransfers([], myTeam, [], false, false);
+    const result = recommendationService.recommendTransfers([], myTeam, [], DumpPlayerSettings.DontDump, false);
 
     expect(result).toBe(doubleTransfer);
   });
@@ -87,7 +88,7 @@ describe("recommendationService", () => {
     recommendOneTransfer.mockReturnValueOnce(singleTransfer);
     recommendTwoTransfers.mockReturnValueOnce(doubleTransfer);
 
-    const result = recommendationService.recommendTransfers([], myTeam, [], false, false);
+    const result = recommendationService.recommendTransfers([], myTeam, [], DumpPlayerSettings.DontDump, false);
 
     expect(result).toBe(doubleTransfer);
   });

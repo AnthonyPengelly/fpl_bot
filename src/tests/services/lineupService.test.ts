@@ -5,6 +5,7 @@ import PlayerScoreBuilder from "../builders/playerScoreBuilder";
 import { TeamPickWithScore } from "../../models/TeamPickWithScore";
 import LineupService from "../../services/lineupService";
 import FplFetcher from "../../fetchers/fplFetcher";
+import PlayerScore from "../../models/PlayerScore";
 
 const fplFetcher = {} as FplFetcher;
 const lineupService = new LineupService(fplFetcher);
@@ -14,88 +15,64 @@ const generatePlayers = (
   numberOfMidfielders: number,
   numberOfForwards: number
 ) => {
-  const goalkeeper = new TeamPickWithScoreBuilder()
-    .withPlayerScore(
-      new PlayerScoreBuilder().withPlayerId(1).withPositionId(1).withScore(100).build()
-    )
+  const goalkeeper = new PlayerScoreBuilder()
+    .withPlayerId(1)
+    .withPositionId(1)
+    .withScore(100)
     .build();
   const defenders = Array.from(Array(numberOfDefenders), (_, i) =>
-    new TeamPickWithScoreBuilder()
-      .withPlayerScore(
-        new PlayerScoreBuilder()
-          .withPlayerId(i + 2)
-          .withPositionId(2)
-          .withScore(100)
-          .build()
-      )
+    new PlayerScoreBuilder()
+      .withPlayerId(i + 2)
+      .withPositionId(2)
+      .withScore(100)
       .build()
   );
   const midfielders = Array.from(Array(numberOfMidfielders), (_, i) =>
-    new TeamPickWithScoreBuilder()
-      .withPlayerScore(
-        new PlayerScoreBuilder()
-          .withPlayerId(i + 2 + numberOfDefenders)
-          .withPositionId(3)
-          .withScore(100)
-          .build()
-      )
+    new PlayerScoreBuilder()
+      .withPlayerId(i + 2 + numberOfDefenders)
+      .withPositionId(3)
+      .withScore(100)
       .build()
   );
   const forwards = Array.from(Array(numberOfForwards), (_, i) =>
-    new TeamPickWithScoreBuilder()
-      .withPlayerScore(
-        new PlayerScoreBuilder()
-          .withPlayerId(i + 2 + numberOfDefenders + numberOfMidfielders)
-          .withPositionId(4)
-          .withScore(100)
-          .build()
-      )
+    new PlayerScoreBuilder()
+      .withPlayerId(i + 2 + numberOfDefenders + numberOfMidfielders)
+      .withPositionId(4)
+      .withScore(100)
       .build()
   );
-  const goalkeeperSub = new TeamPickWithScoreBuilder()
-    .withPlayerScore(
-      new PlayerScoreBuilder().withPlayerId(12).withPositionId(1).withScore(1).build()
-    )
+  const goalkeeperSub = new PlayerScoreBuilder()
+    .withPlayerId(12)
+    .withPositionId(1)
+    .withScore(1)
     .build();
   const defenderSubs =
     numberOfDefenders < 5
       ? Array.from(Array(5 - numberOfDefenders), (_, i) =>
-          new TeamPickWithScoreBuilder()
-            .withPlayerScore(
-              new PlayerScoreBuilder()
-                .withPlayerId(i + 13)
-                .withPositionId(2)
-                .withScore(1)
-                .build()
-            )
+          new PlayerScoreBuilder()
+            .withPlayerId(i + 13)
+            .withPositionId(2)
+            .withScore(1)
             .build()
         )
       : [];
   const midfielderSubs =
     numberOfMidfielders < 5
       ? Array.from(Array(5 - numberOfMidfielders), (_, i) =>
-          new TeamPickWithScoreBuilder()
-            .withPlayerScore(
-              new PlayerScoreBuilder()
-                .withPlayerId(i + 13 + defenderSubs.length)
-                .withPositionId(3)
-                .withScore(1)
-                .build()
-            )
+          new PlayerScoreBuilder()
+            .withPlayerId(i + 13 + defenderSubs.length)
+            .withPositionId(3)
+            .withScore(1)
             .build()
         )
       : [];
   const forwardSubs =
     numberOfForwards < 3
       ? Array.from(Array(3 - numberOfForwards), (_, i) =>
-          new TeamPickWithScoreBuilder()
-            .withPlayerScore(
-              new PlayerScoreBuilder()
-                .withPlayerId(i + 13 + defenderSubs.length + midfielderSubs.length)
-                .withPositionId(4)
-                .withScore(1)
-                .build()
-            )
+          new PlayerScoreBuilder()
+            .withPlayerId(i + 13 + defenderSubs.length + midfielderSubs.length)
+            .withPositionId(4)
+            .withScore(1)
             .build()
         )
       : [];
@@ -107,8 +84,8 @@ const generatePlayers = (
     forwards,
     forwardSubs
   );
-  squad.find((x) => x.playerScore.player.id === 5)!.playerScore.score = 150; // Captain
-  squad.find((x) => x.playerScore.player.id === 6)!.playerScore.score = 120; // Vice
+  squad.find((x) => x.player.id === 5)!.score = 150; // Captain
+  squad.find((x) => x.player.id === 6)!.score = 120; // Vice
   return squad;
 };
 
@@ -123,7 +100,7 @@ describe("lineupService", () => {
     ["352", generatePlayers(3, 5, 2)],
   ])(
     "Sets lineup to highest score, with a %s formation",
-    (formation: string, players: TeamPickWithScore[]) => {
+    (formation: string, players: PlayerScore[]) => {
       const result = lineupService.recommendLineup(players);
 
       expect(result.captain.player.id).toBe(5);
@@ -156,7 +133,7 @@ describe("lineupService", () => {
     ["665", generatePlayers(2, 7, 1)],
   ])(
     "Does not force an invalid lineup, with a %s formation",
-    (formation: string, players: TeamPickWithScore[]) => {
+    (formation: string, players: PlayerScore[]) => {
       const result = lineupService.recommendLineup(players);
 
       expect(result.captain.player.id).toBe(5);

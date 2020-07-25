@@ -5,6 +5,8 @@ import TransferService from "./transferService";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import { TransferWithScores } from "../models/TransferWithScores";
 import DisplayService from "./displayService";
+import { PositionMap } from "../models/PositionMap";
+import { DumpPlayerSettings } from '../config/dumpPlayerSettings';
 
 export default class RecommendationService {
   constructor(
@@ -13,10 +15,13 @@ export default class RecommendationService {
   ) {}
 
   recommendATeam(playerScores: PlayerScore[], settings: OptimisationSettings, budget: number) {
+    const dumpPlayers = this.getDumpPlayers(playerScores, settings);
+    const newBudget = budget - dumpPlayers.reduce((total, player) => player.value + total, 0);
     const initialSquad = this.optimisationService.getOptimalTeamForSettings(
       playerScores.slice(0, 150),
       settings,
-      budget
+      newBudget,
+      dumpPlayers
     );
     if (!initialSquad) {
       console.log(`Unable to recommend squad for budget £${budget}m and settings: `);
@@ -31,9 +36,7 @@ export default class RecommendationService {
       recommendedTransfer = this.recommendTransferUsingExistSquad(
         playerScores,
         newSquad,
-        settings,
-        budget,
-        false
+        newBudget,
       );
       if (
         !recommendedTransfer ||
@@ -49,14 +52,14 @@ export default class RecommendationService {
       newSquad = this.rebuildSquadBasedOnTransfer(newSquad, recommendedTransfer);
       attempts++;
     } while (attempts < 50);
-    return newSquad;
+    return newSquad.concat(dumpPlayers);
   }
 
   recommendTransfers(
     playerScores: PlayerScore[],
     myTeam: MyTeam,
     picksWithScore: TeamPickWithScore[],
-    useDumpPlayers: boolean,
+    useDumpPlayers: DumpPlayerSettings,
     debug: boolean
   ) {
     const singleTransfer = this.transferService.recommendOneTransfer(
@@ -104,24 +107,48 @@ export default class RecommendationService {
   private recommendTransferUsingExistSquad(
     playerScores: PlayerScore[],
     squad: PlayerScore[],
-    settings: OptimisationSettings,
     budget: number,
-    useDumpPlayers: boolean,
   ) {
     const value = squad.reduce((total, player) => player.value + total, 0);
     const myTeam = {
-      transfers: { bank: (budget - settings.budgetOffset - value) * 10 },
+      transfers: { bank: (budget - value) * 10 },
     } as MyTeam;
     const teamWithScores: TeamPickWithScore[] = squad.map((player) => ({
       pick: { selling_price: player.value * 10, element: player.player.id } as FantasyPick,
       playerScore: player,
     }));
-    return this.transferService.recommendOneTransfer(playerScores, myTeam, teamWithScores, useDumpPlayers, false);
+    return this.transferService.recommendOneTransfer(
+      playerScores,
+      myTeam,
+      teamWithScores,
+      DumpPlayerSettings.DontDump,
+      false
+    );
   }
 
   private rebuildSquadBasedOnTransfer(squad: PlayerScore[], transfer: TransferWithScores) {
     const newSquad = squad.filter((x) => x.player.id !== transfer.playersOut[0].player.id);
     newSquad.push(transfer.playersIn[0]);
     return newSquad;
+  }
+
+  private getDumpPlayers(players: PlayerScore[], settings: OptimisationSettings) {
+    return [
+      ...this.getDumpPlayersForPosition(players, PositionMap.GOALKEEPER, 2 - settings.goalkeepers),
+      ...this.getDumpPlayersForPosition(players, PositionMap.DEFENDER, 5 - settings.defenders),
+      ...this.getDumpPlayersForPosition(players, PositionMap.MIDFIELDER, 5 - settings.midfielders),
+      ...this.getDumpPlayersForPosition(players, PositionMap.FORWARD, 3 - settings.forwards),
+    ];
+  }
+
+  private getDumpPlayersForPosition(
+    players: PlayerScore[],
+    position: number,
+    numberOfPlayers: number
+  ) {
+    return players
+      .filter((p) => p.position.id === position)
+      .sort((a, b) => a.value - b.value)
+      .slice(0, numberOfPlayers);
   }
 }

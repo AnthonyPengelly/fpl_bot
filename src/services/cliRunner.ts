@@ -14,12 +14,14 @@ import {
   skeleton433Squad,
   skeleton442Squad,
   skeleton343Squad,
+  dumpGkpSquad,
 } from "../config/optimisationSettings";
 import TransferService from "./transferService";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import LineupService from "./lineupService";
 import DataRecorder from "./dataRecorder";
 import DraftService from "./draftService";
+import { DumpPlayerSettings } from "../config/dumpPlayerSettings";
 
 export default class CliRunner {
   private fplFetcher: FplFetcher;
@@ -121,7 +123,13 @@ export default class CliRunner {
         this.recommendSquad(players, optionalParameter ? parseInt(optionalParameter) : 100);
         break;
       case CliRunner.RECOMMEND_TRANSFERS_CMD:
-        this.recommendTransfers(players, myTeam, picksWithScore, optionalParameter === 'true', true);
+        this.recommendTransfers(
+          players,
+          myTeam,
+          picksWithScore,
+          optionalParameter === "true",
+          true
+        );
         break;
       case CliRunner.RECOMMEND_LINEUP_CMD:
         this.recommendLineup(picksWithScore);
@@ -130,7 +138,14 @@ export default class CliRunner {
         this.setLineup(picksWithScore, teamId, false);
         break;
       case CliRunner.PERFORM_TRANSFERS_CMD:
-        this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId, optionalParameter === 'true');
+        this.performTransfers(
+          players,
+          myTeam,
+          picksWithScore,
+          nextEvent,
+          teamId,
+          optionalParameter === "true"
+        );
         break;
       case CliRunner.RECORD_DATA_CMD:
         this.recordData(players, nextEvent.id);
@@ -268,14 +283,19 @@ export default class CliRunner {
       .filter((player) => player.position.singular_name_short === "FWD")
       .slice(0, 3);
     const bestSquad = goalkeepers.concat(defenders, midfielders, forwards);
-    DisplayService.displaySquad(bestSquad, "Best Squad");
+    this.displaySquad(bestSquad, "Best Squad");
   }
 
   private recommendSquad(players: PlayerScore[], budget: number) {
     console.log(`Recommending squads based on a budget of £${budget}m`);
     const all15Positions = this.recommendationService.recommendATeam(players, fullSquad, budget);
     if (all15Positions.length >= 11) {
-      DisplayService.displaySquad(all15Positions, "Full Squad");
+      this.displaySquad(all15Positions, "Full Squad");
+    }
+
+    const dumpGkp = this.recommendationService.recommendATeam(players, dumpGkpSquad, budget);
+    if (dumpGkp.length >= 11) {
+      this.displaySquad(dumpGkp, "Dump Goalkeeper Squad");
     }
 
     const skeleton442 = this.recommendationService.recommendATeam(
@@ -284,7 +304,7 @@ export default class CliRunner {
       budget
     );
     if (skeleton442.length >= 11) {
-      DisplayService.displaySquad(skeleton442, "Skeleton 442 Squad");
+      this.displaySquad(skeleton442, "Skeleton 442 Squad");
     }
 
     const skeleton433 = this.recommendationService.recommendATeam(
@@ -293,7 +313,7 @@ export default class CliRunner {
       budget
     );
     if (skeleton433.length >= 11) {
-      DisplayService.displaySquad(skeleton433, "Skeleton 433 Squad");
+      this.displaySquad(skeleton433, "Skeleton 433 Squad");
     }
 
     const skeleton343 = this.recommendationService.recommendATeam(
@@ -302,7 +322,7 @@ export default class CliRunner {
       budget
     );
     if (skeleton343.length >= 11) {
-      DisplayService.displaySquad(skeleton343, "Skeleton 343 Squad");
+      this.displaySquad(skeleton343, "Skeleton 343 Squad");
     }
 
     const skeleton532 = this.recommendationService.recommendATeam(
@@ -311,7 +331,7 @@ export default class CliRunner {
       budget
     );
     if (skeleton532.length >= 11) {
-      DisplayService.displaySquad(skeleton532, "Skeleton 532 Squad");
+      this.displaySquad(skeleton532, "Skeleton 532 Squad");
     }
   }
 
@@ -332,7 +352,7 @@ export default class CliRunner {
       playerScores,
       myTeam,
       picksWithScore,
-      useDumpPlayers,
+      useDumpPlayers ? DumpPlayerSettings.DumpPlayers : DumpPlayerSettings.DumpGoalkeeper,
       debug
     );
   }
@@ -343,7 +363,7 @@ export default class CliRunner {
     picksWithScore: TeamPickWithScore[],
     nextEvent: Gameweek,
     teamId: number,
-    useDumpPlayers: boolean,
+    useDumpPlayers: boolean
   ) {
     const recommendation = await this.recommendTransfers(
       playerScores,
@@ -366,14 +386,8 @@ export default class CliRunner {
   }
 
   private recommendLineup(picksWithScore: TeamPickWithScore[]) {
-    const lineup = this.lineupService.recommendLineup(picksWithScore);
-    DisplayService.displaySquad(lineup.starting11, "Starting XI");
-    console.log();
-    console.log("Subs (Ordered)");
-    DisplayService.displayPlayers(lineup.orderedSubs);
-    console.log(`Captain: ${lineup.captain.player.web_name}`);
-    console.log(`Vice Captain: ${lineup.viceCaptain.player.web_name}`);
-    DisplayService.displaySquad([...lineup.starting11, ...lineup.orderedSubs], "My Squad");
+    const lineup = this.lineupService.recommendLineup(picksWithScore.map((p) => p.playerScore));
+    DisplayService.displaySquad(lineup, "My Squad");
     return lineup;
   }
 
@@ -439,5 +453,10 @@ export default class CliRunner {
       element.id = draftOverview.elements.find((x) => x.code === element.code)?.id!;
     });
     overview.elements = overview.elements.filter((x) => x.id);
+  }
+
+  private displaySquad(players: PlayerScore[], squadName: string) {
+    const lineup = this.lineupService.recommendLineup(players);
+    DisplayService.displaySquad(lineup, squadName);
   }
 }

@@ -11,7 +11,7 @@ export default class OptimisationService {
     budget: number,
     otherPlayersInTeam: PlayerScore[] = []
   ) => {
-    const W = (budget - settings.budgetOffset) * 100;
+    const W = budget * 100;
     let cache: PlayerScore[][][] = [];
     for (let g = 0; g < players.length + 1; g++) {
       cache[g] = [];

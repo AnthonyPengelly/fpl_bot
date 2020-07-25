@@ -18,31 +18,19 @@ export default class TeamValidator {
       return false;
     }
 
-    if (
-      fullTeam.filter((player) => player.position.id === PositionMap.GOALKEEPER).length >
-      settings.goalkeepers
-    ) {
+    if (fullTeam.filter((player) => player.position.id === PositionMap.GOALKEEPER).length > 2) {
       return false;
     }
 
-    if (
-      fullTeam.filter((player) => player.position.id === PositionMap.DEFENDER).length >
-      settings.defenders
-    ) {
+    if (fullTeam.filter((player) => player.position.id === PositionMap.DEFENDER).length > 5) {
       return false;
     }
 
-    if (
-      fullTeam.filter((player) => player.position.id === PositionMap.MIDFIELDER).length >
-      settings.midfielders
-    ) {
+    if (fullTeam.filter((player) => player.position.id === PositionMap.MIDFIELDER).length > 5) {
       return false;
     }
 
-    if (
-      fullTeam.filter((player) => player.position.id === PositionMap.FORWARD).length >
-      settings.forwards
-    ) {
+    if (fullTeam.filter((player) => player.position.id === PositionMap.FORWARD).length > 3) {
       return false;
     }
 

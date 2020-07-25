@@ -5,6 +5,7 @@ import PlayerScore from "../../models/PlayerScore";
 import PlayerScoreBuilder from "../builders/playerScoreBuilder";
 import TeamPickWithScoreBuilder from "../builders/teamPickWithScoreBuilder";
 import { fullSquad } from "../../config/optimisationSettings";
+import { DumpPlayerSettings } from "../../config/dumpPlayerSettings";
 
 const fplFetcher = {} as FplFetcher;
 
@@ -36,18 +37,19 @@ describe("transferService", () => {
       0,
       new PlayerScoreBuilder().withPositionId(2).withScore(1).build()
     );
-    const dumpGkp = getPlayerPick(
-      1,
-      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(1).withTeamId(1).build()
-    );
     const picks = [
       worstExistingPick,
       getPlayerPick(0, new PlayerScoreBuilder().withPositionId(2).withScore(100).build()),
-      dumpGkp,
     ];
     const myTeam = { picks: [], chips: [], transfers: { bank: 10 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendOneTransfer(players, myTeam, picks, false, false);
+    const result = transferService.recommendOneTransfer(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DontDump,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(bestPlayer.player.id);
     expect(result.playersOut[0].player.id).toBe(worstExistingPick.playerScore.player.id);
@@ -79,14 +81,16 @@ describe("transferService", () => {
       100, // a factor of 10 different from value. This is the equivalent of '10'
       new PlayerScoreBuilder().withPositionId(2).withScore(200).withValue(5).build()
     );
-    const dumpGkp = getPlayerPick(
-      1,
-      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(1).withTeamId(1).build()
-    );
-    const picks = [existingWeakPlayer, existingGoodPlayer, dumpGkp];
+    const picks = [existingWeakPlayer, existingGoodPlayer];
     const myTeam = { picks: [], chips: [], transfers: { bank: 50 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendOneTransfer(players, myTeam, picks, false, false);
+    const result = transferService.recommendOneTransfer(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DontDump,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(bestPlayerWithinBudget.player.id);
     expect(result.playersOut[0].player.id).toBe(existingWeakPlayer.playerScore.player.id);
@@ -113,14 +117,16 @@ describe("transferService", () => {
       100, // a factor of 10 different from value. This is the equivalent of '10'
       new PlayerScoreBuilder().withPositionId(2).withScore(50).withValue(5).build()
     );
-    const dumpGkp = getPlayerPick(
-      1,
-      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(1).withTeamId(1).build()
-    );
-    const picks = [existingWeakPlayer, existingGoodPlayer, dumpGkp];
+    const picks = [existingWeakPlayer, existingGoodPlayer];
     const myTeam = { picks: [], chips: [], transfers: { bank: 50 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendOneTransfer(players, myTeam, picks, false, false);
+    const result = transferService.recommendOneTransfer(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DontDump,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(bestPlayer.player.id);
     expect(result.playersOut[0].player.id).toBe(existingGoodPlayer.playerScore.player.id);
@@ -157,14 +163,16 @@ describe("transferService", () => {
       100,
       new PlayerScoreBuilder().withPositionId(2).withScore(1).withValue(5).withTeamId(3).build()
     );
-    const dumpGkp = getPlayerPick(
-      1,
-      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(1).withTeamId(1).build()
-    );
-    const picks = [existingPlayer1, existingPlayer2, existingPlayer3, existingPlayer4, dumpGkp];
+    const picks = [existingPlayer1, existingPlayer2, existingPlayer3, existingPlayer4];
     const myTeam = { picks: [], chips: [], transfers: { bank: 500 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendOneTransfer(players, myTeam, picks, false, false);
+    const result = transferService.recommendOneTransfer(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DontDump,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(otherPlayer.player.id);
     expect(result.playersOut[0].player.id).toBe(existingPlayer4.playerScore.player.id);
@@ -201,20 +209,21 @@ describe("transferService", () => {
       100,
       new PlayerScoreBuilder().withPositionId(2).withScore(1).withValue(5).withTeamId(2).build()
     );
-    const dumpGkp = getPlayerPick(
-      1,
-      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(1).withTeamId(1).build()
-    );
     const picks = [
       existingGoodPlayerFromTheSameTeam,
       existingPlayer2,
       existingPlayer3,
       existingPlayer4,
-      dumpGkp,
     ];
     const myTeam = { picks: [], chips: [], transfers: { bank: 500 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendOneTransfer(players, myTeam, picks, false, false);
+    const result = transferService.recommendOneTransfer(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DontDump,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(bestPlayer.player.id);
     expect(result.playersOut[0].player.id).toBe(
@@ -254,7 +263,13 @@ describe("transferService", () => {
     const picks = [existingPlayer, dumpGkp, dumpDef, dumpMid, dumpFwd];
     const myTeam = { picks: [], chips: [], transfers: { bank: 500 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendOneTransfer(players, myTeam, picks, true, false);
+    const result = transferService.recommendOneTransfer(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DumpPlayers,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(bestPlayer.player.id);
     expect(result.playersOut[0].player.id).toBe(existingPlayer.playerScore.player.id);
@@ -280,7 +295,13 @@ describe("transferService", () => {
     const picks = [existingPlayer, dumpGkp];
     const myTeam = { picks: [], chips: [], transfers: { bank: 500 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendOneTransfer(players, myTeam, picks, false, false);
+    const result = transferService.recommendOneTransfer(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DumpGoalkeeper,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(bestPlayer.player.id);
     expect(result.playersOut[0].player.id).toBe(existingPlayer.playerScore.player.id);
@@ -312,14 +333,16 @@ describe("transferService", () => {
       50, // a factor of 10 different from value. This is the equivalent of '5'
       new PlayerScoreBuilder().withPositionId(2).withScore(100).withValue(5).build()
     );
-    const dumpGkp = getPlayerPick(
-      1,
-      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(1).withTeamId(1).build()
-    );
-    const picks = [existingWeakPlayer, otherExistingWeakPlayer, greatExistingPlayer, dumpGkp];
+    const picks = [existingWeakPlayer, otherExistingWeakPlayer, greatExistingPlayer];
     const myTeam = { picks: [], chips: [], transfers: { bank: 500 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendTwoTransfers(players, myTeam, picks, false, false);
+    const result = transferService.recommendTwoTransfers(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DontDump,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(bestPlayer.player.id);
     expect(result.playersOut[0].player.id).toBe(existingWeakPlayer.playerScore.player.id);
@@ -368,7 +391,13 @@ describe("transferService", () => {
     const picks = [existingPlayer1, existingPlayer2, dumpGkp, dumpDef, dumpMid, dumpFwd];
     const myTeam = { picks: [], chips: [], transfers: { bank: 500 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendTwoTransfers(players, myTeam, picks, true, false);
+    const result = transferService.recommendTwoTransfers(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DumpPlayers,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(goodPlayer1.player.id);
     expect(result.playersOut[0].player.id).toBe(existingPlayer1.playerScore.player.id);
@@ -405,7 +434,13 @@ describe("transferService", () => {
     const picks = [existingPlayer1, existingPlayer2, dumpGkp];
     const myTeam = { picks: [], chips: [], transfers: { bank: 500 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendTwoTransfers(players, myTeam, picks, false, false);
+    const result = transferService.recommendTwoTransfers(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DumpGoalkeeper,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(goodPlayer1.player.id);
     expect(result.playersOut[0].player.id).toBe(existingPlayer1.playerScore.player.id);
@@ -444,7 +479,13 @@ describe("transferService", () => {
     const picks = [existingPlayer1, existingPlayer2, dumpGkp];
     const myTeam = { picks: [], chips: [], transfers: { bank: 500 } as TransferInfo } as MyTeam;
 
-    const result = transferService.recommendTwoTransfers(players, myTeam, picks, false, false);
+    const result = transferService.recommendTwoTransfers(
+      players,
+      myTeam,
+      picks,
+      DumpPlayerSettings.DumpGoalkeeper,
+      false
+    );
 
     expect(result.playersIn[0].player.id).toBe(correctPlayer1.player.id);
     expect(result.playersOut[0].player.id).toBe(existingPlayer1.playerScore.player.id);
