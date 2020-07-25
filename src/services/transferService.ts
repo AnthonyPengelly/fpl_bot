@@ -4,6 +4,7 @@ import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import OptimisationService from "./optimisationService";
 import { fullSquad } from "../config/optimisationSettings";
 import FplFetcher from "../fetchers/fplFetcher";
+import { PositionMap } from "../models/PositionMap";
 
 interface TeamCount {
   [index: number]: number;
@@ -16,9 +17,13 @@ export default class TransferService {
     playerScores: PlayerScore[],
     myTeam: MyTeam,
     picksWithScore: TeamPickWithScore[],
+    useDumpPlayers: boolean,
     debug: boolean
   ): TransferWithScores {
-    const options = picksWithScore.map((pickWithScore) => {
+    const playersToSuggest = useDumpPlayers
+      ? this.filterOutDumpPlayers(picksWithScore)
+      : this.filterOutDumpGoalkeeper(picksWithScore);
+    const options = playersToSuggest.map((pickWithScore) => {
       const remainingTeam = picksWithScore.filter(
         (player) => player.playerScore.player.id !== pickWithScore.playerScore.player.id
       );
@@ -54,12 +59,16 @@ export default class TransferService {
     playerScores: PlayerScore[],
     myTeam: MyTeam,
     picksWithScore: TeamPickWithScore[],
+    useDumpPlayers: boolean,
     debug: boolean
   ): TransferWithScores {
     const options: TransferWithScores[] = [];
     let failedSuggestions = 0;
-    picksWithScore.forEach((pick1) => {
-      picksWithScore.forEach((pick2) => {
+    const playersToSuggest = useDumpPlayers
+      ? this.filterOutDumpPlayers(picksWithScore)
+      : this.filterOutDumpGoalkeeper(picksWithScore);
+    playersToSuggest.forEach((pick1) => {
+      playersToSuggest.forEach((pick2) => {
         if (pick1.playerScore.player.id === pick2.playerScore.player.id) {
           return;
         }
@@ -170,6 +179,47 @@ export default class TransferService {
     await this.fplFetcher!.performTransfers(transferRequest);
     return true;
   }
+
+  private filterOutDumpPlayers = (picksWithScore: TeamPickWithScore[]) => {
+    const cheapestGkps = this.cheapestPlayersByPosition(picksWithScore, PositionMap.GOALKEEPER, 1);
+    const cheapestDefs = this.cheapestPlayersByPosition(picksWithScore, PositionMap.DEFENDER, 2);
+    const cheapestMids = this.cheapestPlayersByPosition(picksWithScore, PositionMap.MIDFIELDER, 2);
+    const cheapestFwds = this.cheapestPlayersByPosition(picksWithScore, PositionMap.FORWARD, 2);
+    const dumpPlayers = [
+      ...cheapestGkps,
+      ...this.cheapestPlayers(cheapestDefs.concat(cheapestMids, cheapestFwds), 3),
+    ];
+    return picksWithScore.filter(
+      (p) =>
+        dumpPlayers.filter((d) => d.playerScore.player.id === p.playerScore.player.id).length === 0
+    );
+  };
+
+  private filterOutDumpGoalkeeper = (picksWithScore: TeamPickWithScore[]) => {
+    const cheapestGkp = this.cheapestPlayersByPosition(
+      picksWithScore,
+      PositionMap.GOALKEEPER,
+      1
+    )[0];
+    return picksWithScore.filter(
+      (p) => p.playerScore.player.id !== cheapestGkp.playerScore.player.id
+    );
+  };
+
+  private cheapestPlayersByPosition = (
+    picksWithScore: TeamPickWithScore[],
+    position: number,
+    playersToSelect: number
+  ) =>
+    this.cheapestPlayers(
+      picksWithScore.filter((p) => p.playerScore.position.id === position),
+      playersToSelect
+    );
+
+  private cheapestPlayers = (picksWithScore: TeamPickWithScore[], playersToSelect: number) =>
+    picksWithScore
+      .sort((a, b) => a.playerScore.value - b.playerScore.value)
+      .slice(0, playersToSelect);
 
   private countPlayersOnTeam = (picksWithScore: TeamPickWithScore[]) => {
     const teams = picksWithScore.map((pick) => pick.playerScore.player.team);

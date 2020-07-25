@@ -5,7 +5,6 @@ import TransferService from "./transferService";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import { TransferWithScores } from "../models/TransferWithScores";
 import DisplayService from "./displayService";
-import { receiveMessageOnPort } from "worker_threads";
 
 export default class RecommendationService {
   constructor(
@@ -33,7 +32,8 @@ export default class RecommendationService {
         playerScores,
         newSquad,
         settings,
-        budget
+        budget,
+        false
       );
       if (
         !recommendedTransfer ||
@@ -56,18 +56,21 @@ export default class RecommendationService {
     playerScores: PlayerScore[],
     myTeam: MyTeam,
     picksWithScore: TeamPickWithScore[],
+    useDumpPlayers: boolean,
     debug: boolean
   ) {
     const singleTransfer = this.transferService.recommendOneTransfer(
       playerScores,
       myTeam,
       picksWithScore,
+      useDumpPlayers,
       debug
     );
     const twoTransfers = this.transferService.recommendTwoTransfers(
       playerScores,
       myTeam,
       picksWithScore,
+      useDumpPlayers,
       debug
     );
     const twoTransfersAreDouble =
@@ -102,7 +105,8 @@ export default class RecommendationService {
     playerScores: PlayerScore[],
     squad: PlayerScore[],
     settings: OptimisationSettings,
-    budget: number
+    budget: number,
+    useDumpPlayers: boolean,
   ) {
     const value = squad.reduce((total, player) => player.value + total, 0);
     const myTeam = {
@@ -112,7 +116,7 @@ export default class RecommendationService {
       pick: { selling_price: player.value * 10, element: player.player.id } as FantasyPick,
       playerScore: player,
     }));
-    return this.transferService.recommendOneTransfer(playerScores, myTeam, teamWithScores, false);
+    return this.transferService.recommendOneTransfer(playerScores, myTeam, teamWithScores, useDumpPlayers, false);
   }
 
   private rebuildSquadBasedOnTransfer(squad: PlayerScore[], transfer: TransferWithScores) {

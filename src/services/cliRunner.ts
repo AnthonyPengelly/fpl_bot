@@ -121,7 +121,7 @@ export default class CliRunner {
         this.recommendSquad(players, optionalParameter ? parseInt(optionalParameter) : 100);
         break;
       case CliRunner.RECOMMEND_TRANSFERS_CMD:
-        this.recommendTransfers(players, myTeam, picksWithScore, true);
+        this.recommendTransfers(players, myTeam, picksWithScore, optionalParameter === 'true', true);
         break;
       case CliRunner.RECOMMEND_LINEUP_CMD:
         this.recommendLineup(picksWithScore);
@@ -130,7 +130,7 @@ export default class CliRunner {
         this.setLineup(picksWithScore, teamId, false);
         break;
       case CliRunner.PERFORM_TRANSFERS_CMD:
-        this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId);
+        this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId, optionalParameter === 'true');
         break;
       case CliRunner.RECORD_DATA_CMD:
         this.recordData(players, nextEvent.id);
@@ -172,14 +172,14 @@ export default class CliRunner {
     const hoursTilDeadline = deadlineTime.diff(timeNow, "hours");
     if (hoursTilDeadline < 24) {
       console.log(`Deadline in ${hoursTilDeadline} hours, performing transfers`);
-      await this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId);
+      await this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId, false);
       this.recordData(players, nextEvent.id);
     } else {
       console.log(
         `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week. ` +
           "Showing recommended transfers"
       );
-      await this.recommendTransfers(players, myTeam, picksWithScore, false);
+      await this.recommendTransfers(players, myTeam, picksWithScore, false, false);
     }
     console.log("Updating lineup...");
     const myNewTeam = await this.fplFetcher.getMyTeam(teamId);
@@ -325,12 +325,14 @@ export default class CliRunner {
     playerScores: PlayerScore[],
     myTeam: MyTeam,
     picksWithScore: TeamPickWithScore[],
+    useDumpPlayers: boolean,
     debug: boolean
   ) {
     return this.recommendationService.recommendTransfers(
       playerScores,
       myTeam,
       picksWithScore,
+      useDumpPlayers,
       debug
     );
   }
@@ -340,12 +342,14 @@ export default class CliRunner {
     myTeam: MyTeam,
     picksWithScore: TeamPickWithScore[],
     nextEvent: Gameweek,
-    teamId: number
+    teamId: number,
+    useDumpPlayers: boolean,
   ) {
     const recommendation = await this.recommendTransfers(
       playerScores,
       myTeam,
       picksWithScore,
+      useDumpPlayers,
       false
     );
     const didPerformTransfer = await this.transferService.performTransfers(

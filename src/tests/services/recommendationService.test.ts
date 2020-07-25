@@ -39,7 +39,7 @@ describe("recommendationService", () => {
     recommendOneTransfer.mockReturnValueOnce(singleTransfer);
     recommendTwoTransfers.mockReturnValueOnce(doubleTransfer);
 
-    const result = recommendationService.recommendTransfers([], myTeam, [], false);
+    const result = recommendationService.recommendTransfers([], myTeam, [], false, false);
 
     expect(result).toBe(singleTransfer);
   });
@@ -63,7 +63,7 @@ describe("recommendationService", () => {
     recommendOneTransfer.mockReturnValueOnce(singleTransfer);
     recommendTwoTransfers.mockReturnValueOnce(doubleTransfer);
 
-    const result = recommendationService.recommendTransfers([], myTeam, [], false);
+    const result = recommendationService.recommendTransfers([], myTeam, [], false, false);
 
     expect(result).toBe(doubleTransfer);
   });
@@ -87,7 +87,7 @@ describe("recommendationService", () => {
     recommendOneTransfer.mockReturnValueOnce(singleTransfer);
     recommendTwoTransfers.mockReturnValueOnce(doubleTransfer);
 
-    const result = recommendationService.recommendTransfers([], myTeam, [], false);
+    const result = recommendationService.recommendTransfers([], myTeam, [], false, false);
 
     expect(result).toBe(doubleTransfer);
   });
