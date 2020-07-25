@@ -13,10 +13,10 @@ describe("fplFetcher", () => {
     expect(result.elements[0].element_type).toBeTruthy();
     expect(result.elements[0].team).toBeTruthy();
     expect(result.elements[0].code).toBeTruthy();
-    expect(result.elements[0].form).toBeTruthy();
-    expect(result.elements[0].points_per_game).toBeTruthy();
-    expect(result.elements[0].ict_index).toBeTruthy();
-    expect(result.elements[0].chance_of_playing_next_round).toBeTruthy();
+    expectToBeNumeric(result.elements[0].form);
+    expectToBeNumeric(result.elements[0].points_per_game);
+    expectToBeNumeric(result.elements[0].ict_index);
+    expectToBeNumeric(result.elements[0].chance_of_playing_next_round);
 
     expect(result.events.length).toBeGreaterThan(20);
     expect(result.events[0].id).toBeTruthy();
@@ -100,3 +100,7 @@ describe("fplFetcher", () => {
     expect(result.picks[0].element).toBeTruthy();
   }, 15000);
 });
+
+const expectToBeNumeric = (actual: any) => {
+  expect(!isNaN(actual)).toBeTruthy();
+};
