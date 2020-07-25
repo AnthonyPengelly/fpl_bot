@@ -174,11 +174,11 @@ describe("transferService", () => {
     );
     const existingPlayer2 = getPlayerPick(
       100,
-      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(5).withTeamId(3).build()
+      new PlayerScoreBuilder().withPositionId(1).withScore(51).withValue(5).withTeamId(3).build()
     );
     const existingPlayer3 = getPlayerPick(
       100,
-      new PlayerScoreBuilder().withPositionId(1).withScore(1).withValue(5).withTeamId(3).build()
+      new PlayerScoreBuilder().withPositionId(1).withScore(51).withValue(5).withTeamId(3).build()
     );
     const existingPlayer4 = getPlayerPick(
       100,
@@ -198,7 +198,7 @@ describe("transferService", () => {
     expect(result.playersOut[0].player.id).toBe(
       existingGoodPlayerFromTheSameTeam.playerScore.player.id
     );
-    expect(result.scoreImprovement).toBe(99);
+    expect(result.scoreImprovement).toBe(50);
   });
 
   test("Gets 2 transfers with the highest value", () => {
