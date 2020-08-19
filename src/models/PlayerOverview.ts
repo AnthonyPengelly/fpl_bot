@@ -21,7 +21,7 @@ interface PlayerOverview {
   in_dreamteam: boolean;
   dreamteam_count: number;
   selected_by_percent: string;
-  form: number;
+  form: string;
   transfers_out: number;
   transfers_in: number;
   transfers_out_event: number;
@@ -32,7 +32,7 @@ interface PlayerOverview {
   loaned_out: number;
   total_points: number;
   event_points: number;
-  points_per_game: number;
+  points_per_game: string;
   ep_this: string;
   ep_next: string;
   special: boolean;
@@ -52,7 +52,7 @@ interface PlayerOverview {
   influence: string;
   creativity: string;
   threat: string;
-  ict_index: number;
+  ict_index: string;
   ea_index: number;
   element_type: number;
   team: number;

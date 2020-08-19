@@ -2,11 +2,11 @@ import { getScoreSettingsForPlayer } from "../../config/scoreSettings";
 import ScoreService from "../../services/scoreService";
 
 const basePlayer = {
-  form: 0,
-  ict_index: 0,
+  form: "0",
+  ict_index: "0",
   chance_of_playing_next_round: 0,
   element_type: 1,
-  points_per_game: 0,
+  points_per_game: "0",
 } as PlayerOverview;
 
 const scoreSettings = getScoreSettingsForPlayer(basePlayer);
@@ -32,7 +32,7 @@ const getOpponent = (strength: number, isHome: boolean): OpponentFixture => ({
 
 describe("scoreService", () => {
   test("Calculates form correctly", () => {
-    const player = { ...basePlayer, form: scoreSettings.weights.form.max };
+    const player = { ...basePlayer, form: scoreSettings.weights.form.max.toString() };
     const expectedScoreFromPlayer = (100 * scoreSettings.weights.form.weight) / totalWeight;
     const expectedScoreFromGames =
       (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
@@ -53,7 +53,7 @@ describe("scoreService", () => {
   });
 
   test("Calculates form correctly from previous results", () => {
-    const player = { ...basePlayer, form: scoreSettings.weights.form.max };
+    const player = { ...basePlayer, form: scoreSettings.weights.form.max.toString() };
     const previousScore = {
       inputs: { form: scoreSettings.weights.form.max / 2 },
     } as ScoreDetails;
@@ -80,7 +80,10 @@ describe("scoreService", () => {
   });
 
   test("Calculates points per game correctly", () => {
-    const player = { ...basePlayer, points_per_game: scoreSettings.weights.pointsPerGame.max };
+    const player = {
+      ...basePlayer,
+      points_per_game: scoreSettings.weights.pointsPerGame.max.toString(),
+    };
     const expectedScoreFromPlayer =
       (100 * scoreSettings.weights.pointsPerGame.weight) / totalWeight;
     const expectedScoreFromGames =
@@ -102,7 +105,7 @@ describe("scoreService", () => {
   });
 
   test("Calculates ict correctly", () => {
-    const player = { ...basePlayer, ict_index: scoreSettings.weights.ictIndex.max };
+    const player = { ...basePlayer, ict_index: scoreSettings.weights.ictIndex.max.toString() };
     const expectedScoreFromPlayer = (100 * scoreSettings.weights.ictIndex.weight) / totalWeight;
     const expectedScoreFromGames =
       (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;

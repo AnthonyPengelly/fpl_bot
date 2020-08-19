@@ -14,8 +14,8 @@ export default class ScoreService {
     const weights = settings.weights;
     const inputs: ScoreInputs = {
       form: this.getForm(player, gamesPlayed, previousScore),
-      pointsPerGame: player.points_per_game,
-      ictIndex: player.ict_index,
+      pointsPerGame: parseFloat(player.points_per_game),
+      ictIndex: parseFloat(player.ict_index),
       teamStrength: team.strength,
       teamStrengthForPosition: this.teamStrengthForPosition(player, team, opponentFixtures),
       opponentStrength: this.getOpponentAverageStrength(opponentFixtures, settings),
@@ -50,10 +50,15 @@ export default class ScoreService {
     gamesPlayed: number,
     previousScore?: ScoreDetails
   ) {
+    const form = parseFloat(player.form);
     if (gamesPlayed < 4 && previousScore) {
-      return (player.form + 3 * previousScore.inputs.form) / 4;
+      const previousForm =
+        typeof previousScore.inputs.form === "string"
+          ? parseFloat(previousScore.inputs.form)
+          : previousScore.inputs.form;
+      return (form + 3 * previousForm) / 4;
     }
-    return player.form;
+    return form;
   }
 
   private static teamStrengthForPosition(
