@@ -109,7 +109,6 @@ export default class FplFetcher {
         Cookie: this.cookies,
       },
     });
-    console.log(draftStatus);
     return draftStatus;
   }
 

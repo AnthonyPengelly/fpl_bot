@@ -1,8 +1,10 @@
 import { exit } from "process";
 import CliRunner from "./services/cliRunner";
+import { Logger } from "./services/logger";
 
-console.log("");
-console.log("Welcome to FPL bot!");
+const logger = new Logger();
+logger.log("");
+logger.log("Welcome to FPL bot!");
 
 if (process.argv.length < 3) {
   console.error(
@@ -12,5 +14,5 @@ if (process.argv.length < 3) {
   exit(1);
 }
 
-const cliRunner = new CliRunner();
+const cliRunner = new CliRunner(logger);
 cliRunner.run(process.argv[2], process.argv[3]).catch((error) => console.error(error));

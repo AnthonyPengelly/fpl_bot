@@ -6,13 +6,18 @@ import { fullSquad } from "../config/optimisationSettings";
 import FplFetcher from "../fetchers/fplFetcher";
 import { PositionMap } from "../models/PositionMap";
 import { DumpPlayerSettings } from "../config/dumpPlayerSettings";
+import { Logger } from "./logger";
 
 interface TeamCount {
   [index: number]: number;
 }
 
 export default class TransferService {
-  constructor(private fplFetcher: FplFetcher, private optimisationService: OptimisationService) {}
+  constructor(
+    private fplFetcher: FplFetcher,
+    private optimisationService: OptimisationService,
+    private logger: Logger
+  ) {}
 
   recommendOneTransfer(
     playerScores: PlayerScore[],
@@ -131,9 +136,9 @@ export default class TransferService {
         });
       });
     });
-    console.log("");
-    console.log(`Failed to suggest options for ${failedSuggestions} combinations`);
-    console.log("");
+    this.logger.log("");
+    this.logger.log(`Failed to suggest options for ${failedSuggestions} combinations`);
+    this.logger.log("");
     return options.sort((a, b) => b.scoreImprovement - a.scoreImprovement)[0];
   }
 
@@ -147,7 +152,7 @@ export default class TransferService {
       myTeam.transfers.limit &&
       transfer.playersIn.length > myTeam.transfers.limit - myTeam.transfers.made
     ) {
-      console.log(
+      this.logger.log(
         `Transfers requested: ${transfer.playersIn.length} exceeds limit: ${
           myTeam.transfers.limit - myTeam.transfers.made
         }, postponing until next week`
@@ -155,7 +160,7 @@ export default class TransferService {
       return false;
     }
     if (transfer.scoreImprovement < 0) {
-      console.log("Transfer has a negative value, not performing!");
+      this.logger.log("Transfer has a negative value, not performing!");
       return false;
     }
     const transferRequest: TransferRequest = {
@@ -245,7 +250,7 @@ export default class TransferService {
 
   private debug(message: string, debug: boolean) {
     if (debug) {
-      console.log(message);
+      this.logger.log(message);
     }
   }
 }

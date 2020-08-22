@@ -6,6 +6,7 @@ import PlayerScoreBuilder from "../builders/playerScoreBuilder";
 import TeamPickWithScoreBuilder from "../builders/teamPickWithScoreBuilder";
 import { fullSquad } from "../../config/optimisationSettings";
 import { DumpPlayerSettings } from "../../config/dumpPlayerSettings";
+import { Logger } from "../../services/logger";
 
 const fplFetcher = {} as FplFetcher;
 
@@ -15,7 +16,7 @@ const optimisationService = ({
   getOptimalTeamForSettings: mockGetOptimalTeamForSettings,
 } as unknown) as OptimisationService;
 
-const transferService = new TransferService(fplFetcher, optimisationService);
+const transferService = new TransferService(fplFetcher, optimisationService, new Logger());
 
 describe("transferService", () => {
   beforeEach(() => {

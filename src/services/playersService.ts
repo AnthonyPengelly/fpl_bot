@@ -1,13 +1,14 @@
 import ScoreService from "./scoreService";
 import PlayerScore from "../models/PlayerScore";
 import DataRecorder from "./dataRecorder";
+import { Logger } from './logger';
 
 export default class PlayersService {
-  constructor(private dataRecorder: DataRecorder) {}
+  constructor(private dataRecorder: DataRecorder, private logger: Logger) {}
 
   async getAllPlayerScores(overview: Overview, fixtures: Fixture[], nextEventId: number) {
     const teams = this.indexTeams(overview.teams);
-    console.log(`Scoring ${overview.elements.length} players`);
+    this.logger.log(`Scoring ${overview.elements.length} players`);
     const fixturesPlayed = fixtures.filter((x) => x.finished);
     const gameweeksPlayed = new Set(fixturesPlayed.map((x) => x.event)).size;
     const previousData = await this.dataRecorder.getLatestScores();
@@ -41,7 +42,7 @@ export default class PlayersService {
           scoreDetails
         );
       } catch (e) {
-        console.log(`Failed to score ${player.web_name}`);
+        this.logger.log(`Failed to score ${player.web_name}`);
         return;
       }
     });

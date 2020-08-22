@@ -3,7 +3,9 @@ import TransferService from "../../services/transferService";
 import RecommendationService from "../../services/recommendationService";
 import { TransferWithScores } from "../../models/TransferWithScores";
 import PlayerScoreBuilder from "../builders/playerScoreBuilder";
-import { DumpPlayerSettings } from '../../config/dumpPlayerSettings';
+import { DumpPlayerSettings } from "../../config/dumpPlayerSettings";
+import { Logger } from "../../services/logger";
+import DisplayService from "../../services/displayService";
 
 const playerIn1 = new PlayerScoreBuilder().build();
 const playerIn2 = new PlayerScoreBuilder().build();
@@ -18,7 +20,14 @@ const transferService = ({
   recommendTwoTransfers: recommendTwoTransfers,
 } as unknown) as TransferService;
 
-const recommendationService = new RecommendationService(optimisationService, transferService);
+const logger = new Logger();
+const displayService = new DisplayService(logger);
+const recommendationService = new RecommendationService(
+  optimisationService,
+  transferService,
+  displayService,
+  logger
+);
 
 describe("recommendationService", () => {
   test("returns 1 transfer when it is optimal", () => {
@@ -40,7 +49,13 @@ describe("recommendationService", () => {
     recommendOneTransfer.mockReturnValueOnce(singleTransfer);
     recommendTwoTransfers.mockReturnValueOnce(doubleTransfer);
 
-    const result = recommendationService.recommendTransfers([], myTeam, [], DumpPlayerSettings.DontDump, false);
+    const result = recommendationService.recommendTransfers(
+      [],
+      myTeam,
+      [],
+      DumpPlayerSettings.DontDump,
+      false
+    );
 
     expect(result).toBe(singleTransfer);
   });
@@ -64,7 +79,13 @@ describe("recommendationService", () => {
     recommendOneTransfer.mockReturnValueOnce(singleTransfer);
     recommendTwoTransfers.mockReturnValueOnce(doubleTransfer);
 
-    const result = recommendationService.recommendTransfers([], myTeam, [], DumpPlayerSettings.DontDump, false);
+    const result = recommendationService.recommendTransfers(
+      [],
+      myTeam,
+      [],
+      DumpPlayerSettings.DontDump,
+      false
+    );
 
     expect(result).toBe(doubleTransfer);
   });
@@ -88,7 +109,13 @@ describe("recommendationService", () => {
     recommendOneTransfer.mockReturnValueOnce(singleTransfer);
     recommendTwoTransfers.mockReturnValueOnce(doubleTransfer);
 
-    const result = recommendationService.recommendTransfers([], myTeam, [], DumpPlayerSettings.DontDump, false);
+    const result = recommendationService.recommendTransfers(
+      [],
+      myTeam,
+      [],
+      DumpPlayerSettings.DontDump,
+      false
+    );
 
     expect(result).toBe(doubleTransfer);
   });

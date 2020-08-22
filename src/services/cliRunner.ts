@@ -22,6 +22,7 @@ import LineupService from "./lineupService";
 import DataRecorder from "./dataRecorder";
 import DraftService from "./draftService";
 import { DumpPlayerSettings } from "../config/dumpPlayerSettings";
+import { Logger } from "./logger";
 
 export default class CliRunner {
   private fplFetcher: FplFetcher;
@@ -33,6 +34,7 @@ export default class CliRunner {
   private lineupService: LineupService;
   private dataRecorder: DataRecorder;
   private draftService: DraftService;
+  private displayService: DisplayService;
 
   public static RUN_CMD = "run";
   public static DRAFT_RUN_CMD = "draft-run";
@@ -69,19 +71,22 @@ export default class CliRunner {
     CliRunner.DRAFT_PERFORM_TRANSACTIONS_CMD,
   ];
 
-  constructor() {
+  constructor(private logger: Logger) {
+    this.displayService = new DisplayService(logger);
     this.fplFetcher = new FplFetcher();
     this.dataRecorder = new DataRecorder();
-    this.playerService = new PlayersService(this.dataRecorder);
+    this.playerService = new PlayersService(this.dataRecorder, logger);
     this.teamValidator = new TeamValidator();
     this.optimisationService = new OptimisationService(this.teamValidator);
     this.lineupService = new LineupService(this.fplFetcher);
-    this.transferService = new TransferService(this.fplFetcher, this.optimisationService);
+    this.transferService = new TransferService(this.fplFetcher, this.optimisationService, logger);
     this.recommendationService = new RecommendationService(
       this.optimisationService,
-      this.transferService
+      this.transferService,
+      this.displayService,
+      logger
     );
-    this.draftService = new DraftService(this.fplFetcher);
+    this.draftService = new DraftService(this.fplFetcher, this.displayService, logger);
   }
 
   async run(command: string, optionalParameter: string) {
@@ -181,27 +186,28 @@ export default class CliRunner {
     nextEvent: Gameweek,
     teamId: number
   ) {
-    console.log("Running Bot...");
+    this.logger.log("Running Bot...");
     const timeNow = moment();
     const deadlineTime = moment(nextEvent.deadline_time);
     const hoursTilDeadline = deadlineTime.diff(timeNow, "hours");
     if (hoursTilDeadline < 24) {
-      console.log(`Deadline in ${hoursTilDeadline} hours, performing transfers`);
+      this.logger.log(`Deadline in ${hoursTilDeadline} hours, performing transfers`);
       await this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId, false);
       await this.recordData(players, nextEvent.id);
+      this.logger.setShouldSendEmail();
     } else {
-      console.log(
+      this.logger.log(
         `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week. ` +
           "Showing recommended transfers"
       );
       await this.recommendTransfers(players, myTeam, picksWithScore, false, false);
     }
-    console.log("Updating lineup...");
+    this.logger.log("Updating lineup...");
     const myNewTeam = await this.fplFetcher.getMyTeam(teamId);
     const newPicksWithScore = this.mapTeamToTeamPickWithScore(myNewTeam, players);
     await this.setLineup(newPicksWithScore, teamId, false);
 
-    console.log("");
+    this.logger.log("");
     this.topPlayers(players);
   }
 
@@ -211,62 +217,60 @@ export default class CliRunner {
     nextEvent: Gameweek,
     teamId: number
   ) {
-    console.log("Running Draft Bot...");
+    this.logger.log("Running Draft Bot...");
     const timeNow = moment();
     const deadlineTime = moment(nextEvent.deadline_time);
     const hoursTilDeadline = deadlineTime.diff(timeNow, "hours");
     if (hoursTilDeadline < 24) {
-      console.log(`Deadline in ${hoursTilDeadline} hours, setting lineup`);
+      this.logger.log(`Deadline in ${hoursTilDeadline} hours, setting lineup`);
       await this.setLineup(picksWithScore, teamId, true);
-      console.log("");
-      console.log("SEND EMAIL"); // can be checked by a script to consider sending emails
+      this.logger.setShouldSendEmail();
     } else if (hoursTilDeadline < 48) {
-      console.log(
+      this.logger.log(
         `Waiver deadline in ${hoursTilDeadline - 24} hours, settings uncontroversial transactions`
       );
-      console.log("Consider manually settings some of the more expensive transactions");
+      this.logger.log("Consider manually settings some of the more expensive transactions");
       await this.performTransactions(players, picksWithScore, teamId);
-      console.log("");
-      console.log("SEND EMAIL"); // can be checked by a script to consider sending emails
+      this.logger.setShouldSendEmail();
     } else {
-      console.log(
+      this.logger.log(
         `Waiver deadline in ${hoursTilDeadline - 24} hours, showing recommended transactions.`
       );
       await this.recommendTransactions(players, picksWithScore);
     }
 
-    console.log("");
+    this.logger.log("");
     await this.draftTopPlayers(players);
   }
 
   private scorePlayer(players: PlayerScore[], playerId: number) {
     const player = players.find((x) => x.player.id === playerId)!;
-    console.log(player.scoreDetails);
-    console.log("");
-    DisplayService.displayPlayers([player]);
+    this.logger.log(JSON.stringify(player.scoreDetails, null, 2));
+    this.logger.log("");
+    this.displayService.displayPlayers([player]);
   }
 
   private topPlayers(players: PlayerScore[]) {
-    console.log("All Players:");
-    DisplayService.displayPlayers(players.slice(0, 40));
+    this.logger.log("All Players:");
+    this.displayService.displayPlayers(players.slice(0, 40));
 
-    console.log("Goalkeepers");
-    DisplayService.displayPlayers(
+    this.logger.log("Goalkeepers");
+    this.displayService.displayPlayers(
       players.filter((player) => player.position.id === PositionMap.GOALKEEPER).slice(0, 10)
     );
 
-    console.log("Defenders");
-    DisplayService.displayPlayers(
+    this.logger.log("Defenders");
+    this.displayService.displayPlayers(
       players.filter((player) => player.position.id === PositionMap.DEFENDER).slice(0, 20)
     );
 
-    console.log("Midfielders");
-    DisplayService.displayPlayers(
+    this.logger.log("Midfielders");
+    this.displayService.displayPlayers(
       players.filter((player) => player.position.id === PositionMap.MIDFIELDER).slice(0, 20)
     );
 
-    console.log("Forwards");
-    DisplayService.displayPlayers(
+    this.logger.log("Forwards");
+    this.displayService.displayPlayers(
       players.filter((player) => player.position.id === PositionMap.FORWARD).slice(0, 20)
     );
 
@@ -287,7 +291,7 @@ export default class CliRunner {
   }
 
   private recommendSquad(players: PlayerScore[], budget: number) {
-    console.log(`Recommending squads based on a budget of £${budget}m`);
+    this.logger.log(`Recommending squads based on a budget of £${budget}m`);
     const all15Positions = this.recommendationService.recommendATeam(players, fullSquad, budget);
     if (all15Positions.length >= 11) {
       this.displaySquad(all15Positions, "Full Squad");
@@ -379,22 +383,22 @@ export default class CliRunner {
       teamId
     );
     if (didPerformTransfer) {
-      console.log("Successfully performed transfers");
+      this.logger.log("Successfully performed transfers");
     } else {
-      console.log("Did not perform transfer");
+      this.logger.log("Did not perform transfer");
     }
   }
 
   private recommendLineup(picksWithScore: TeamPickWithScore[]) {
     const lineup = this.lineupService.recommendLineup(picksWithScore.map((p) => p.playerScore));
-    DisplayService.displaySquad(lineup, "My Squad");
+    this.displayService.displaySquad(lineup, "My Squad");
     return lineup;
   }
 
   private async setLineup(picksWithScore: TeamPickWithScore[], teamId: number, draft: boolean) {
     const lineup = this.recommendLineup(picksWithScore);
     await this.lineupService.setLineup(lineup, teamId, draft);
-    console.log("Successfully updated lineup");
+    this.logger.log("Successfully updated lineup");
   }
 
   private async recordData(players: PlayerScore[], nextEventId: number) {
@@ -404,11 +408,11 @@ export default class CliRunner {
   private async draftTopPlayers(players: PlayerScore[]) {
     const availablePlayers = await this.draftService.getTopAvailablePlayers(players);
     if (availablePlayers) {
-      console.log("Available Players:");
+      this.logger.log("Available Players:");
       this.topPlayers(availablePlayers);
-      console.log("");
+      this.logger.log("");
     }
-    console.log("Best Players:");
+    this.logger.log("Best Players:");
     this.topPlayers(players);
   }
 
@@ -423,14 +427,14 @@ export default class CliRunner {
   ) {
     const transactions = await this.recommendTransactions(players, picksWithScore);
     await this.draftService.performTransactions(transactions, teamId);
-    console.log("Successfully set transactions");
+    this.logger.log("Successfully set transactions");
   }
 
   private async getMyTeamId(draft: boolean) {
     if (draft) {
       const draftInfo = await this.fplFetcher.getMyDraftInfo();
       if (draftInfo.player.entry_set.length === 0) {
-        console.log("No draft entries!");
+        this.logger.log("No draft entries!");
         return;
       }
       return draftInfo.player.entry_set[0];
@@ -457,6 +461,6 @@ export default class CliRunner {
 
   private displaySquad(players: PlayerScore[], squadName: string) {
     const lineup = this.lineupService.recommendLineup(players);
-    DisplayService.displaySquad(lineup, squadName);
+    this.displayService.displaySquad(lineup, squadName);
   }
 }

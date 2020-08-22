@@ -6,12 +6,15 @@ import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import { TransferWithScores } from "../models/TransferWithScores";
 import DisplayService from "./displayService";
 import { PositionMap } from "../models/PositionMap";
-import { DumpPlayerSettings } from '../config/dumpPlayerSettings';
+import { DumpPlayerSettings } from "../config/dumpPlayerSettings";
+import { Logger } from "./logger";
 
 export default class RecommendationService {
   constructor(
     private optimisationService: OptimisationService,
-    private transferService: TransferService
+    private transferService: TransferService,
+    private displayService: DisplayService,
+    private logger: Logger
   ) {}
 
   recommendATeam(playerScores: PlayerScore[], settings: OptimisationSettings, budget: number) {
@@ -24,8 +27,8 @@ export default class RecommendationService {
       dumpPlayers
     );
     if (!initialSquad) {
-      console.log(`Unable to recommend squad for budget £${budget}m and settings: `);
-      console.log(settings);
+      this.logger.log(`Unable to recommend squad for budget £${budget}m and settings: `);
+      this.logger.log(JSON.stringify(settings, null, 2));
       return [];
     }
 
@@ -36,7 +39,7 @@ export default class RecommendationService {
       recommendedTransfer = this.recommendTransferUsingExistSquad(
         playerScores,
         newSquad,
-        newBudget,
+        newBudget
       );
       if (
         !recommendedTransfer ||
@@ -45,7 +48,7 @@ export default class RecommendationService {
       ) {
         break;
       }
-      console.log(
+      this.logger.log(
         `${recommendedTransfer.playersIn[0].player.web_name} in to replace ${recommendedTransfer.playersOut[0].player.web_name}`
       );
 
@@ -96,10 +99,10 @@ export default class RecommendationService {
     singleTransfer: TransferWithScores,
     doubleTransfer: TransferWithScores
   ) {
-    console.log("Rejected transfer option:");
-    DisplayService.displayTransfer(recommendTwoTransfers ? singleTransfer : doubleTransfer);
-    console.log("Recommended transfer option:");
-    DisplayService.displayTransfer(recommendTwoTransfers ? doubleTransfer : singleTransfer);
+    this.logger.log("Rejected transfer option:");
+    this.displayService.displayTransfer(recommendTwoTransfers ? singleTransfer : doubleTransfer);
+    this.logger.log("Recommended transfer option:");
+    this.displayService.displayTransfer(recommendTwoTransfers ? doubleTransfer : singleTransfer);
 
     return recommendTwoTransfers ? doubleTransfer : singleTransfer;
   }
@@ -107,7 +110,7 @@ export default class RecommendationService {
   private recommendTransferUsingExistSquad(
     playerScores: PlayerScore[],
     squad: PlayerScore[],
-    budget: number,
+    budget: number
   ) {
     const value = squad.reduce((total, player) => player.value + total, 0);
     const myTeam = {

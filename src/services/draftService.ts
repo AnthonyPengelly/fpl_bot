@@ -3,14 +3,19 @@ import PlayerScore from "../models/PlayerScore";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import { TransferWithScores } from "../models/TransferWithScores";
 import DisplayService from "./displayService";
+import { Logger } from "./logger";
 
 export default class DraftService {
-  constructor(private fplFetcher: FplFetcher) {}
+  constructor(
+    private fplFetcher: FplFetcher,
+    private displayService: DisplayService,
+    private logger: Logger
+  ) {}
 
   async getTopAvailablePlayers(allPlayers: PlayerScore[]) {
     const draftInfo = await this.fplFetcher.getMyDraftInfo();
     if (draftInfo.leagues.length === 0) {
-      console.log("Not part of any draft leagues!");
+      this.logger.log("Not part of any draft leagues!");
       return;
     }
     const draftStatus = await this.fplFetcher.getDraftStatus(draftInfo.leagues[0].id);
@@ -28,7 +33,7 @@ export default class DraftService {
   ): Promise<TransferWithScores[]> {
     const availablePlayers = await this.getTopAvailablePlayers(players);
     if (!availablePlayers) {
-      console.log("Not part of any draft leagues!");
+      this.logger.log("Not part of any draft leagues!");
       return [];
     }
     const recommendations = picksWithScore.reduce((array, pick) => {
@@ -40,20 +45,20 @@ export default class DraftService {
     );
     const rejectedTransactions = sortedRecommendations.filter((x) => x.playersOut[0].value >= 7.5);
     const acceptedTransactions = sortedRecommendations.filter((x) => x.playersOut[0].value < 7.5);
-    console.log("Transactions rejected due to high value of player out:");
-    rejectedTransactions.forEach(DisplayService.displayTransfer);
-    console.log("");
-    console.log("");
-    console.log("");
-    console.log("Transactions proposed:");
-    acceptedTransactions.forEach(DisplayService.displayTransfer);
-    console.log("");
+    this.logger.log("Transactions rejected due to high value of player out:");
+    rejectedTransactions.forEach(this.displayService.displayTransfer);
+    this.logger.log("");
+    this.logger.log("");
+    this.logger.log("");
+    this.logger.log("Transactions proposed:");
+    acceptedTransactions.forEach(this.displayService.displayTransfer);
+    this.logger.log("");
     return acceptedTransactions;
   }
 
   async performTransactions(transactions: TransferWithScores[], teamId: number) {
     if (transactions.length === 0) {
-      console.log("No transactions");
+      this.logger.log("No transactions");
       return;
     }
 
