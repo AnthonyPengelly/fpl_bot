@@ -1,4 +1,4 @@
-import { S3, SES } from "aws-sdk";
+import { S3, SES, config } from "aws-sdk";
 import moment from "moment";
 
 export class Logger {
@@ -30,14 +30,15 @@ export class Logger {
       .promise();
   }
 
-  async sendEmailIfNeeded(subject: string) {
+  async sendEmailIfNeeded(subject: string, emailAddress: string) {
     if (!this.shouldSendEmail) {
       return;
     }
+    config.update({ region: process.env.AWS_REGION });
     await new SES()
       .sendEmail({
         Destination: {
-          ToAddresses: [process.env.FPL_EMAIL as string],
+          ToAddresses: [emailAddress],
         },
         Message: {
           Body: {
@@ -51,7 +52,7 @@ export class Logger {
             Data: subject,
           },
         },
-        Source: process.env.FPL_EMAIL as string,
+        Source: emailAddress,
       })
       .promise();
   }
