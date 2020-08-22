@@ -42,12 +42,12 @@ export default class DraftService {
     const acceptedTransactions = sortedRecommendations.filter((x) => x.playersOut[0].value < 7.5);
     console.log("Transactions rejected due to high value of player out:");
     rejectedTransactions.forEach(DisplayService.displayTransfer);
-    console.log();
-    console.log();
-    console.log();
+    console.log("");
+    console.log("");
+    console.log("");
     console.log("Transactions proposed:");
     acceptedTransactions.forEach(DisplayService.displayTransfer);
-    console.log();
+    console.log("");
     return acceptedTransactions;
   }
 

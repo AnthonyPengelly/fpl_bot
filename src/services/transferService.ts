@@ -5,7 +5,7 @@ import OptimisationService from "./optimisationService";
 import { fullSquad } from "../config/optimisationSettings";
 import FplFetcher from "../fetchers/fplFetcher";
 import { PositionMap } from "../models/PositionMap";
-import { DumpPlayerSettings } from '../config/dumpPlayerSettings';
+import { DumpPlayerSettings } from "../config/dumpPlayerSettings";
 
 interface TeamCount {
   [index: number]: number;
@@ -131,9 +131,9 @@ export default class TransferService {
         });
       });
     });
-    console.log();
+    console.log("");
     console.log(`Failed to suggest options for ${failedSuggestions} combinations`);
-    console.log();
+    console.log("");
     return options.sort((a, b) => b.scoreImprovement - a.scoreImprovement)[0];
   }
 
@@ -177,8 +177,11 @@ export default class TransferService {
     return true;
   }
 
-  private getPlayersFromDumpSettings = (picksWithScore: TeamPickWithScore[], dumpPlayerSettings: DumpPlayerSettings) => {
-    switch(dumpPlayerSettings) {
+  private getPlayersFromDumpSettings = (
+    picksWithScore: TeamPickWithScore[],
+    dumpPlayerSettings: DumpPlayerSettings
+  ) => {
+    switch (dumpPlayerSettings) {
       case DumpPlayerSettings.DontDump:
         return picksWithScore;
       case DumpPlayerSettings.DumpGoalkeeper:
@@ -186,7 +189,7 @@ export default class TransferService {
       case DumpPlayerSettings.DumpPlayers:
         return this.filterOutDumpPlayers(picksWithScore);
     }
-  }
+  };
 
   private filterOutDumpPlayers = (picksWithScore: TeamPickWithScore[]) => {
     const cheapestGkps = this.cheapestPlayersByPosition(picksWithScore, PositionMap.GOALKEEPER, 1);

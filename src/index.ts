@@ -1,7 +1,7 @@
 import { exit } from "process";
 import CliRunner from "./services/cliRunner";
 
-console.log();
+console.log("");
 console.log("Welcome to FPL bot!");
 
 if (process.argv.length < 3) {

@@ -201,7 +201,7 @@ export default class CliRunner {
     const newPicksWithScore = this.mapTeamToTeamPickWithScore(myNewTeam, players);
     await this.setLineup(newPicksWithScore, teamId, false);
 
-    console.log();
+    console.log("");
     this.topPlayers(players);
   }
 
@@ -218,7 +218,7 @@ export default class CliRunner {
     if (hoursTilDeadline < 24) {
       console.log(`Deadline in ${hoursTilDeadline} hours, setting lineup`);
       await this.setLineup(picksWithScore, teamId, true);
-      console.log();
+      console.log("");
       console.log("SEND EMAIL"); // can be checked by a script to consider sending emails
     } else if (hoursTilDeadline < 48) {
       console.log(
@@ -226,7 +226,7 @@ export default class CliRunner {
       );
       console.log("Consider manually settings some of the more expensive transactions");
       await this.performTransactions(players, picksWithScore, teamId);
-      console.log();
+      console.log("");
       console.log("SEND EMAIL"); // can be checked by a script to consider sending emails
     } else {
       console.log(
@@ -235,14 +235,14 @@ export default class CliRunner {
       await this.recommendTransactions(players, picksWithScore);
     }
 
-    console.log();
+    console.log("");
     await this.draftTopPlayers(players);
   }
 
   private scorePlayer(players: PlayerScore[], playerId: number) {
     const player = players.find((x) => x.player.id === playerId)!;
     console.log(player.scoreDetails);
-    console.log();
+    console.log("");
     DisplayService.displayPlayers([player]);
   }
 
@@ -406,7 +406,7 @@ export default class CliRunner {
     if (availablePlayers) {
       console.log("Available Players:");
       this.topPlayers(availablePlayers);
-      console.log();
+      console.log("");
     }
     console.log("Best Players:");
     this.topPlayers(players);
