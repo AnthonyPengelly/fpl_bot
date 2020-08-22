@@ -4,28 +4,10 @@ import axios from "axios";
 export default class FplFetcher {
   private baseUrl: string = "https://fantasy.premierleague.com/api";
   private draftBaseUrl: string = "https://draft.premierleague.com/api";
-  private cookies: string;
+  private usersBaseUrl: string = "https://users.premierleague.com";
+  private cookies?: string;
   private draftCookies?: string;
   private draftCsrfToken?: string;
-
-  constructor() {
-    // Parse the response from the auth request, which was performed in
-    // the bash script.
-    if (!process.env.FPL_AUTH_HEADERS) {
-      throw "Env variable FPL_AUTH_HEADERS must be set!";
-    }
-    const splitOnSetCookie = process.env.FPL_AUTH_HEADERS!.split("set-cookie: ");
-    const cookiesArray = splitOnSetCookie.slice(1).map((x) => x.split("; ")[0]);
-    this.cookies = cookiesArray.join("; ") + ";";
-
-    if (process.env.DRAFT_AUTH_HEADERS) {
-      const draftSplitOnSetCookie = process.env.DRAFT_AUTH_HEADERS!.split("set-cookie: ");
-      const draftCookiesArray = draftSplitOnSetCookie.slice(1).map((x) => x.split("; ")[0]);
-      this.draftCookies = draftCookiesArray.join("; ") + ";";
-      const csrfCookie = draftCookiesArray.find((x) => x.indexOf("csrf") !== -1)!;
-      this.draftCsrfToken = csrfCookie.split("=")[1];
-    }
-  }
 
   async getOverview() {
     const url = this.baseUrl + "/bootstrap-static/";
@@ -46,6 +28,7 @@ export default class FplFetcher {
   }
 
   async getMyDetails() {
+    await this.ensureLoggedIn();
     const url = this.baseUrl + "/me/";
     const myDetails = await WebRequest.json<MyDetails>(url, {
       headers: {
@@ -56,6 +39,7 @@ export default class FplFetcher {
   }
 
   async getMyTeam(teamId: number) {
+    await this.ensureLoggedIn();
     const url = this.baseUrl + "/my-team/" + teamId;
     const myTeam = await WebRequest.json<MyTeam>(url, {
       headers: {
@@ -66,6 +50,7 @@ export default class FplFetcher {
   }
 
   async setLineup(lineup: MyTeamRequest, teamId: number) {
+    await this.ensureLoggedIn();
     const url = this.baseUrl + "/my-team/" + teamId + "/";
     const response = await WebRequest.post(
       url,
@@ -83,6 +68,7 @@ export default class FplFetcher {
   }
 
   async performTransfers(transferRequest: TransferRequest) {
+    await this.ensureLoggedIn();
     const url = this.baseUrl + "/transfers/";
     const response = await WebRequest.post(
       url,
@@ -106,6 +92,7 @@ export default class FplFetcher {
   }
 
   async getMyDraftInfo() {
+    await this.ensureLoggedIn();
     const url = this.draftBaseUrl + "/bootstrap-dynamic";
     const draftStatus = await WebRequest.json<DraftInfo>(url, {
       headers: {
@@ -116,16 +103,19 @@ export default class FplFetcher {
   }
 
   async getDraftStatus(leagueId: number) {
+    await this.ensureLoggedIn();
     const url = this.draftBaseUrl + `/league/${leagueId}/element-status`;
     const draftStatus = await WebRequest.json<DraftStatus>(url, {
       headers: {
         Cookie: this.cookies,
       },
     });
+    console.log(draftStatus);
     return draftStatus;
   }
 
   async getMyDraftTeam(teamId: number) {
+    await this.ensureLoggedIn();
     const url = this.draftBaseUrl + `/entry/${teamId}/my-team`;
     const myTeam = await WebRequest.json<MyTeam>(url, {
       headers: {
@@ -136,6 +126,7 @@ export default class FplFetcher {
   }
 
   async setDraftLineup(lineup: MyTeamRequest, teamId: number) {
+    await this.ensureLoggedIn(true);
     const url = this.draftBaseUrl + `/entry/${teamId}/my-team`;
     const response = await WebRequest.post(
       url,
@@ -155,6 +146,7 @@ export default class FplFetcher {
   }
 
   async performTransactions(waivers: Waiver[], teamId: number) {
+    await this.ensureLoggedIn(true);
     const url = this.draftBaseUrl + `/draft/entry/${teamId}/waivers`;
     const response = await WebRequest.post(
       url,
@@ -171,5 +163,42 @@ export default class FplFetcher {
     if (response.statusCode !== 200 && response.statusCode !== 201) {
       throw response.content;
     }
+  }
+
+  private async ensureLoggedIn(includeDraft = false) {
+    if (!this.cookies) {
+      await this.login();
+    }
+    if (includeDraft && !this.draftCookies) {
+      await this.loginDraft();
+    }
+  }
+
+  private async login() {
+    const url = this.usersBaseUrl + "/accounts/login/";
+    const response = await WebRequest.post(
+      url,
+      {
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+        },
+      },
+      `login=${process.env.FPL_EMAIL}&password=${process.env.FPL_PASSWORD}&app=plfpl-web&redirect_uri=https%3A%2F%2Ffantasy.premierleague.com%2F`
+    );
+    const cookiesArray: string[] = response.headers["set-cookie"];
+    this.cookies = cookiesArray.map((x) => x.split("; ")[0]).join("; ") + ";";
+  }
+
+  private async loginDraft() {
+    const url = this.draftBaseUrl + "/bootstrap-dynamic";
+    const response = await WebRequest.get(url, {
+      headers: {
+        Cookie: this.cookies,
+      },
+    });
+    const cookiesArray = (response.headers["set-cookie"] as string[]).map((x) => x.split("; ")[0]);
+    this.draftCookies = cookiesArray.join("; ") + ";";
+    const csrfCookie = cookiesArray.find((x) => x.indexOf("csrf") !== -1)!;
+    this.draftCsrfToken = csrfCookie.split("=")[1];
   }
 }
