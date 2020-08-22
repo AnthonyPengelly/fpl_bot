@@ -7,31 +7,33 @@
     "fpl-cli": "./bin/fpl-cli"
   },
   "scripts": {
-    "start": "npm run build && fpl-cli",
-    "build": "npm run clean:some && tsc -p . && npm run global",
+    "start": "npm run build && npm run global && fpl-cli",
+    "build": "npm run clean:some && tsc -p .",
     "build-for-tests": "npm run clean:some && tsc -p .",
     "global": "npm i -g",
-    "clean:some": "rm -rf ./lib",
+    "clean:some": "rm -rf ./lib package.zip",
     "clean:all": "rm -rf ./node_modules ./package-lock.json ./lib",
     "refresh": "npm run clean:all && npm install",
-    "test": "npm run build-for-tests && ./scripts/run-tests.sh"
+    "test": "npm run build-for-tests && ./scripts/run-tests.sh",
+    "install:lambda": "cp package.json package-lock.json ./lib && cd ./lib && npm i --production",
+    "package:lambda": "cd lib && zip -9 -r ../package.zip .",
+    "build:lambda": "npm run build && npm run install:lambda && npm run package:lambda"
   },
   "author": "Anthony Pengelly",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.19.2",
     "moment": "^2.27.0",
-    "tslib": "^2.0.0",
     "web-request": "^1.0.7"
   },
   "devDependencies": {
-    "@types/axios": "^0.14.0",
+    "@types/aws-lambda": "^8.10.61",
     "@types/jest": "^26.0.3",
     "@types/moment": "^2.13.0",
     "@types/node": "^14.0.13",
     "jest": "^26.1.0",
     "prettier": "2.0.5",
     "ts-jest": "^26.1.1",
+    "tslib": "^2.0.0",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.5"
   },

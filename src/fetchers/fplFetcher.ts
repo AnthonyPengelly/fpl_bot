@@ -1,5 +1,4 @@
 import * as WebRequest from "web-request";
-import axios from "axios";
 
 export default class FplFetcher {
   private baseUrl: string = "https://fantasy.premierleague.com/api";
