@@ -105,10 +105,10 @@ export default class CliRunner {
 
     switch (command) {
       case CliRunner.RUN_CMD:
-        this.runBot(players, myTeam, picksWithScore, nextEvent, teamId);
+        await this.runBot(players, myTeam, picksWithScore, nextEvent, teamId);
         break;
       case CliRunner.DRAFT_RUN_CMD:
-        this.runDraftBot(players, picksWithScore, nextEvent, teamId);
+        await this.runDraftBot(players, picksWithScore, nextEvent, teamId);
         break;
       case CliRunner.SCORE_PLAYER_CMD:
         this.scorePlayer(players, parseInt(optionalParameter));
@@ -123,7 +123,7 @@ export default class CliRunner {
         this.recommendSquad(players, optionalParameter ? parseInt(optionalParameter) : 100);
         break;
       case CliRunner.RECOMMEND_TRANSFERS_CMD:
-        this.recommendTransfers(
+        await this.recommendTransfers(
           players,
           myTeam,
           picksWithScore,
@@ -135,10 +135,10 @@ export default class CliRunner {
         this.recommendLineup(picksWithScore);
         break;
       case CliRunner.SET_LINEUP_CMD:
-        this.setLineup(picksWithScore, teamId, false);
+        await this.setLineup(picksWithScore, teamId, false);
         break;
       case CliRunner.PERFORM_TRANSFERS_CMD:
-        this.performTransfers(
+        await this.performTransfers(
           players,
           myTeam,
           picksWithScore,
@@ -148,22 +148,22 @@ export default class CliRunner {
         );
         break;
       case CliRunner.RECORD_DATA_CMD:
-        this.recordData(players, nextEvent.id);
+        await this.recordData(players, nextEvent.id);
         break;
       case CliRunner.DRAFT_TOP_PLAYERS:
-        this.draftTopPlayers(players);
+        await this.draftTopPlayers(players);
         break;
       case CliRunner.DRAFT_RECOMMEND_LINEUP_CMD:
         this.recommendLineup(picksWithScore);
         break;
       case CliRunner.DRAFT_SET_LINEUP_CMD:
-        this.setLineup(picksWithScore, teamId, true);
+        await this.setLineup(picksWithScore, teamId, true);
         break;
       case CliRunner.DRAFT_RECOMMEND_TRANSACTIONS_CMD:
-        this.recommendTransactions(players, picksWithScore);
+        await this.recommendTransactions(players, picksWithScore);
         break;
       case CliRunner.DRAFT_PERFORM_TRANSACTIONS_CMD:
-        this.performTransactions(players, picksWithScore, teamId);
+        await this.performTransactions(players, picksWithScore, teamId);
         break;
       default:
         console.error(
@@ -188,7 +188,7 @@ export default class CliRunner {
     if (hoursTilDeadline < 24) {
       console.log(`Deadline in ${hoursTilDeadline} hours, performing transfers`);
       await this.performTransfers(players, myTeam, picksWithScore, nextEvent, teamId, false);
-      this.recordData(players, nextEvent.id);
+      await this.recordData(players, nextEvent.id);
     } else {
       console.log(
         `Deadline in ${hoursTilDeadline} hours, postponing transfers until later in the week. ` +
