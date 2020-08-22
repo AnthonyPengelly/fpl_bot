@@ -22,9 +22,10 @@
   "author": "Anthony Pengelly",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.738.0",
     "moment": "^2.27.0",
-    "web-request": "^1.0.7",
-    "tslib": "^2.0.0"
+    "tslib": "^2.0.0",
+    "web-request": "^1.0.7"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.61",

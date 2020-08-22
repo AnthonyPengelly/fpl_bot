@@ -1,9 +1,13 @@
 import PlayerScore from "../models/PlayerScore";
 import fs from "fs";
 import moment from "moment";
+import { S3 } from "aws-sdk";
 
 export default class DataRecorder {
   async recordData(players: PlayerScore[], nextEventId: number) {
+    if (!process.env.BUCKET_NAME) {
+      throw "Add BUCKET_NAME env variable!";
+    }
     const data: GameweekScores = {
       event: nextEventId,
       playerData: players.map((player) => ({
@@ -18,40 +22,29 @@ export default class DataRecorder {
       })),
     };
     const dateString = moment().format("YYYY/MM/DD");
-    const folderDate = moment().format("YYYY/MM");
-    await fs.promises.mkdir(`./data/${folderDate}`, { recursive: true });
-    return fs.promises.writeFile(
-      `./data/${dateString}.json`,
-      JSON.stringify(data, null, 2),
-      "utf8"
-    );
+
+    const params = {
+      Bucket: process.env.BUCKET_NAME as string,
+      Key: `player-score-data/${dateString}.json`,
+      ContentType: "application/json",
+      Body: JSON.stringify(data, null, 2),
+    };
+    await new S3().putObject(params).promise();
   }
 
   async getLatestScores() {
-    const years = await this.getSortedContentsInPath("./data");
-    if (years.length === 0) {
-      return undefined;
-    }
-    const year = years.pop()!;
-    const months = await this.getSortedContentsInPath(`./data/${year}`);
-    if (months.length === 0) {
-      return undefined;
-    }
-    const month = months.pop();
-    const scoreFiles = await this.getSortedContentsInPath(`./data/${year}/${month}`);
-    if (scoreFiles.length === 0) {
-      return undefined;
-    }
-    const latestScoreFile = scoreFiles.pop();
-    return require(`../../data/${year}/${month}/${latestScoreFile}`) as GameweekScores;
-  }
-
-  private async getSortedContentsInPath(path: string) {
-    if (!fs.existsSync(path)) {
-      return [];
-    }
-    return (await fs.promises.readdir(path, { withFileTypes: true }))
-      .map((fileOrDirectory) => fileOrDirectory.name)
-      .sort();
+    const params = {
+      Bucket: process.env.BUCKET_NAME as string,
+      Prefix: "player-score-data/",
+    };
+    const scoreObjects = await new S3().listObjectsV2(params).promise();
+    const latestScore = scoreObjects.Contents?.sort((a, b) => b.Key!.localeCompare(a.Key!))[0];
+    const scores = await new S3()
+      .getObject({
+        Bucket: process.env.BUCKET_NAME as string,
+        Key: latestScore!.Key!,
+      })
+      .promise();
+    return JSON.parse(scores.Body as string) as GameweekScores;
   }
 }
