@@ -12,7 +12,8 @@ export const handler = async () => {
   } catch (error) {
     logger.log(error);
     logger.setShouldSendEmail();
-    logger.sendEmailIfNeeded("FPL Error", emailToSendTo);
+    await logger.uploadOutput("bot-logs");
+    await logger.sendEmailIfNeeded("FPL Error", emailToSendTo);
   }
 
   const draftLogger = new Logger();
@@ -26,7 +27,8 @@ export const handler = async () => {
   } catch (error) {
     draftLogger.log(error);
     draftLogger.setShouldSendEmail();
-    draftLogger.sendEmailIfNeeded("FPL Draft Error", emailToSendTo);
+    await draftLogger.uploadOutput("draft-bot-logs");
+    await draftLogger.sendEmailIfNeeded("FPL Draft Error", emailToSendTo);
   }
   return;
 };
