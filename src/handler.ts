@@ -2,7 +2,7 @@ import CliRunner from "./services/cliRunner";
 import { Logger } from "./services/logger";
 
 export const handler = async () => {
-  const emailToSendTo = process.env.FPL_EMAIL as string;
+  const emailToSendTo = process.env.SEND_TO_EMAIL ?? (process.env.FPL_EMAIL as string);
   const logger = new Logger();
   try {
     const cliRunner = new CliRunner(logger);
