@@ -29,7 +29,8 @@ export default class DraftService {
 
   async recommendTransactions(
     players: PlayerScore[],
-    picksWithScore: TeamPickWithScore[]
+    picksWithScore: TeamPickWithScore[],
+    onlySuggestLowPriceTransactions: boolean = false
   ): Promise<TransferWithScores[]> {
     const availablePlayers = await this.getTopAvailablePlayers(players);
     if (!availablePlayers) {
@@ -43,15 +44,21 @@ export default class DraftService {
     const sortedRecommendations = recommendations.sort(
       (a, b) => b.scoreImprovement - a.scoreImprovement
     );
-    const rejectedTransactions = sortedRecommendations.filter((x) => x.playersOut[0].value >= 6.9);
-    const acceptedTransactions = sortedRecommendations.filter((x) => x.playersOut[0].value < 6.9);
-    this.logger.log("Transactions rejected due to high value of player out:");
-    rejectedTransactions.forEach(this.displayService.displayTransfer);
-    this.logger.log("");
-    this.logger.log("");
-    this.logger.log("");
+    const rejectedTransactions = sortedRecommendations.filter(
+      (x) => onlySuggestLowPriceTransactions && x.playersOut[0].value >= 6.9
+    );
+    const acceptedTransactions = sortedRecommendations.filter(
+      (x) => !onlySuggestLowPriceTransactions || x.playersOut[0].value < 6.9
+    );
+    if (rejectedTransactions.length !== 0) {
+      this.logger.log("Transactions rejected due to high value of player out:");
+      rejectedTransactions.forEach((x) => this.displayService.displayTransfer(x));
+      this.logger.log("");
+      this.logger.log("");
+      this.logger.log("");
+    }
     this.logger.log("Transactions proposed:");
-    acceptedTransactions.forEach(this.displayService.displayTransfer);
+    acceptedTransactions.forEach((x) => this.displayService.displayTransfer(x));
     this.logger.log("");
     return acceptedTransactions;
   }

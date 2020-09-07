@@ -165,7 +165,7 @@ export default class CliRunner {
         await this.setLineup(picksWithScore, teamId, true);
         break;
       case CliRunner.DRAFT_RECOMMEND_TRANSACTIONS_CMD:
-        await this.recommendTransactions(players, picksWithScore);
+        await this.recommendTransactions(players, picksWithScore, false);
         break;
       case CliRunner.DRAFT_PERFORM_TRANSACTIONS_CMD:
         await this.performTransactions(players, picksWithScore, teamId);
@@ -227,16 +227,15 @@ export default class CliRunner {
       this.logger.setShouldSendEmail();
     } else if (hoursTilDeadline < 48) {
       this.logger.log(
-        `Waiver deadline in ${hoursTilDeadline - 24} hours, settings uncontroversial transactions`
+        `Waiver deadline in ${hoursTilDeadline - 24} hours, showing recommended transactions.`
       );
-      this.logger.log("Consider manually settings some of the more expensive transactions");
-      await this.performTransactions(players, picksWithScore, teamId);
+      await this.recommendTransactions(players, picksWithScore, false);
       this.logger.setShouldSendEmail();
     } else {
       this.logger.log(
         `Waiver deadline in ${hoursTilDeadline - 24} hours, showing recommended transactions.`
       );
-      await this.recommendTransactions(players, picksWithScore);
+      await this.recommendTransactions(players, picksWithScore, false);
     }
 
     this.logger.log("");
@@ -416,8 +415,16 @@ export default class CliRunner {
     this.topPlayers(players);
   }
 
-  private async recommendTransactions(players: PlayerScore[], picksWithScore: TeamPickWithScore[]) {
-    return await this.draftService.recommendTransactions(players, picksWithScore);
+  private async recommendTransactions(
+    players: PlayerScore[],
+    picksWithScore: TeamPickWithScore[],
+    onlySuggestLowPriceTransactions: boolean
+  ) {
+    return await this.draftService.recommendTransactions(
+      players,
+      picksWithScore,
+      onlySuggestLowPriceTransactions
+    );
   }
 
   private async performTransactions(
@@ -425,7 +432,7 @@ export default class CliRunner {
     picksWithScore: TeamPickWithScore[],
     teamId: number
   ) {
-    const transactions = await this.recommendTransactions(players, picksWithScore);
+    const transactions = await this.recommendTransactions(players, picksWithScore, true);
     await this.draftService.performTransactions(transactions, teamId);
     this.logger.log("Successfully set transactions");
   }
