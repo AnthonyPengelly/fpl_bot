@@ -105,34 +105,48 @@ export default class ScoreService {
   private static calculateWeightedInputs(inputs: ScoreInputs, settings: ScoreSettings) {
     const weights = settings.weights;
     const weightedInputs = {} as ScoreInputs;
-    weightedInputs.form = (inputs.form * weights.form.weight) / weights.form.max;
+    weightedInputs.form = this.calculateCappedWeight(
+      inputs.form,
+      weights.form.weight,
+      weights.form.max
+    );
+    weightedInputs.pointsPerGame = this.calculateCappedWeight(
+      inputs.pointsPerGame,
+      weights.pointsPerGame.weight,
+      weights.pointsPerGame.max
+    );
+    weightedInputs.ictIndex = this.calculateCappedWeight(
+      inputs.ictIndex,
+      weights.ictIndex.weight,
+      weights.ictIndex.max
+    );
+    weightedInputs.teamStrength = this.calculateCappedWeight(
+      inputs.teamStrength - weights.teamStrength.min,
+      weights.teamStrength.weight,
+      weights.teamStrength.max - weights.teamStrength.min
+    );
+    weightedInputs.teamStrengthForPosition = this.calculateCappedWeight(
+      inputs.teamStrengthForPosition - weights.teamStrengthForPosition.min,
+      weights.teamStrengthForPosition.weight,
+      weights.teamStrengthForPosition.max - weights.teamStrengthForPosition.min
+    );
+    weightedInputs.opponentStrength = this.calculateCappedWeight(
+      weights.opponentStrength.max - inputs.opponentStrength,
+      weights.opponentStrength.weight,
+      weights.opponentStrength.max - weights.opponentStrength.min
+    );
+    weightedInputs.futureOpponentStrength = this.calculateCappedWeight(
+      weights.futureOpponentStrength.max - inputs.futureOpponentStrength,
+      weights.futureOpponentStrength.weight,
+      weights.futureOpponentStrength.max - weights.futureOpponentStrength.min
+    );
+    weightedInputs.chanceOfPlaying = this.calculateCappedWeight(
+      inputs.chanceOfPlaying,
+      weights.chanceOfPlaying.weight,
+      weights.chanceOfPlaying.max
+    );
 
-    weightedInputs.pointsPerGame =
-      (inputs.pointsPerGame * weights.pointsPerGame.weight) / weights.pointsPerGame.max;
-
-    weightedInputs.ictIndex = (inputs.ictIndex * weights.ictIndex.weight) / weights.ictIndex.max;
-
-    weightedInputs.teamStrength =
-      ((inputs.teamStrength - weights.teamStrength.min) * weights.teamStrength.weight) /
-      (weights.teamStrength.max - weights.teamStrength.min);
-
-    weightedInputs.teamStrengthForPosition =
-      ((inputs.teamStrengthForPosition - weights.teamStrengthForPosition.min) *
-        weights.teamStrengthForPosition.weight) /
-      (weights.teamStrengthForPosition.max - weights.teamStrengthForPosition.min);
-
-    weightedInputs.opponentStrength =
-      ((weights.opponentStrength.max - inputs.opponentStrength) * weights.opponentStrength.weight) /
-      (weights.opponentStrength.max - weights.opponentStrength.min);
-
-    weightedInputs.futureOpponentStrength =
-      ((weights.futureOpponentStrength.max - inputs.futureOpponentStrength) *
-        weights.futureOpponentStrength.weight) /
-      (weights.futureOpponentStrength.max - weights.futureOpponentStrength.min);
-
-    weightedInputs.chanceOfPlaying =
-      (inputs.chanceOfPlaying * weights.chanceOfPlaying.weight) / weights.chanceOfPlaying.max;
-
+    // Don't cap these two. If they exceed the max, then they deserve it!
     weightedInputs.numberOfGames =
       (inputs.numberOfGames * weights.numberOfGames.weight) / weights.numberOfGames.max;
 
@@ -145,5 +159,12 @@ export default class ScoreService {
 
   private static getTotalWeight(settings: ScoreSettings) {
     return Object.values(settings.weights).reduce((total, weight) => total + weight.weight, 0);
+  }
+
+  private static calculateCappedWeight(input: number, weight: number, max: number): number {
+    if (input > max) {
+      return weight;
+    }
+    return (input * weight) / max;
   }
 }
