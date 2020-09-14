@@ -15,7 +15,7 @@ export default class ScoreService {
     const inputs: ScoreInputs = {
       form: this.getForm(player, gamesPlayed, previousScore),
       pointsPerGame: parseFloat(player.points_per_game),
-      ictIndex: parseFloat(player.ict_index),
+      ictIndex: player.ict_index_rank,
       teamStrength: team.strength,
       teamStrengthForPosition: this.teamStrengthForPosition(player, team, opponentFixtures),
       opponentStrength: this.getOpponentAverageStrength(opponentFixtures, settings),
@@ -116,7 +116,7 @@ export default class ScoreService {
       weights.pointsPerGame.max
     );
     weightedInputs.ictIndex = this.calculateCappedWeight(
-      inputs.ictIndex,
+      weights.ictIndex.max - inputs.ictIndex,
       weights.ictIndex.weight,
       weights.ictIndex.max
     );

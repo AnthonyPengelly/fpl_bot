@@ -53,6 +53,7 @@ interface PlayerOverview {
   creativity: string;
   threat: string;
   ict_index: string;
+  ict_index_rank: number;
   ea_index: number;
   element_type: number;
   team: number;

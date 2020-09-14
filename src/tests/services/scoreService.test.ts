@@ -3,7 +3,7 @@ import ScoreService from "../../services/scoreService";
 
 const basePlayer = {
   form: "0",
-  ict_index: "0",
+  ict_index_rank: 550,
   chance_of_playing_next_round: 0,
   element_type: 1,
   points_per_game: "0",
@@ -105,7 +105,7 @@ describe("scoreService", () => {
   });
 
   test("Calculates ict correctly", () => {
-    const player = { ...basePlayer, ict_index: scoreSettings.weights.ictIndex.max.toString() };
+    const player = { ...basePlayer, ict_index_rank: 0 };
     const expectedScoreFromPlayer = (100 * scoreSettings.weights.ictIndex.weight) / totalWeight;
     const expectedScoreFromGames =
       (100 * scoreSettings.weights.numberOfGames.weight) / 2 / totalWeight;
