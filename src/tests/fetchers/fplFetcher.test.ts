@@ -45,7 +45,7 @@ describe("fplFetcher", () => {
 
     expect(result.length).toBeGreaterThan(100);
     expect(result[0].finished === true || result[0].finished === false).toBeTruthy();
-    expect(result[0].event).toBeTruthy();
+    expect(result[0].event || result[0].event === null).toBeTruthy();
     expect(result[0].team_h).toBeTruthy();
     expect(result[0].team_a).toBeTruthy();
   }, 15000);
@@ -63,7 +63,7 @@ describe("fplFetcher", () => {
     expect(result.picks.length).toBe(15);
     expect(result.picks[0].element).toBeTruthy();
     expect(result.picks[0].selling_price).toBeTruthy();
-    expect(result.transfers.bank).toBeTruthy();
+    expect(typeof result.transfers.bank).toBe("number");
     expect(result.transfers.limit || result.transfers.limit === null).toBeTruthy();
   }, 15000);
 

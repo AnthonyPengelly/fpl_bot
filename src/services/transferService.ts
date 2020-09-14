@@ -7,6 +7,7 @@ import FplFetcher from "../fetchers/fplFetcher";
 import { PositionMap } from "../models/PositionMap";
 import { DumpPlayerSettings } from "../config/dumpPlayerSettings";
 import { Logger } from "./logger";
+import LineupService from "./lineupService";
 
 interface TeamCount {
   [index: number]: number;
@@ -16,6 +17,7 @@ export default class TransferService {
   constructor(
     private fplFetcher: FplFetcher,
     private optimisationService: OptimisationService,
+    private lineupService: LineupService,
     private logger: Logger
   ) {}
 
@@ -26,6 +28,9 @@ export default class TransferService {
     dumpPlayerSettings: DumpPlayerSettings,
     debug: boolean
   ): TransferWithScores {
+    const existingScore = this.lineupService.recommendLineup(
+      picksWithScore.map((x) => x.playerScore)
+    ).score;
     const playersToSuggest = this.getPlayersFromDumpSettings(picksWithScore, dumpPlayerSettings);
     const options = playersToSuggest.map((pickWithScore) => {
       const remainingTeam = picksWithScore.filter(
@@ -43,7 +48,11 @@ export default class TransferService {
               .length === 0
         );
       const suggestion = possiblePlayers.sort((a, b) => b.score - a.score)[0];
-      const improvement = suggestion.score - pickWithScore.playerScore.score;
+      const newScore = this.lineupService.recommendLineup([
+        ...remainingTeam.map((x) => x.playerScore),
+        suggestion,
+      ]).score;
+      const improvement = newScore - existingScore;
       this.debug(
         `Suggested ${suggestion.player.web_name} to replace ${
           pickWithScore.playerScore.player.web_name
@@ -66,6 +75,9 @@ export default class TransferService {
     dumpPlayerSettings: DumpPlayerSettings,
     debug: boolean
   ): TransferWithScores {
+    const existingScore = this.lineupService.recommendLineup(
+      picksWithScore.map((x) => x.playerScore)
+    ).score;
     const options: TransferWithScores[] = [];
     let failedSuggestions = 0;
     const playersToSuggest = this.getPlayersFromDumpSettings(picksWithScore, dumpPlayerSettings);
@@ -117,10 +129,12 @@ export default class TransferService {
           failedSuggestions++;
           return;
         }
-        const scoreImprovement =
-          suggestions[0].score +
-          suggestions[1].score -
-          (pick1.playerScore.score + pick2.playerScore.score);
+        const newScore = this.lineupService.recommendLineup([
+          ...remainingTeam,
+          suggestions[0],
+          suggestions[1],
+        ]).score;
+        const scoreImprovement = newScore - existingScore;
         this.debug(
           `Suggesting ${suggestions[0].player.web_name} and ${
             suggestions[1].player.web_name

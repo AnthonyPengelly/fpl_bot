@@ -24,7 +24,7 @@ export default class DisplayService {
       this.logger.log(`Value £${value.toFixed(2)}m`);
     }
     const squadScore = allPlayers.reduce((total, player) => total + player.score, 0);
-    this.logger.log(`Total Score: ${squadScore.toFixed(2)}`);
+    this.logger.log(`Total Score: ${lineup.score.toFixed(2)}`);
     this.logger.log(`Score per player: ${(squadScore / allPlayers.length).toFixed(2)}`);
     this.logger.log("");
     this.logger.log(`Captain: ${lineup.captain.player.web_name}`);

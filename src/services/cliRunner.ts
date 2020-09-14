@@ -79,7 +79,12 @@ export default class CliRunner {
     this.teamValidator = new TeamValidator();
     this.optimisationService = new OptimisationService(this.teamValidator);
     this.lineupService = new LineupService(this.fplFetcher);
-    this.transferService = new TransferService(this.fplFetcher, this.optimisationService, logger);
+    this.transferService = new TransferService(
+      this.fplFetcher,
+      this.optimisationService,
+      this.lineupService,
+      logger
+    );
     this.recommendationService = new RecommendationService(
       this.optimisationService,
       this.transferService,

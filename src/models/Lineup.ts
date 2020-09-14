@@ -5,4 +5,5 @@ export interface Lineup {
   orderedSubs: PlayerScore[];
   captain: PlayerScore;
   viceCaptain: PlayerScore;
+  score: number;
 }

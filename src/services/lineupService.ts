@@ -45,6 +45,12 @@ export default class LineupService {
       orderedSubs: orderedSubstitutes,
       captain: sortedPlayers[0],
       viceCaptain: sortedPlayers[1],
+      score: this.calculateScore(
+        starting11,
+        orderedSubstitutes,
+        sortedPlayers[0],
+        sortedPlayers[1]
+      ),
     };
   }
 
@@ -68,5 +74,16 @@ export default class LineupService {
     } else {
       await this.fplFetcher.setLineup({ chips: null, picks: picks }, teamId);
     }
+  }
+
+  private calculateScore(
+    starting11: PlayerScore[],
+    subs: PlayerScore[],
+    captain: PlayerScore,
+    vice: PlayerScore
+  ): number {
+    const startingScore = starting11.reduce((acc, player) => acc + player.score, 0);
+    const subsScore = subs.reduce((acc, player) => acc + player.score, 0);
+    return startingScore + 0.75 * subsScore + captain.score + 0.5 * vice.score;
   }
 }

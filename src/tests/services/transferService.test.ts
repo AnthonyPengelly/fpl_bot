@@ -7,6 +7,8 @@ import TeamPickWithScoreBuilder from "../builders/teamPickWithScoreBuilder";
 import { fullSquad } from "../../config/optimisationSettings";
 import { DumpPlayerSettings } from "../../config/dumpPlayerSettings";
 import { Logger } from "../../services/logger";
+import LineupService from "../../services/lineupService";
+import { Lineup } from "../../models/Lineup";
 
 const fplFetcher = {} as FplFetcher;
 
@@ -16,7 +18,17 @@ const optimisationService = ({
   getOptimalTeamForSettings: mockGetOptimalTeamForSettings,
 } as unknown) as OptimisationService;
 
-const transferService = new TransferService(fplFetcher, optimisationService, new Logger());
+const lineupService = new LineupService(fplFetcher);
+lineupService.recommendLineup = (players: PlayerScore[]) =>
+  ({
+    score: players.reduce((acc, player) => acc + player.score, 0),
+  } as Lineup);
+const transferService = new TransferService(
+  fplFetcher,
+  optimisationService,
+  lineupService,
+  new Logger()
+);
 
 describe("transferService", () => {
   beforeEach(() => {
