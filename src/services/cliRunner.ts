@@ -345,8 +345,23 @@ export default class CliRunner {
 
   private wildcardSquad(playerScores: PlayerScore[], myTeam: MyTeam) {
     const totalSales = myTeam.picks.reduce((total, pick) => total + pick.selling_price, 0) / 10;
+    const buyPriceDict = [] as number[];
+    myTeam.picks.forEach(
+      (pick) =>
+        (buyPriceDict[pick.element] = playerScores.find((x) => x.player.id === pick.element)!.value)
+    );
     const budget = totalSales + myTeam.transfers.bank / 10;
+    this.setPlayersValueBasedOnTeamPick(
+      playerScores,
+      myTeam,
+      (pick: FantasyPick) => pick.selling_price / 10
+    );
     this.recommendSquad(playerScores, budget);
+    this.setPlayersValueBasedOnTeamPick(
+      playerScores,
+      myTeam,
+      (pick: FantasyPick) => buyPriceDict[pick.element]
+    );
   }
 
   private async recommendTransfers(
@@ -474,5 +489,18 @@ export default class CliRunner {
   private displaySquad(players: PlayerScore[], squadName: string) {
     const lineup = this.lineupService.recommendLineup(players);
     this.displayService.displaySquad(lineup, squadName);
+  }
+
+  private setPlayersValueBasedOnTeamPick(
+    players: PlayerScore[],
+    team: MyTeam,
+    valueFetcher: (pick: FantasyPick) => number
+  ) {
+    players.forEach((player) => {
+      const matchingPick = team.picks.find((pick) => pick.element === player.player.id);
+      if (matchingPick) {
+        player.value = valueFetcher(matchingPick);
+      }
+    });
   }
 }
