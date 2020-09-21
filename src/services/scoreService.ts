@@ -165,6 +165,9 @@ export default class ScoreService {
     if (input > max) {
       return weight;
     }
+    if (input < 0) {
+      return 0;
+    }
     return (input * weight) / max;
   }
 }
