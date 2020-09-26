@@ -23,6 +23,7 @@ import DataRecorder from "./dataRecorder";
 import DraftService from "./draftService";
 import { DumpPlayerSettings } from "../config/dumpPlayerSettings";
 import { Logger } from "./logger";
+import TwitterService from "./twitterService";
 
 export default class CliRunner {
   private fplFetcher: FplFetcher;
@@ -35,6 +36,7 @@ export default class CliRunner {
   private dataRecorder: DataRecorder;
   private draftService: DraftService;
   private displayService: DisplayService;
+  private twitterService: TwitterService;
 
   public static RUN_CMD = "run";
   public static DRAFT_RUN_CMD = "draft-run";
@@ -47,6 +49,7 @@ export default class CliRunner {
   public static SET_LINEUP_CMD = "set-lineup";
   public static PERFORM_TRANSFERS_CMD = "perform-transfers";
   public static RECORD_DATA_CMD = "record-data";
+  public static TWEET_CMD = "tweet";
   public static DRAFT_TOP_PLAYERS = "draft-top-players";
   public static DRAFT_RECOMMEND_LINEUP_CMD = "draft-recommend-lineup";
   public static DRAFT_SET_LINEUP_CMD = "draft-set-lineup";
@@ -64,6 +67,7 @@ export default class CliRunner {
     CliRunner.SET_LINEUP_CMD,
     CliRunner.PERFORM_TRANSFERS_CMD,
     CliRunner.RECORD_DATA_CMD,
+    CliRunner.TWEET_CMD,
     CliRunner.DRAFT_TOP_PLAYERS,
     CliRunner.DRAFT_RECOMMEND_LINEUP_CMD,
     CliRunner.DRAFT_SET_LINEUP_CMD,
@@ -92,6 +96,7 @@ export default class CliRunner {
       logger
     );
     this.draftService = new DraftService(this.fplFetcher, this.displayService, logger);
+    this.twitterService = new TwitterService(this.lineupService, this.recommendationService);
   }
 
   async run(command: string, optionalParameter: string) {
@@ -159,6 +164,9 @@ export default class CliRunner {
         break;
       case CliRunner.RECORD_DATA_CMD:
         await this.recordData(players, nextEvent.id);
+        break;
+      case CliRunner.TWEET_CMD:
+        await this.twitterService.tweet(players, overview, myTeam, picksWithScore);
         break;
       case CliRunner.DRAFT_TOP_PLAYERS:
         await this.draftTopPlayers(players);

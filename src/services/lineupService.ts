@@ -23,7 +23,7 @@ export default class LineupService {
     starting11.push(...midfielders.slice(0, 3));
     starting11.push(forwards[0]);
     const omitedPlayers = sortedPlayers.filter(
-      (player) => !starting11.find((x) => x.player.id === player.player.id)
+      (player) => !starting11.find((x) => x.player.id === player?.player.id)
     );
     starting11.push(
       ...omitedPlayers
@@ -32,7 +32,7 @@ export default class LineupService {
         .map((player) => player)
     );
     const substitutes = sortedPlayers.filter(
-      (player) => !starting11.find((x) => x.player.id === player.player.id)
+      (player) => !starting11.find((x) => x.player.id === player?.player.id)
     );
     const orderedSubstitutes = substitutes.filter(
       (player) => player.position.id === PositionMap.GOALKEEPER
