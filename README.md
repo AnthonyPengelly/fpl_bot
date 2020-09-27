@@ -1,12 +1,13 @@
 # FPL Bot
 
 The FPL bot is an autonomous fantasy premier league bot. Every week, it scores all the players in the league,
-and makes transfers and sets its lineup based on these scores. It also has a CLI allowing various other 
+and makes transfers and sets its lineup based on these scores. It also has a CLI allowing various other
 interactions with these scores including:
-* Viewing details on a players score
-* Listing the top players in each position
-* Suggesting squads for a budget to maximise the score for different formations
-* Suggesting transactions for draft mode
+
+- Viewing details on a players score
+- Listing the top players in each position
+- Suggesting squads for a budget to maximise the score for different formations
+- Suggesting transactions for draft mode
 
 ## Running Autonomously
 
@@ -25,15 +26,31 @@ The following environment variables should be set:
 | `DRAFT_PASSWORD` | Draft Premier League password                           |
 | `SENT_TO_EMAIL`  | Email to send updates to. This must be setup within SES |
 
+## Twitter
+
+It is also possible to run a twitter lambda using the same `package.zip` (handler: `twitterHandler.handler`). This will tweet info daily about your team news and players to watch.
+To use this, you should also set the environment variables from the twitter developer portal:
+
+`TWITTER_CONSUMER_KEY`
+
+`TWITTER_CONSUMER_SECRET`
+
+`TWITTER_ACCESS_KEY`
+
+`TWITTER_TOKEN_SECRET`
+
 ## Running locally
 
 Run the following to install dependencies:
+
 ```
 npm install
 ```
 
 Then (once you have set the env variables as above), you can run the CLI with:
+
 ```
 npm start top-players
 ```
+
 Or any other command.

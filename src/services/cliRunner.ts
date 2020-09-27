@@ -24,6 +24,7 @@ import DraftService from "./draftService";
 import { DumpPlayerSettings } from "../config/dumpPlayerSettings";
 import { Logger } from "./logger";
 import TwitterService from "./twitterService";
+import TwitterApiClient from "../fetchers/twitterApiClient";
 
 export default class CliRunner {
   private fplFetcher: FplFetcher;
@@ -96,7 +97,13 @@ export default class CliRunner {
       logger
     );
     this.draftService = new DraftService(this.fplFetcher, this.displayService, logger);
-    this.twitterService = new TwitterService(this.lineupService, this.recommendationService);
+    const twitterApiClient = new TwitterApiClient();
+    this.twitterService = new TwitterService(
+      this.lineupService,
+      this.recommendationService,
+      twitterApiClient,
+      this.logger
+    );
   }
 
   async run(command: string, optionalParameter: string) {

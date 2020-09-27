@@ -1,18 +1,22 @@
 import moment from "moment";
 import { DumpPlayerSettings } from "../config/dumpPlayerSettings";
 import { dumpGkpSquad } from "../config/optimisationSettings";
+import TwitterApiClient from "../fetchers/twitterApiClient";
 import { Lineup } from "../models/Lineup";
 import PlayerScore from "../models/PlayerScore";
 import { PositionMap } from "../models/PositionMap";
 import { TeamPickWithScore } from "../models/TeamPickWithScore";
 import { TransferWithScores } from "../models/TransferWithScores";
 import LineupService from "./lineupService";
+import { Logger } from "./logger";
 import RecommendationService from "./recommendationService";
 
 export default class TwitterService {
   constructor(
     private lineupService: LineupService,
-    private recommendationService: RecommendationService
+    private recommendationService: RecommendationService,
+    private twitterApiClient: TwitterApiClient,
+    private logger: Logger
   ) {}
 
   async tweet(
@@ -24,17 +28,17 @@ export default class TwitterService {
     const currentGameweek = overview.events.filter((event) => event.is_current)[0];
     const nextGameweek = overview.events.filter((event) => event.is_next)[0];
     if (!currentGameweek && !nextGameweek) {
-      console.log("No upcoming gameweeks");
+      this.logger.log("No upcoming gameweeks");
     }
     const timeNow = moment();
     const deadlineTime = moment(nextGameweek.deadline_time);
     const daysTilDeadline = deadlineTime.diff(timeNow, "hours") / 24;
     if (currentGameweek) {
-      console.log("tweet progress - not yet implemented");
+      this.logger.log("tweet progress - not yet implemented");
       return;
     }
     if (daysTilDeadline < 1) {
-      console.log("tweet my team");
+      this.logger.log("tweet my team");
       const lineup = this.lineupService.recommendLineup(
         picksWithScore.map((pick) => pick.playerScore)
       );
@@ -42,7 +46,7 @@ export default class TwitterService {
       return;
     }
     if (daysTilDeadline < 2) {
-      console.log("tweet my transfers");
+      this.logger.log("tweet my transfers");
       const transfer = this.recommendationService.recommendTransfers(
         players,
         myTeam,
@@ -54,17 +58,17 @@ export default class TwitterService {
       return;
     }
     if (daysTilDeadline < 3) {
-      console.log("tweet best squad for the gameweek");
+      this.logger.log("tweet best squad for the gameweek");
       await this.tweetBestSquad(players);
       return;
     }
     if (daysTilDeadline < 4) {
-      console.log("tweet top players");
+      this.logger.log("tweet top players");
       await this.tweetPlayers(players.slice(0, 8), "These are my top picks for this week");
       return;
     }
     if (daysTilDeadline < 5) {
-      console.log("tweet best squad for £100m");
+      this.logger.log("tweet best squad for £100m");
       const squad = this.recommendationService.recommendATeam(players, dumpGkpSquad, 100);
       if (squad.length === 15) {
         const lineup = this.lineupService.recommendLineup(squad);
@@ -73,7 +77,7 @@ export default class TwitterService {
       return;
     }
     if (daysTilDeadline < 6) {
-      console.log("tweet best players under £8m");
+      this.logger.log("tweet best players under £8m");
       await this.tweetPlayers(
         players.filter((player) => player.value <= 8).slice(0, 8),
         "These mid-price options (< £8m) are looking good!"
@@ -81,7 +85,7 @@ export default class TwitterService {
       return;
     }
     if (daysTilDeadline < 7) {
-      console.log("tweet best players under £6m");
+      this.logger.log("tweet best players under £6m");
       await this.tweetPlayers(
         players.filter((player) => player.value <= 6).slice(0, 8),
         "I'm tipping these budget options (< £6m)"
@@ -89,7 +93,7 @@ export default class TwitterService {
       return;
     }
     if (daysTilDeadline < 8) {
-      console.log("tweet best midfielders");
+      this.logger.log("tweet best midfielders");
       await this.tweetPlayers(
         players.filter((player) => player.position.id === PositionMap.MIDFIELDER).slice(0, 8),
         "The top Midfielders going into the next GW"
@@ -97,7 +101,7 @@ export default class TwitterService {
       return;
     }
     if (daysTilDeadline < 9) {
-      console.log("tweet best forwards");
+      this.logger.log("tweet best forwards");
       await this.tweetPlayers(
         players.filter((player) => player.position.id === PositionMap.FORWARD).slice(0, 8),
         "The top Forwards going into the next GW"
@@ -105,7 +109,7 @@ export default class TwitterService {
       return;
     }
     if (daysTilDeadline < 10) {
-      console.log("tweet best defenders");
+      this.logger.log("tweet best defenders");
       await this.tweetPlayers(
         players.filter((player) => player.position.id === PositionMap.DEFENDER).slice(0, 8),
         "The top Defenders going into the next GW"
@@ -113,14 +117,14 @@ export default class TwitterService {
       return;
     }
     if (daysTilDeadline < 11) {
-      console.log("tweet best goalkeepers");
+      this.logger.log("tweet best goalkeepers");
       await this.tweetPlayers(
         players.filter((player) => player.position.id === PositionMap.GOALKEEPER).slice(0, 8),
         "The top Goalkeepers going into the next GW"
       );
       return;
     }
-    console.log(`No gameweek for ${daysTilDeadline} days, not tweeting`);
+    this.logger.log(`No gameweek for ${daysTilDeadline} days, not tweeting`);
   }
 
   private tweetBestSquad(players: PlayerScore[]): Promise<void> {
@@ -150,8 +154,9 @@ export default class TwitterService {
         .join("\n")}\n\nOUT:\n` +
       `${transfer.playersOut.map((player) => this.getPlayerText(player, true)).join("\n")}\n\n#FPL`;
 
-    console.log(tweet);
-    console.log(`length: ${tweet.length}`);
+    this.logger.log(tweet);
+    this.logger.log(`length: ${tweet.length}`);
+    await this.twitterApiClient.tweet(tweet);
   }
 
   private async tweetPlayers(players: PlayerScore[], message: string): Promise<void> {
@@ -159,8 +164,9 @@ export default class TwitterService {
       `${message}\n\n` +
       `${players.map((player) => this.getPlayerText(player, true)).join("\n")}\n\n#FPL`;
 
-    console.log(tweet);
-    console.log(`length: ${tweet.length}`);
+    this.logger.log(tweet);
+    this.logger.log(`length: ${tweet.length}`);
+    await this.twitterApiClient.tweet(tweet);
   }
 
   private async tweetLineup(lineup: Lineup, message: string): Promise<void> {
@@ -183,8 +189,9 @@ export default class TwitterService {
         .map((player) => this.getPlayerText(player, false))
         .join("\n")}\n\n£${value.toFixed(1)}m\n#FPL`;
 
-    console.log(tweet);
-    console.log(`length: ${tweet.length}`);
+    this.logger.log(tweet);
+    this.logger.log(`length: ${tweet.length}`);
+    await this.twitterApiClient.tweet(tweet);
   }
 
   private getPlayerText(
