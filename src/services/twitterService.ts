@@ -41,103 +41,162 @@ export default class TwitterService {
       fixtures
     );
     if (currentGameweek) {
-      this.logger.log("tweet progress");
-      await this.tweetGameweekProgress(currentGameweekPicksWithScore, "Progress so far");
-      return;
+      return await this.gameweekProgress(currentGameweekPicksWithScore);
     }
     if (daysSincePreviousGameweekFinished && daysSincePreviousGameweekFinished < 1) {
-      this.logger.log("tweet result");
-      await this.tweetGameweekProgress(currentGameweekPicksWithScore, "Did you beat me this week?");
+      await this.gameweekResult(currentGameweekPicksWithScore);
       // Don't return - Allow another tweet too
     }
     if (daysTilDeadline < 1) {
-      this.logger.log("tweet my team");
-      const lineup = this.lineupService.recommendLineup(
-        picksWithScore.map((pick) => pick.playerScore)
-      );
-      await this.tweetLineup(lineup, "Here's my team for this week - fingers crossed!");
-      return;
+      await this.myTeam(picksWithScore);
+      await this.topPlayers(players);
+      return await this.wildcardSquad(players);
     }
     if (daysTilDeadline < 2) {
-      this.logger.log("tweet my transfers");
-      const transfer = this.recommendationService.recommendTransfers(
-        players,
-        myTeam,
-        picksWithScore,
-        DumpPlayerSettings.DumpGoalkeeper,
-        false
-      );
-      await this.tweetTransfer(transfer);
-      return;
+      await this.myTransfers(players, myTeam, picksWithScore);
+      return await this.bestSquad(players);
     }
     if (daysTilDeadline < 3) {
-      this.logger.log("tweet best squad for the gameweek");
-      await this.tweetBestSquad(players);
-      return;
+      await this.budgetOptions(players);
+      return await this.midPriceOptions(players);
     }
     if (daysTilDeadline < 4) {
-      this.logger.log("tweet top players");
-      await this.tweetPlayers(players.slice(0, 8), "These are my top picks for this week");
-      return;
+      await this.bestMidfielders(players);
+      return await this.bestForwards(players);
     }
     if (daysTilDeadline < 5) {
-      this.logger.log("tweet best squad for £100m");
-      const squad = this.recommendationService.recommendATeam(players, dumpGkpSquad, 100);
-      if (squad.length === 15) {
-        const lineup = this.lineupService.recommendLineup(squad);
-        await this.tweetLineup(lineup, "Top squad for £100m imo, wildcard anyone?");
-      }
-      return;
+      await this.bestDefenders(players);
+      return await this.bestGoalkeepers(players);
     }
     if (daysTilDeadline < 6) {
-      this.logger.log("tweet best players under £8m");
-      await this.tweetPlayers(
-        players.filter((player) => player.value <= 8).slice(0, 8),
-        "These mid-price options (< £8m) are looking good!"
-      );
-      return;
+      return await this.topPlayers(players);
     }
     if (daysTilDeadline < 7) {
-      this.logger.log("tweet best players under £6m");
-      await this.tweetPlayers(
-        players.filter((player) => player.value <= 6).slice(0, 8),
-        "I'm tipping these budget options (< £6m)"
-      );
-      return;
+      return await this.wildcardSquad(players);
     }
     if (daysTilDeadline < 8) {
-      this.logger.log("tweet best midfielders");
-      await this.tweetPlayers(
-        players.filter((player) => player.position.id === PositionMap.MIDFIELDER).slice(0, 8),
-        "The top Midfielders going into the next GW"
-      );
-      return;
+      return await this.bestSquad(players);
     }
     if (daysTilDeadline < 9) {
-      this.logger.log("tweet best forwards");
-      await this.tweetPlayers(
-        players.filter((player) => player.position.id === PositionMap.FORWARD).slice(0, 8),
-        "The top Forwards going into the next GW"
-      );
-      return;
+      return await this.budgetOptions(players);
     }
     if (daysTilDeadline < 10) {
-      this.logger.log("tweet best defenders");
-      await this.tweetPlayers(
-        players.filter((player) => player.position.id === PositionMap.DEFENDER).slice(0, 8),
-        "The top Defenders going into the next GW"
-      );
-      return;
+      return await this.midPriceOptions(players);
     }
     if (daysTilDeadline < 11) {
-      this.logger.log("tweet best goalkeepers");
-      await this.tweetPlayers(
-        players.filter((player) => player.position.id === PositionMap.GOALKEEPER).slice(0, 8),
-        "The top Goalkeepers going into the next GW"
-      );
-      return;
+      return await this.bestMidfielders(players);
+    }
+    if (daysTilDeadline < 12) {
+      return await this.bestForwards(players);
+    }
+    if (daysTilDeadline < 13) {
+      return await this.bestDefenders(players);
+    }
+    if (daysTilDeadline < 14) {
+      return await this.bestGoalkeepers(players);
     }
     this.logger.log(`No gameweek for ${daysTilDeadline} days, not tweeting`);
+  }
+
+  private async gameweekProgress(currentGameweekPicksWithScore: TeamPickWithScore[]) {
+    this.logger.log("tweet progress");
+    await this.tweetGameweekProgress(currentGameweekPicksWithScore, "Progress so far");
+  }
+
+  private async gameweekResult(currentGameweekPicksWithScore: TeamPickWithScore[]) {
+    this.logger.log("tweet result");
+    await this.tweetGameweekProgress(currentGameweekPicksWithScore, "Did you beat me this week?");
+  }
+
+  private async myTeam(picksWithScore: TeamPickWithScore[]) {
+    this.logger.log("tweet my team");
+    const lineup = this.lineupService.recommendLineup(
+      picksWithScore.map((pick) => pick.playerScore)
+    );
+    await this.tweetLineup(lineup, "Here's my team for this week - fingers crossed!");
+  }
+
+  private async myTransfers(
+    players: PlayerScore[],
+    myTeam: MyTeam,
+    picksWithScore: TeamPickWithScore[]
+  ) {
+    this.logger.log("tweet my transfers");
+    const transfer = this.recommendationService.recommendTransfers(
+      players,
+      myTeam,
+      picksWithScore,
+      DumpPlayerSettings.DumpGoalkeeper,
+      false
+    );
+    await this.tweetTransfer(transfer);
+  }
+
+  private async bestSquad(players: PlayerScore[]) {
+    this.logger.log("tweet best squad for the gameweek");
+    await this.tweetBestSquad(players);
+  }
+
+  private async topPlayers(players: PlayerScore[]) {
+    this.logger.log("tweet top players");
+    await this.tweetPlayers(players.slice(0, 8), "These are my top picks for this week");
+  }
+
+  private async wildcardSquad(players: PlayerScore[]) {
+    this.logger.log("tweet best squad for £100m");
+    const squad = this.recommendationService.recommendATeam(players, dumpGkpSquad, 100);
+    if (squad.length === 15) {
+      const lineup = this.lineupService.recommendLineup(squad);
+      await this.tweetLineup(lineup, "Top squad for £100m imo, wildcard anyone?");
+    }
+  }
+
+  private async midPriceOptions(players: PlayerScore[]) {
+    this.logger.log("tweet best players under £8m");
+    await this.tweetPlayers(
+      players.filter((player) => player.value <= 8).slice(0, 8),
+      "These mid-price options (< £8m) are looking good!"
+    );
+  }
+
+  private async budgetOptions(players: PlayerScore[]) {
+    this.logger.log("tweet best players under £6m");
+    await this.tweetPlayers(
+      players.filter((player) => player.value <= 6).slice(0, 8),
+      "I'm tipping these budget options (< £6m)"
+    );
+  }
+
+  private async bestMidfielders(players: PlayerScore[]) {
+    this.logger.log("tweet best midfielders");
+    await this.tweetPlayers(
+      players.filter((player) => player.position.id === PositionMap.MIDFIELDER).slice(0, 8),
+      "The top Midfielders going into the next GW"
+    );
+  }
+
+  private async bestForwards(players: PlayerScore[]) {
+    this.logger.log("tweet best forwards");
+    await this.tweetPlayers(
+      players.filter((player) => player.position.id === PositionMap.FORWARD).slice(0, 8),
+      "The top Forwards going into the next GW"
+    );
+  }
+
+  private async bestDefenders(players: PlayerScore[]) {
+    this.logger.log("tweet best defenders");
+    await this.tweetPlayers(
+      players.filter((player) => player.position.id === PositionMap.DEFENDER).slice(0, 8),
+      "The top Defenders going into the next GW"
+    );
+  }
+
+  private async bestGoalkeepers(players: PlayerScore[]) {
+    this.logger.log("tweet best goalkeepers");
+    await this.tweetPlayers(
+      players.filter((player) => player.position.id === PositionMap.GOALKEEPER).slice(0, 8),
+      "The top Goalkeepers going into the next GW"
+    );
   }
 
   private async tweetGameweekProgress(picks: TeamPickWithScore[], message: string) {
@@ -148,7 +207,7 @@ export default class TwitterService {
     );
     const pickedPlayers = sortedPicks.filter((pick) => pick.pick.multiplier > 0);
     const subbedPlayers = sortedPicks.filter((pick) => pick.pick.multiplier === 0);
-    const tweet = `${message} - ${score}\n\n${pickedPlayers
+    const tweet = `${message} - ${score}pts\n\n${pickedPlayers
       .map((pick) =>
         this.getPlayerTextwithScore(
           pick.playerScore,
