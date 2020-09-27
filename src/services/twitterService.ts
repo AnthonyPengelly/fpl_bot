@@ -22,10 +22,13 @@ export default class TwitterService {
   async tweet(
     players: PlayerScore[],
     overview: Overview,
+    fixtures: Fixture[],
     myTeam: MyTeam,
-    picksWithScore: TeamPickWithScore[]
+    picksWithScore: TeamPickWithScore[],
+    currentGameweekPicksWithScore: TeamPickWithScore[]
   ): Promise<void> {
     const currentGameweek = overview.events.filter((event) => event.is_current)[0];
+    const previousGameweek = overview.events.filter((event) => event.is_previous)[0];
     const nextGameweek = overview.events.filter((event) => event.is_next)[0];
     if (!currentGameweek && !nextGameweek) {
       this.logger.log("No upcoming gameweeks");
@@ -33,9 +36,19 @@ export default class TwitterService {
     const timeNow = moment();
     const deadlineTime = moment(nextGameweek.deadline_time);
     const daysTilDeadline = deadlineTime.diff(timeNow, "hours") / 24;
+    const daysSincePreviousGameweekFinished = this.daysSincePreviousGameweekFinished(
+      previousGameweek,
+      fixtures
+    );
     if (currentGameweek) {
-      this.logger.log("tweet progress - not yet implemented");
+      this.logger.log("tweet progress");
+      await this.tweetGameweekProgress(currentGameweekPicksWithScore, "Progress so far");
       return;
+    }
+    if (daysSincePreviousGameweekFinished && daysSincePreviousGameweekFinished < 1) {
+      this.logger.log("tweet result");
+      await this.tweetGameweekProgress(currentGameweekPicksWithScore, "Did you beat me this week?");
+      // Don't return - Allow another tweet too
     }
     if (daysTilDeadline < 1) {
       this.logger.log("tweet my team");
@@ -127,7 +140,34 @@ export default class TwitterService {
     this.logger.log(`No gameweek for ${daysTilDeadline} days, not tweeting`);
   }
 
-  private tweetBestSquad(players: PlayerScore[]): Promise<void> {
+  private async tweetGameweekProgress(picks: TeamPickWithScore[], message: string) {
+    const sortedPicks = picks.sort((a, b) => a.pick.position - b.pick.position);
+    const score = sortedPicks.reduce(
+      (acc, pick) => acc + pick.pick.multiplier * pick.playerScore.player.event_points,
+      0
+    );
+    const pickedPlayers = sortedPicks.filter((pick) => pick.pick.multiplier > 0);
+    const subbedPlayers = sortedPicks.filter((pick) => pick.pick.multiplier === 0);
+    const tweet = `${message} - ${score}\n\n${pickedPlayers
+      .map((pick) =>
+        this.getPlayerTextwithScore(
+          pick.playerScore,
+          pick.pick.multiplier * pick.playerScore.player.event_points,
+          pick.pick.is_captain,
+          pick.pick.is_vice_captain
+        )
+      )
+      .join("\n")}\n\n${subbedPlayers
+      .map((pick) =>
+        this.getPlayerTextwithScore(pick.playerScore, pick.playerScore.player.event_points)
+      )
+      .join("\n")}\n\n#FPL`;
+    this.logger.log(tweet);
+    this.logger.log(`length: ${tweet.length}`);
+    await this.twitterApiClient.tweet(tweet);
+  }
+
+  private async tweetBestSquad(players: PlayerScore[]): Promise<void> {
     const goalkeepers = players
       .filter((player) => player.position.singular_name_short === "GKP")
       .slice(0, 2);
@@ -143,7 +183,7 @@ export default class TwitterService {
     const lineup = this.lineupService.recommendLineup(
       goalkeepers.concat(defenders, midfielders, forwards)
     );
-    return this.tweetLineup(lineup, "I reckon this is the best squad for this week $$$");
+    await this.tweetLineup(lineup, "I reckon this is the best squad for this week $$$");
   }
 
   private async tweetTransfer(transfer: TransferWithScores): Promise<void> {
@@ -204,5 +244,31 @@ export default class TwitterService {
     return `${player.player.web_name}${captainToken}${
       showPrice ? ` - £${player.value.toFixed(1)}m` : ""
     }`;
+  }
+
+  private getPlayerTextwithScore(
+    player: PlayerScore,
+    score: number,
+    isCaptain: boolean = false,
+    isVice: boolean = false
+  ): string {
+    const captainToken = isCaptain ? "(c)" : isVice ? "(v)" : "";
+    return `${score} ${player.player.web_name}${captainToken}`;
+  }
+
+  private daysSincePreviousGameweekFinished(
+    gameweek: Gameweek | undefined,
+    fixtures: Fixture[]
+  ): number | undefined {
+    if (!gameweek) {
+      return;
+    }
+    const previousFixtures = fixtures.filter((fixture) => fixture.event === gameweek.id);
+    const latestFixture = previousFixtures.sort((a, b) =>
+      moment(b.kickoff_time).diff(moment(a.kickoff_time))
+    )[0];
+    const timeNow = moment();
+    const kickoffTime = moment(latestFixture.kickoff_time);
+    return timeNow.diff(kickoffTime, "hours") / 24;
   }
 }

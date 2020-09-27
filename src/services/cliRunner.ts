@@ -113,6 +113,9 @@ export default class CliRunner {
       await this.updateOverviewIdsFromDraftOverview(overview);
     }
     const nextEvent = overview.events.filter((event) => event.is_next)[0];
+    const currentEvent = overview.events.filter((event) => event.is_current)[0];
+    const previousEvent = overview.events.filter((event) => event.is_previous)[0];
+    const eventForPoints = currentEvent || previousEvent;
     const fixtures = await this.fplFetcher.getFixtures();
     const players = await this.playerService.getAllPlayerScores(overview, fixtures, nextEvent.id);
 
@@ -124,6 +127,11 @@ export default class CliRunner {
       ? await this.fplFetcher.getMyDraftTeam(teamId)
       : await this.fplFetcher.getMyTeam(teamId);
     const picksWithScore = this.mapTeamToTeamPickWithScore(myTeam, players);
+    const myTeamPoints =
+      eventForPoints && draft
+        ? await this.fplFetcher.getMyDraftGameweekTeam(teamId, eventForPoints)
+        : await this.fplFetcher.getMyGameweekTeam(teamId, eventForPoints);
+    const currentGameweekPicksWithScore = this.mapTeamToTeamPickWithScore(myTeamPoints, players);
 
     switch (command) {
       case CliRunner.RUN_CMD:
@@ -173,7 +181,14 @@ export default class CliRunner {
         await this.recordData(players, nextEvent.id);
         break;
       case CliRunner.TWEET_CMD:
-        await this.twitterService.tweet(players, overview, myTeam, picksWithScore);
+        await this.twitterService.tweet(
+          players,
+          overview,
+          fixtures,
+          myTeam,
+          picksWithScore,
+          currentGameweekPicksWithScore
+        );
         break;
       case CliRunner.DRAFT_TOP_PLAYERS:
         await this.draftTopPlayers(players);

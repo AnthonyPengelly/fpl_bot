@@ -48,6 +48,17 @@ export default class FplFetcher {
     return myTeam;
   }
 
+  async getMyGameweekTeam(teamId: number, gameweek: Gameweek) {
+    await this.ensureLoggedIn();
+    const url = this.baseUrl + `/entry/${teamId}/event/${gameweek.id}/picks/`;
+    const myTeam = await WebRequest.json<MyTeam>(url, {
+      headers: {
+        Cookie: this.cookies,
+      },
+    });
+    return myTeam;
+  }
+
   async setLineup(lineup: MyTeamRequest, teamId: number) {
     await this.ensureLoggedIn();
     const url = this.baseUrl + "/my-team/" + teamId + "/";
@@ -115,6 +126,17 @@ export default class FplFetcher {
   async getMyDraftTeam(teamId: number) {
     await this.ensureLoggedIn();
     const url = this.draftBaseUrl + `/entry/${teamId}/my-team`;
+    const myTeam = await WebRequest.json<MyTeam>(url, {
+      headers: {
+        Cookie: this.cookies,
+      },
+    });
+    return myTeam;
+  }
+
+  async getMyDraftGameweekTeam(teamId: number, gameweek: Gameweek) {
+    await this.ensureLoggedIn();
+    const url = this.draftBaseUrl + `/entry/${teamId}/event/${gameweek.id}`;
     const myTeam = await WebRequest.json<MyTeam>(url, {
       headers: {
         Cookie: this.cookies,
