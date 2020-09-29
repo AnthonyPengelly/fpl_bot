@@ -28,22 +28,25 @@ export default class TwitterService {
     currentGameweekPicksWithScore: TeamPickWithScore[]
   ): Promise<void> {
     const currentGameweek = overview.events.filter((event) => event.is_current)[0];
-    const previousGameweek = overview.events.filter((event) => event.is_previous)[0];
     const nextGameweek = overview.events.filter((event) => event.is_next)[0];
-    if (!currentGameweek && !nextGameweek) {
+    if ((!currentGameweek || currentGameweek.finished) && !nextGameweek) {
       this.logger.log("No upcoming gameweeks");
     }
     const timeNow = moment();
     const deadlineTime = moment(nextGameweek.deadline_time);
     const daysTilDeadline = deadlineTime.diff(timeNow, "hours") / 24;
     const daysSincePreviousGameweekFinished = this.daysSincePreviousGameweekFinished(
-      previousGameweek,
+      currentGameweek,
       fixtures
     );
-    if (currentGameweek) {
+    if (!currentGameweek.finished) {
       return await this.gameweekProgress(currentGameweekPicksWithScore);
     }
-    if (daysSincePreviousGameweekFinished && daysSincePreviousGameweekFinished < 1) {
+    if (
+      currentGameweek.finished &&
+      daysSincePreviousGameweekFinished &&
+      daysSincePreviousGameweekFinished < 1
+    ) {
       await this.gameweekResult(currentGameweekPicksWithScore);
       // Don't return - Allow another tweet too
     }
