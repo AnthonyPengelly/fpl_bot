@@ -39,11 +39,11 @@ export default class TwitterService {
       currentGameweek,
       fixtures
     );
-    if (!currentGameweek.finished) {
+    if (!currentGameweek?.finished) {
       return await this.gameweekProgress(currentGameweekPicksWithScore);
     }
     if (
-      currentGameweek.finished &&
+      currentGameweek?.finished &&
       daysSincePreviousGameweekFinished &&
       daysSincePreviousGameweekFinished < 1
     ) {
