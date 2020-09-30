@@ -258,7 +258,6 @@ export default class CliRunner {
     const hoursTilDeadline = deadlineTime.diff(timeNow, "hours");
     if (hoursTilDeadline < 24) {
       this.logger.log(`Deadline in ${hoursTilDeadline} hours, setting lineup`);
-      await this.setLineup(picksWithScore, teamId, true);
       this.logger.setShouldSendEmail();
     } else if (hoursTilDeadline < 48) {
       this.logger.log(
@@ -272,6 +271,7 @@ export default class CliRunner {
       );
       await this.recommendTransactions(players, picksWithScore, false);
     }
+    await this.setLineup(picksWithScore, teamId, true);
 
     this.logger.log("");
     await this.draftTopPlayers(players);
