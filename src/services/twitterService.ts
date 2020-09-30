@@ -264,7 +264,9 @@ export default class TwitterService {
   private async tweetPlayers(players: PlayerScore[], message: string): Promise<void> {
     const tweet =
       `${message}\n\n` +
-      `${players.map((player) => this.getPlayerText(player, true)).join("\n")}\n\n#FPL`;
+      `${players
+        .map((player, i) => this.getPlayerText(player, true, false, false, i + 1))
+        .join("\n")}\n\n#FPL`;
 
     this.logger.log(tweet);
     this.logger.log(`length: ${tweet.length}`);
@@ -300,10 +302,11 @@ export default class TwitterService {
     player: PlayerScore,
     showPrice: boolean,
     isCaptain: boolean = false,
-    isVice: boolean = false
+    isVice: boolean = false,
+    index?: number
   ): string {
     const captainToken = isCaptain ? " (c)" : isVice ? " (v)" : "";
-    return `${player.player.web_name}${captainToken}${
+    return `${index ? index + ". " : ""}${player.player.web_name}${captainToken}${
       showPrice ? ` - £${player.value.toFixed(1)}m` : ""
     }`;
   }
