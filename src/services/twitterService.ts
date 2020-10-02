@@ -39,6 +39,10 @@ export default class TwitterService {
       currentGameweek,
       fixtures
     );
+    const teamsPlayingInTheNextDay = this.getTeamsPlayingInTheNextDay(fixtures);
+    if (teamsPlayingInTheNextDay.length !== 0) {
+      await this.todaysPlayers(players, teamsPlayingInTheNextDay);
+    }
     if (!currentGameweek?.finished) {
       return await this.gameweekProgress(currentGameweekPicksWithScore);
     }
@@ -99,6 +103,14 @@ export default class TwitterService {
       return await this.bestGoalkeepers(players);
     }
     this.logger.log(`No gameweek for ${daysTilDeadline} days, not tweeting`);
+  }
+
+  private async todaysPlayers(players: PlayerScore[], teamsPlaying: number[]) {
+    this.logger.log("today's players");
+    await this.tweetPlayers(
+      players.filter((x) => teamsPlaying.includes(x.player.team)).slice(0, 8),
+      "Keep an eye on these assets in today's games"
+    );
   }
 
   private async gameweekProgress(currentGameweekPicksWithScore: TeamPickWithScore[]) {
@@ -335,5 +347,17 @@ export default class TwitterService {
     const timeNow = moment();
     const kickoffTime = moment(latestFixture.kickoff_time);
     return timeNow.diff(kickoffTime, "hours") / 24;
+  }
+
+  private getTeamsPlayingInTheNextDay(fixtures: Fixture[]) {
+    const timeNow = moment();
+    const fixturesInTheNextDay = fixtures.filter((x) => {
+      const kickoffTime = moment(x.kickoff_time);
+      const hoursTilGame = kickoffTime.diff(timeNow, "hours");
+      return hoursTilGame < 24 && hoursTilGame > 0;
+    });
+    return fixturesInTheNextDay
+      .map((x) => x.team_h)
+      .concat(fixturesInTheNextDay.map((x) => x.team_a));
   }
 }

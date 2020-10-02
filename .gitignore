@@ -6,3 +6,4 @@
 /scripts/run-with-creds.sh
 /.vscode
 package.zip
+*.log
