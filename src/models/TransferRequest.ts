@@ -1,5 +1,5 @@
 interface TransferRequest {
-  chips: null;
+  chips: [];
   entry: number;
   event: number;
   transfers: {

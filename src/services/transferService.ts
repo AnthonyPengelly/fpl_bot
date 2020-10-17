@@ -178,7 +178,7 @@ export default class TransferService {
       return false;
     }
     const transferRequest: TransferRequest = {
-      chips: null,
+      chips: myTeam.chips,
       entry: teamId,
       event: nextEvent.id,
       transfers: transfer.playersIn.map((playerIn, index) => {
