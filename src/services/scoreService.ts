@@ -28,7 +28,7 @@ export default class ScoreService {
       numberOfGamesInNext3Gameweeks: futureFixtures.length,
     };
 
-    const weightedInputs = this.calculateWeightedInputs(inputs, settings);
+    const weightedInputs = this.calculateWeightedInputs(inputs, settings, gamesPlayed < 4);
     const score = Object.values(weightedInputs).reduce((total, value) => total + value, 0);
 
     const totalWeight = this.getTotalWeight(settings);
@@ -102,14 +102,16 @@ export default class ScoreService {
     );
   }
 
-  private static calculateWeightedInputs(inputs: ScoreInputs, settings: ScoreSettings) {
+  private static calculateWeightedInputs(inputs: ScoreInputs, settings: ScoreSettings, capForm: boolean) {
     const weights = settings.weights;
     const weightedInputs = {} as ScoreInputs;
-    weightedInputs.form = this.calculateCappedWeight(
+
+    weightedInputs.form = capForm ? this.calculateCappedWeight(
       inputs.form,
       weights.form.weight,
       weights.form.max
-    );
+    ) : (inputs.form * weights.form.weight) / weights.form.max;
+
     weightedInputs.pointsPerGame = this.calculateCappedWeight(
       inputs.pointsPerGame,
       weights.pointsPerGame.weight,
