@@ -177,6 +177,8 @@ export default class TransferService {
       this.logger.log("Transfer has a negative value, not performing!");
       return false;
     }
+    transfer.playersIn = transfer.playersIn.sort((a, b) => a.position.id - b.position.id);
+    transfer.playersOut = transfer.playersOut.sort((a, b) => a.position.id - b.position.id);
     const transferRequest: TransferRequest = {
       chips: myTeam.chips,
       entry: teamId,

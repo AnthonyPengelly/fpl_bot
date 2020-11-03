@@ -150,7 +150,7 @@ export default class CliRunner {
         this.wildcardSquad(players, myTeam);
         break;
       case CliRunner.RECOMMEND_SQUAD_CMD:
-        this.recommendSquad(players, optionalParameter ? parseInt(optionalParameter) : 100);
+        this.recommendSquad(players, optionalParameter ? parseFloat(optionalParameter) : 100);
         break;
       case CliRunner.RECOMMEND_TRANSFERS_CMD:
         await this.recommendTransfers(
