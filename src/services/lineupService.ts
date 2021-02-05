@@ -8,7 +8,7 @@ export default class LineupService {
   constructor(private fplFetcher: FplFetcher) {}
 
   recommendLineup(picksWithScore: PlayerScore[]): Lineup {
-    const sortedPlayers = picksWithScore.sort((a, b) => b.score - a.score);
+    const sortedPlayers = picksWithScore.sort((a, b) => b.scoreDetails.scoreThisWeek - a.scoreDetails.scoreThisWeek);
     const starting11: PlayerScore[] = [];
     const goalkeepers = sortedPlayers.filter(
       (player) => player.position.id === PositionMap.GOALKEEPER

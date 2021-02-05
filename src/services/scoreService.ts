@@ -30,15 +30,21 @@ export default class ScoreService {
 
     const weightedInputs = this.calculateWeightedInputs(inputs, settings, gamesPlayed < 4);
     const score = Object.values(weightedInputs).reduce((total, value) => total + value, 0);
+    const scoreForThisWeek = score - weightedInputs.numberOfGamesInNext3Gameweeks - weightedInputs.futureOpponentStrength;
 
     const totalWeight = this.getTotalWeight(settings);
+    const weightForThisWeek = totalWeight - settings.weights.numberOfGamesInNext3Gameweeks.weight - settings.weights.futureOpponentStrength.weight;
 
     const overallScore = (100 * score) / totalWeight;
+    const overallScoreThisWeek = (100 * scoreForThisWeek) / weightForThisWeek;
+
     const scoreWithPositionPenalty = overallScore - settings.positionPenalty;
+    const scoreWithPositionPenaltyThisWeek = overallScoreThisWeek - settings.positionPenalty;
 
     return {
       score: scoreWithPositionPenalty >= 0 ? scoreWithPositionPenalty : 0,
       overallScore: overallScore,
+      scoreThisWeek: scoreWithPositionPenaltyThisWeek >= 0 ? scoreWithPositionPenaltyThisWeek : 0,
       inputs: inputs,
       weightedInputs: weightedInputs,
       weights: weights,
