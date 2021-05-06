@@ -263,7 +263,7 @@ export default class CliRunner {
       this.logger.log(
         `Waiver deadline in ${hoursTilDeadline - 24} hours, showing recommended transactions.`
       );
-      await this.recommendTransactions(players, picksWithScore, false);
+      await this.performTransactions(players, picksWithScore, teamId);
       this.logger.setShouldSendEmail();
     } else {
       this.logger.log(
