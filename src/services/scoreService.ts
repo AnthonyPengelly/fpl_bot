@@ -26,25 +26,32 @@ export default class ScoreService {
         player.chance_of_playing_next_round === null ? 100 : player.chance_of_playing_next_round,
       numberOfGames: opponentFixtures.length,
       numberOfGamesInNext3Gameweeks: futureFixtures.length,
+      transfersIn: player.transfers_in_event,
+      transfersOut: player.transfers_out_event,
     };
 
     const weightedInputs = this.calculateWeightedInputs(inputs, settings, gamesPlayed < 4);
     const score = Object.values(weightedInputs).reduce((total, value) => total + value, 0);
-    const scoreForThisWeek = score - weightedInputs.numberOfGamesInNext3Gameweeks - weightedInputs.futureOpponentStrength;
+    const scoreForThisWeek =
+      score - weightedInputs.numberOfGamesInNext3Gameweeks - weightedInputs.futureOpponentStrength;
 
     const totalWeight = this.getTotalWeight(settings);
-    const weightForThisWeek = totalWeight - settings.weights.numberOfGamesInNext3Gameweeks.weight - settings.weights.futureOpponentStrength.weight;
+    const weightForThisWeek =
+      totalWeight -
+      settings.weights.numberOfGamesInNext3Gameweeks.weight -
+      settings.weights.futureOpponentStrength.weight;
 
     const overallScore = (100 * score) / totalWeight;
     const overallScoreThisWeek = (100 * scoreForThisWeek) / weightForThisWeek;
 
     const scoreWithPositionPenalty = overallScore - settings.positionPenalty;
     const scoreWithPositionPenaltyThisWeek = overallScoreThisWeek - settings.positionPenalty;
+    const ownership = parseFloat(player.selected_by_percent);
 
     return {
-      score: scoreWithPositionPenalty >= 0 ? scoreWithPositionPenalty : 0,
-      overallScore: overallScore,
-      scoreThisWeek: scoreWithPositionPenaltyThisWeek >= 0 ? scoreWithPositionPenaltyThisWeek : 0,
+      score: ownership,
+      overallScore: ownership,
+      scoreThisWeek: ownership,
       inputs: inputs,
       weightedInputs: weightedInputs,
       weights: weights,
@@ -108,15 +115,17 @@ export default class ScoreService {
     );
   }
 
-  private static calculateWeightedInputs(inputs: ScoreInputs, settings: ScoreSettings, capForm: boolean) {
+  private static calculateWeightedInputs(
+    inputs: ScoreInputs,
+    settings: ScoreSettings,
+    capForm: boolean
+  ) {
     const weights = settings.weights;
     const weightedInputs = {} as ScoreInputs;
 
-    weightedInputs.form = capForm ? this.calculateCappedWeight(
-      inputs.form,
-      weights.form.weight,
-      weights.form.max
-    ) : (inputs.form * weights.form.weight) / weights.form.max;
+    weightedInputs.form = capForm
+      ? this.calculateCappedWeight(inputs.form, weights.form.weight, weights.form.max)
+      : (inputs.form * weights.form.weight) / weights.form.max;
 
     weightedInputs.pointsPerGame = this.calculateCappedWeight(
       inputs.pointsPerGame,

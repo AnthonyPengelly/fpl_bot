@@ -9,4 +9,6 @@ interface ScoreInputs {
   chanceOfPlaying: number;
   numberOfGames: number;
   numberOfGamesInNext3Gameweeks: number;
+  transfersIn: number;
+  transfersOut: number;
 }
