@@ -128,10 +128,12 @@ export default class CliRunner {
       : await this.fplFetcher.getMyTeam(teamId);
     const picksWithScore = this.mapTeamToTeamPickWithScore(myTeam, players);
     const myTeamPoints =
-      eventForPoints && draft
+      eventForPoints &&
+      (draft
         ? await this.fplFetcher.getMyDraftGameweekTeam(teamId, eventForPoints)
-        : await this.fplFetcher.getMyGameweekTeam(teamId, eventForPoints);
-    const currentGameweekPicksWithScore = this.mapTeamToTeamPickWithScore(myTeamPoints, players);
+        : await this.fplFetcher.getMyGameweekTeam(teamId, eventForPoints));
+    const currentGameweekPicksWithScore =
+      myTeamPoints && this.mapTeamToTeamPickWithScore(myTeamPoints, players);
 
     switch (command) {
       case CliRunner.RUN_CMD:
