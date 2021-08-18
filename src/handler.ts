@@ -8,12 +8,12 @@ export const handler = async () => {
     const cliRunner = new CliRunner(logger);
     await cliRunner.run("run", "");
     await logger.uploadOutput("bot-logs");
-    await logger.sendEmailIfNeeded("FPL Update", emailToSendTo);
+    await logger.sendEmailIfNeeded("FPL Sheep Update", emailToSendTo);
   } catch (error) {
     logger.log(error);
     logger.setShouldSendEmail();
     await logger.uploadOutput("bot-logs");
-    await logger.sendEmailIfNeeded("FPL Error", emailToSendTo);
+    await logger.sendEmailIfNeeded("FPL Sheep Error", emailToSendTo);
   }
   return;
 };
