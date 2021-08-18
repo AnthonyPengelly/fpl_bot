@@ -1,6 +1,8 @@
 import { getScoreSettingsForPlayer, ScoreSettings, WeightSetting } from "../config/scoreSettings";
 import { PositionMap } from "../models/PositionMap";
 
+const numberOfPlayers = 6538042;
+
 export default class ScoreService {
   static calculateScore(
     player: PlayerOverview,
@@ -28,34 +30,38 @@ export default class ScoreService {
       numberOfGamesInNext3Gameweeks: futureFixtures.length,
       transfersIn: player.transfers_in_event,
       transfersOut: player.transfers_out_event,
+      ownership: parseFloat(player.selected_by_percent),
     };
 
     const weightedInputs = this.calculateWeightedInputs(inputs, settings, gamesPlayed < 4);
-    const score = Object.values(weightedInputs).reduce((total, value) => total + value, 0);
-    const scoreForThisWeek =
-      score - weightedInputs.numberOfGamesInNext3Gameweeks - weightedInputs.futureOpponentStrength;
 
-    const totalWeight = this.getTotalWeight(settings);
-    const weightForThisWeek =
-      totalWeight -
-      settings.weights.numberOfGamesInNext3Gameweeks.weight -
-      settings.weights.futureOpponentStrength.weight;
-
-    const overallScore = (100 * score) / totalWeight;
-    const overallScoreThisWeek = (100 * scoreForThisWeek) / weightForThisWeek;
-
-    const scoreWithPositionPenalty = overallScore - settings.positionPenalty;
-    const scoreWithPositionPenaltyThisWeek = overallScoreThisWeek - settings.positionPenalty;
-    const ownership = parseFloat(player.selected_by_percent);
+    const score =
+      inputs.transfersIn > inputs.transfersOut
+        ? this.calculateScoreForTransfersIn(inputs)
+        : this.calculateScoreForTransfersOut(inputs);
 
     return {
-      score: ownership,
-      overallScore: ownership,
-      scoreThisWeek: ownership,
+      score: score,
+      overallScore: score,
+      scoreThisWeek: score,
       inputs: inputs,
       weightedInputs: weightedInputs,
       weights: weights,
     } as ScoreDetails;
+  }
+
+  private static calculateScoreForTransfersIn(inputs: ScoreInputs) {
+    const playersWithPlayer = (inputs.ownership * numberOfPlayers) / 100;
+    const playersWithoutPlayer = numberOfPlayers - playersWithPlayer;
+    return (100 * inputs.transfersIn) / playersWithoutPlayer;
+  }
+
+  private static calculateScoreForTransfersOut(inputs: ScoreInputs) {
+    const playersWithPlayer = (inputs.ownership * numberOfPlayers) / 100;
+    if (playersWithPlayer === 0) {
+      return -100;
+    }
+    return (-100 * inputs.transfersOut) / playersWithPlayer;
   }
 
   private static getForm(

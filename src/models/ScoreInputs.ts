@@ -11,4 +11,5 @@ interface ScoreInputs {
   numberOfGamesInNext3Gameweeks: number;
   transfersIn: number;
   transfersOut: number;
+  ownership: number;
 }

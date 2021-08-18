@@ -15,20 +15,5 @@ export const handler = async () => {
     await logger.uploadOutput("bot-logs");
     await logger.sendEmailIfNeeded("FPL Error", emailToSendTo);
   }
-
-  const draftLogger = new Logger();
-  try {
-    const draftRunner = new CliRunner(draftLogger);
-    process.env.FPL_EMAIL = process.env.DRAFT_EMAIL;
-    process.env.FPL_PASSWORD = process.env.DRAFT_PASSWORD;
-    await draftRunner.run("draft-run", "");
-    await draftLogger.uploadOutput("draft-bot-logs");
-    await draftLogger.sendEmailIfNeeded("FPL Draft Update", emailToSendTo);
-  } catch (error) {
-    draftLogger.log(error);
-    draftLogger.setShouldSendEmail();
-    await draftLogger.uploadOutput("draft-bot-logs");
-    await draftLogger.sendEmailIfNeeded("FPL Draft Error", emailToSendTo);
-  }
   return;
 };
