@@ -35,10 +35,12 @@ export default class ScoreService {
 
     const weightedInputs = this.calculateWeightedInputs(inputs, settings, gamesPlayed < 4);
 
-    const score =
+    const scoreThisWeek =
       inputs.transfersIn > inputs.transfersOut
         ? this.calculateScoreForTransfersIn(inputs)
         : this.calculateScoreForTransfersOut(inputs);
+
+    const score = previousScore ? 0.6 * scoreThisWeek + 0.4 * previousScore.score : scoreThisWeek;
 
     return {
       score: score,
