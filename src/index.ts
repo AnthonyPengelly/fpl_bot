@@ -14,5 +14,7 @@ if (process.argv.length < 3) {
   exit(1);
 }
 
+require("dotenv").config();
+
 const cliRunner = new CliRunner(logger);
 cliRunner.run(process.argv[2], process.argv[3]).catch((error) => console.error(error));
