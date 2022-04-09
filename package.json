@@ -23,7 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.0.0",
-    "moment": "^2.27.0",
+    "moment": "^2.29.2",
     "tslib": "^2.0.0",
     "twit": "^2.2.11",
     "web-request": "^1.0.7"
